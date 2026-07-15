@@ -1,0 +1,100 @@
+﻿@page "/form"
+@using System.ComponentModel.DataAnnotations
+@using SollyUI.Demo.Components.Shared
+
+<DemoPage Title="Full form" Subtitle="Everything together with data annotations validation.">
+
+    <div class="demo-form-layout">
+        <EditForm Model="_m" OnValidSubmit="Submit">
+            <DataAnnotationsValidator />
+
+            <div class="demo-col">
+                <SInput @bind-Value="_m.Name" Label="Full name" Required Clearable
+                        Placeholder="Jane Doe" />
+
+                <SInput @bind-Value="_m.Email" Label="Email" Type="email" Required Clearable
+                        Icon="@SIcons.Search" Placeholder="you@example.com" />
+
+                <SSelect TValue="string" Items="_countries" @bind-Value="_m.Country"
+                         Label="Country" Searchable Clearable Required />
+
+                <SSelect TValue="string" Items="_langs" @bind-Values="_m.Languages"
+                         Label="Languages" Multiple Searchable Clearable
+                         Hint="Pick as many as you like" />
+
+                <SDatePicker @bind-Value="_m.Birthday" Label="Birthday"
+                             Max="DateTime.Today" />
+
+                <STextArea @bind-Value="_m.Bio" Label="Bio" MaxLength="200" Rows="3"
+                           Placeholder="Tell us about yourself…" />
+
+                <SSwitch @bind-Value="_m.Newsletter" Label="Subscribe to the newsletter" />
+
+                <SCheckbox @bind-Value="_m.Agree" Label="I accept the terms and conditions" />
+
+                <div class="demo-row" style="margin-top:.5rem;">
+                    <SButton Type="submit" Variant="SVariant.Primary" Icon="@SIcons.Check">
+                        Submit
+                    </SButton>
+                    <SButton Variant="SVariant.Ghost" OnClick="Reset">Reset</SButton>
+                </div>
+            </div>
+        </EditForm>
+
+        <div class="demo-state s-glass">
+            <strong>Model state</strong>
+            <pre>@_json</pre>
+            @if (_submitted)
+            {
+                <span class="demo-note" style="color: var(--s-accent);">Submitted.</span>
+            }
+        </div>
+    </div>
+
+</DemoPage>
+
+@code {
+    class Model
+    {
+        [Required(ErrorMessage = "Name is required")]
+        [StringLength(60, MinimumLength = 2, ErrorMessage = "Between 2 and 60 characters")]
+        public string? Name { get; set; }
+
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Not a valid email address")]
+        public string? Email { get; set; }
+
+        [Required(ErrorMessage = "Pick a country")]
+        public string? Country { get; set; }
+
+        public IEnumerable<string> Languages { get; set; } = Array.Empty<string>();
+        public DateTime? Birthday { get; set; }
+
+        [StringLength(200, ErrorMessage = "200 characters max")]
+        public string? Bio { get; set; }
+
+        public bool Newsletter { get; set; }
+
+        [Range(typeof(bool), "true", "true", ErrorMessage = "You must accept the terms")]
+        public bool Agree { get; set; }
+    }
+
+    Model _m = new();
+    bool _submitted;
+
+    string[] _countries = { "Germany", "France", "Netherlands", "Portugal", "Spain", "Italy", "Poland" };
+    string[] _langs = { "C#", "F#", "TypeScript", "Python", "Rust", "Go", "Kotlin" };
+
+    string _json => System.Text.Json.JsonSerializer.Serialize(_m, new System.Text.Json.JsonSerializerOptions
+    {
+        WriteIndented = true
+    });
+
+    void Submit() => _submitted = true;
+
+    void Reset()
+    {
+        _m = new();
+        _submitted = false;
+    }
+}

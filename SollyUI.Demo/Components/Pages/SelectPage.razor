@@ -1,0 +1,122 @@
+﻿@page "/select"
+@using SollyUI.Demo.Components.Shared
+@using Microsoft.AspNetCore.Components
+
+<DemoPage Title="Select" Subtitle="Generic, searchable, multi-select, async loading.">
+
+    <DemoBlock Title="Basic" Code="@_basicCode">
+        <div class="demo-col">
+            <SSelect TValue="string" Items="_opts" @bind-Value="_basic"
+                     Label="Option" Clearable />
+            <span class="demo-note">Value: @(_basic ?? "—")</span>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Custom display"
+               Description="Display maps TValue to the string shown in the trigger and list."
+               Code="@_displayCode">
+        <div class="demo-col">
+            <SSelect TValue="City" Items="_cities" @bind-Value="_city"
+                     Display="@(c => $"{c.Name} ({c.Country})")"
+                     Label="City" Clearable />
+            <span class="demo-note">Value: @(_city?.Name ?? "—")</span>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Searchable" Code="@_searchCode">
+        <SSelect TValue="City" Items="_cities" @bind-Value="_searchCity"
+                 Display="@(c => c.Name)"
+                 Label="City" Searchable Clearable
+                 Hint="Type to filter · ↑↓ to navigate · Enter to pick" />
+    </DemoBlock>
+
+    <DemoBlock Title="Multiple"
+               Description="Note bind-Values (plural), not bind-Value."
+               Code="@_multiCode">
+        <div class="demo-col">
+            <SSelect TValue="City" Items="_cities" @bind-Values="_multi"
+                     Display="@(c => c.Name)"
+                     Label="Cities" Multiple Searchable Clearable />
+            <span class="demo-note">
+                Selected: @(_multi.Any() ? string.Join(", ", _multi.Select(c => c.Name)) : "—")
+            </span>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Async source"
+               Description="ItemsProvider receives the query and does its own filtering. Debounced at 250ms."
+               Code="@_asyncCode">
+        <SSelect TValue="string" ItemsProvider="SearchAsync" @bind-Value="_remote"
+                 Label="Remote" Searchable Clearable
+                 Hint="500 items, simulated 400ms latency" />
+    </DemoBlock>
+
+    <DemoBlock Title="Item template" Code="@_tmplCode">
+        <SSelect TValue="City" Items="_cities" @bind-Value="_fancy"
+                 Display="@(c => c.Name)" Label="City" Searchable>
+            <ItemTemplate Context="c">
+                <span class="demo-city">
+                    <strong>@c.Name</strong>
+                    <small>@c.Country</small>
+                </span>
+            </ItemTemplate>
+        </SSelect>
+    </DemoBlock>
+
+    <DemoBlock Title="Empty & disabled" Code="@_edgeCode">
+        <div class="demo-col">
+            <SSelect TValue="string" Items="@(Array.Empty<string>())"
+                     Label="No options" />
+            <SSelect TValue="string" Items="_opts" Value="@("Alpha")"
+                     Label="Disabled" Disabled />
+        </div>
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    public record City(string Name, string Country);
+
+    string[] _opts = { "Alpha", "Beta", "Gamma", "Delta", "Epsilon" };
+
+    City[] _cities =
+    {
+        new("Berlin", "DE"), new("Frankfurt", "DE"), new("Munich", "DE"),
+        new("Paris", "FR"), new("Lyon", "FR"), new("Marseille", "FR"),
+        new("Lisbon", "PT"), new("Porto", "PT"),
+        new("Amsterdam", "NL"), new("Rotterdam", "NL"), new("Utrecht", "NL"),
+        new("Madrid", "ES"), new("Barcelona", "ES"), new("Valencia", "ES"),
+    };
+
+    string[] _pool = Enumerable.Range(1, 500).Select(i => $"Item {i:D3}").ToArray();
+
+    string? _basic;
+    City? _city;
+    City? _searchCity;
+    City? _fancy;
+    string? _remote;
+    IEnumerable<City> _multi = Array.Empty<City>();
+
+    async Task<IEnumerable<string>> SearchAsync(string q, CancellationToken ct)
+    {
+        await Task.Delay(400, ct);
+        return _pool
+            .Where(x => string.IsNullOrEmpty(q) || x.Contains(q, StringComparison.OrdinalIgnoreCase))
+            .Take(20);
+    }
+
+    const string _basicCode = """<SSelect TValue="string" Items="_opts" @bind-Value="_basic" Label="Option" Clearable />""";
+
+    const string _displayCode = """record City(string Name, string Country); <SSelect TValue="City" Items="_cities" @bind-Value="_city"Display="@(c => $"{c.Name} ({c.Country})")"Label="City" Clearable /> """;
+
+    const string _searchCode = """<SSelect TValue="City" Items="_cities" @bind-Value="_city"Display="@(c => c.Name)"Label="City" Searchable Clearable /> """;
+
+    const string _multiCode = """IEnumerable<City> _multi = Array.Empty<City>();<SSelect TValue="City" Items="_cities" @bind-Values="_multi"Display="@(c => c.Name)"Label="Cities" Multiple Searchable Clearable /> """;
+
+    const string _asyncCode = """<SSelect TValue="string" ItemsProvider="SearchAsync" @bind-Value="_remote"Label="Remote" Searchable Clearable />@code {async Task<IEnumerable<string>> SearchAsync(string q, CancellationToken ct){var r = await Http.GetFromJsonAsync<string[]>($"/api/search?q={q}", ct);return r ?? Array.Empty<string>();}} """;
+
+    const string _tmplCode = """<SSelect TValue="City" Items="_cities" @bind-Value="_city"Display="@(c => c.Name)" Label="City" Searchable><ItemTemplate Context="c"><span style="display:flex;flex-direction:column;"><strong>@c.Name</strong><small>@c.Country</small></span></ItemTemplate></SSelect> """;
+
+    const string _edgeCode = """<SSelect TValue="string" Items="@(Array.Empty<string>())" Label="No options" /><SSelect TValue="string" Items="_opts" Value="@("Alpha")" Label="Disabled" Disabled /> """;
+}
+

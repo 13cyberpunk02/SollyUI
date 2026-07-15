@@ -1,145 +1,37 @@
 ﻿@page "/"
-@rendermode InteractiveServer
+@using SollyUI.Demo.Components.Shared
 
-<h1>Components</h1>
-
-<section class="demo-section">
-    <h2>Buttons</h2>
-    <div class="demo-row">
-        <SButton>Default</SButton>
-        <SButton Variant="SVariant.Primary" Icon="@SIcons.Check">Primary</SButton>
-        <SButton Variant="SVariant.Danger" Icon="@SIcons.X">Danger</SButton>
-        <SButton Variant="SVariant.Ghost">Ghost</SButton>
-        <SButton Disabled>Disabled</SButton>
-        <SButton Variant="SVariant.Primary" OnClick="SlowAsync">Async (spinner)</SButton>
+<DemoPage Title="Solly.UI" Subtitle="Glassmorphism components for Blazor.">
+    <div class="demo-cards">
+        <a class="demo-card s-glass" href="button">
+            <SIcon Name="@SIcons.Cursor" Size="20" />
+            <strong>Button</strong>
+            <span>Variants, icons, async spinner, pointer ripple.</span>
+        </a>
+        <a class="demo-card s-glass" href="input">
+            <SIcon Name="@SIcons.Type" Size="20" />
+            <strong>Input</strong>
+            <span>Labels, icons, hints, clearable, validation.</span>
+        </a>
+        <a class="demo-card s-glass" href="select">
+            <SIcon Name="@SIcons.List" Size="20" />
+            <strong>Select</strong>
+            <span>Generic, searchable, multiple, async source.</span>
+        </a>
+        <a class="demo-card s-glass" href="datepicker">
+            <SIcon Name="@SIcons.Calendar" Size="20" />
+            <strong>DatePicker</strong>
+            <span>Culture-aware calendar with min/max.</span>
+        </a>
+        <a class="demo-card s-glass" href="theming">
+            <SIcon Name="@SIcons.Palette" Size="20" />
+            <strong>Theming</strong>
+            <span>Dark, light, custom tokens, persistence.</span>
+        </a>
+        <a class="demo-card s-glass" href="form">
+            <SIcon Name="@SIcons.Clipboard" Size="20" />
+            <strong>Full form</strong>
+            <span>Everything together with validation.</span>
+        </a>
     </div>
-</section>
-
-<section class="demo-section">
-    <h2>Form</h2>
-    <EditForm Model="_m" OnValidSubmit="() => _sent = true">
-        <DataAnnotationsValidator />
-        <div class="demo-form">
-            <SInput @bind-Value="_m.Name" Label="Name" Placeholder="Jane Doe"
-                    Icon="@SIcons.Search" Required Clearable
-                    Hint="Your full name" />
-
-            <SSelect TValue="string" Items="_opts" @bind-Value="_m.Choice"
-                     Label="Option" Placeholder="Choose one…" />
-
-            <SSelect TValue="City" Items="_cities" @bind-Value="_m.City"
-                     Display="@(c => $"{c.Name} ({c.Country})")"
-                     Label="City (custom display)" />
-
-            <SDatePicker @bind-Value="_m.Date" Label="Date"
-                         Min="DateTime.Today.AddYears(-1)"
-                         Max="DateTime.Today.AddYears(1)" />
-
-            <SButton Type="submit" Variant="SVariant.Primary">Submit</SButton>
-        </div>
-        
-        <h2>Toggles</h2>
-        <div class="demo-form">
-            <SCheckbox @bind-Value="_m.Agree" Label="I agree to the terms" />
-            <SCheckbox @bind-Value="_m.News" Label="Send me updates" Hint="Weekly, no spam" />
-            <SCheckbox Value="false" Indeterminate Label="Partially selected" />
-            <SCheckbox Value="true" Disabled Label="Disabled checked" />
-
-            <SSwitch @bind-Value="_m.Dark" Label="Dark mode" />
-            <SSwitch @bind-Value="_m.Beta" Label="Beta features" Hint="May be unstable" />
-            <SSwitch Value="false" Disabled Label="Disabled" />
-            <SSwitch Value="true" Disabled Label="Disabled on" />
-
-            <STextArea @bind-Value="_m.Bio" Label="Bio"
-                       Placeholder="Tell us about yourself…"
-                       MaxLength="200" Rows="3" Hint="Markdown supported" />
-
-            <STextArea @bind-Value="_m.Notes" Label="Notes (auto-grow)" AutoGrow Rows="2" />
-        </div>
-        
-        <h2>Select</h2>
-        <div class="demo-form">
-            <SSelect TValue="string" Items="_opts" @bind-Value="_m.Choice"
-                     Label="Basic" Clearable />
-
-            <SSelect TValue="City" Items="_cities" @bind-Value="_m.City"
-                     Display="@(c => $"{c.Name} ({c.Country})")"
-                     Label="Searchable" Searchable Clearable
-                     Hint="Type to filter" />
-
-            <SSelect TValue="City" Items="_cities" @bind-Values="_m.Cities"
-                     Display="@(c => c.Name)"
-                     Label="Multiple" Multiple Searchable Clearable />
-
-            <SSelect TValue="string" ItemsProvider="SearchAsync"
-                     @bind-Value="_m.Remote"
-                     Label="Async (ItemsProvider)" Searchable Clearable
-                     Hint="Simulated 400ms latency" />
-
-            <SSelect TValue="City" Items="_cities" @bind-Value="_m.Fancy"
-                     Display="@(c => c.Name)"
-                     Label="Custom template" Searchable>
-                <ItemTemplate Context="c">
-                    <span style="display:flex;flex-direction:column;">
-                        <strong>@c.Name</strong>
-                        <small style="opacity:.6;">@c.Country</small>
-                    </span>
-                </ItemTemplate>
-            </SSelect>
-        </div>
-        
-    </EditForm>
-
-    @if (_sent)
-    {
-        <p class="demo-ok">
-            @_m.Name / @_m.Choice / @_m.City?.Name / @_m.Date?.ToShortDateString()
-        </p>
-    }
-</section>
-
-@code {
-    record City(string Name, string Country);
-    class Model
-    {
-        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Name is required")]
-        public string? Name { get; set; }
-        public string? Choice { get; set; }
-        public City? City { get; set; }
-        public DateTime? Date { get; set; }
-        public bool Agree { get; set; }
-        public bool News { get; set; }
-        public bool Dark { get; set; }
-        public bool Beta { get; set; }
-        public string? Bio { get; set; }
-        public string? Notes { get; set; }
-        public IEnumerable<City> Cities { get; set; } = Array.Empty<City>();
-        public string? Remote { get; set; }
-        public City? Fancy { get; set; }
-    }
-
-    Model _m = new();
-    bool _sent;
-    string[] _opts = { "Alpha", "Beta", "Gamma", "Delta", "Epsilon" };
-
-    async Task SlowAsync() => await Task.Delay(1200);
-    
-    City[] _cities =
-    {
-        new("Berlin", "DE"), new("Frankfurt", "DE"), new("Munich", "DE"),
-        new("Paris", "FR"), new("Lyon", "FR"),
-        new("Lisbon", "PT"), new("Porto", "PT"),
-        new("Amsterdam", "NL"), new("Rotterdam", "NL"),
-        new("Madrid", "ES"), new("Barcelona", "ES"),
-    };
-
-    string[] _pool = Enumerable.Range(1, 500).Select(i => $"Item {i:D3}").ToArray();
-
-    async Task<IEnumerable<string>> SearchAsync(string q, CancellationToken ct)
-    {
-        await Task.Delay(400, ct);
-        return _pool
-            .Where(x => string.IsNullOrEmpty(q) || x.Contains(q, StringComparison.OrdinalIgnoreCase))
-            .Take(20);
-    }
-}
+</DemoPage>

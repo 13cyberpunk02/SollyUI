@@ -86,7 +86,3 @@ export function autoGrow(el) {
     el.addEventListener('input', resize);
     return { dispose: () => el.removeEventListener('input', resize) };
 }
-
-export function focusEl(el) {
-    el?.focus?.({ preventScroll: true });
-}

@@ -1,0 +1,47 @@
+﻿@page "/textarea"
+@using SollyUI.Demo.Components.Shared
+
+<DemoPage Title="TextArea">
+
+    <DemoBlock Title="Basic" Code="@_basicCode">
+        <STextArea @bind-Value="_a" Label="Message" Placeholder="Type here…" Rows="3" />
+    </DemoBlock>
+
+    <DemoBlock Title="Character counter" Code="@_countCode">
+        <STextArea @bind-Value="_b" Label="Bio" MaxLength="200" Rows="3"
+                   Hint="Markdown supported" />
+    </DemoBlock>
+
+    <DemoBlock Title="Auto-grow"
+               Description="Grows with content. Requires JS interop."
+               Code="@_growCode">
+        <STextArea @bind-Value="_c" Label="Notes" AutoGrow Rows="2"
+                   Placeholder="Keep typing…" />
+    </DemoBlock>
+
+    <DemoBlock Title="Disabled" Code="@_disabledCode">
+        <STextArea @bind-Value="_d" Label="Read only" Disabled Rows="2" />
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    string? _a, _b, _c;
+    string? _d = "This content cannot be edited.";
+
+    const string _basicCode = """
+                              <STextArea @bind-Value="_msg" Label="Message" Rows="3" />
+                              """;
+
+    const string _countCode = """
+                              <STextArea @bind-Value="_bio" Label="Bio" MaxLength="200" Rows="3" />
+                              """;
+
+    const string _growCode = """
+                             <STextArea @bind-Value="_notes" Label="Notes" AutoGrow Rows="2" />
+                             """;
+
+    const string _disabledCode = """
+                                 <STextArea @bind-Value="_x" Label="Read only" Disabled Rows="2" />
+                                 """;
+}

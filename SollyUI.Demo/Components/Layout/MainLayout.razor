@@ -1,11 +1,41 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="demo-shell">
-    <header class="demo-header">
-        <span class="demo-brand">SollyUI</span>
-        <SThemeToggle />
-    </header>
-    <main class="demo-main">
-        @Body
-    </main>
+<div class="demo-shell" style="display:flex;min-height:100vh;">
+    <aside class="demo-sidebar s-glass" style="width:15rem;flex-shrink:0;">
+        <div class="demo-brand">
+            <span class="demo-brand-dot"></span>
+            Glassy.UI
+        </div>
+
+        <nav class="demo-nav">
+            <div class="demo-nav-group">Getting started</div>
+            <DemoLink Href="" Icon="@SIcons.Home" Match="NavLinkMatch.All">Overview</DemoLink>
+
+            <div class="demo-nav-group">Inputs</div>
+            <DemoLink Href="button" Icon="@SIcons.Cursor">Button</DemoLink>
+            <DemoLink Href="input" Icon="@SIcons.Type">Input</DemoLink>
+            <DemoLink Href="textarea" Icon="@SIcons.Lines">TextArea</DemoLink>
+            <DemoLink Href="checkbox" Icon="@SIcons.Check">Checkbox</DemoLink>
+            <DemoLink Href="switch" Icon="@SIcons.Toggle">Switch</DemoLink>
+            <DemoLink Href="select" Icon="@SIcons.List">Select</DemoLink>
+            <DemoLink Href="datepicker" Icon="@SIcons.Calendar">DatePicker</DemoLink>
+
+            <div class="demo-nav-group">Primitives</div>
+            <DemoLink Href="icon" Icon="@SIcons.Star">Icon</DemoLink>
+            <DemoLink Href="popover" Icon="@SIcons.Layers">Popover</DemoLink>
+
+            <div class="demo-nav-group">Other</div>
+            <DemoLink Href="theming" Icon="@SIcons.Palette">Theming</DemoLink>
+            <DemoLink Href="form" Icon="@SIcons.Clipboard">Full form</DemoLink>
+        </nav>
+    </aside>
+
+    <div class="demo-content">
+        <header class="demo-topbar">
+            <SThemeToggle />
+        </header>
+        <main class="demo-main">
+            @Body
+        </main>
+    </div>
 </div>

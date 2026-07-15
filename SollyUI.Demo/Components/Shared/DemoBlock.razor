@@ -1,0 +1,36 @@
+﻿<section class="demo-block">
+    <div class="demo-block-head">
+        <h3>@Title</h3>
+        @if (!string.IsNullOrEmpty(Description))
+        {
+            <p class="demo-block-desc">@Description</p>
+        }
+    </div>
+
+    <div class="demo-preview s-glass">
+        @ChildContent
+    </div>
+
+    @if (!string.IsNullOrEmpty(Code))
+    {
+        <div class="demo-code-wrap">
+            <button class="demo-code-toggle" @onclick="() => _show = !_show">
+                <SIcon Name="@SIcons.Code" Size="13" />
+                @(_show ? "Hide code" : "Show code")
+            </button>
+            @if (_show)
+            {
+                <pre class="demo-code"><code>@Code</code></pre>
+            }
+        </div>
+    }
+</section>
+
+@code {
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string? Description { get; set; }
+    [Parameter] public string? Code { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private bool _show;
+}

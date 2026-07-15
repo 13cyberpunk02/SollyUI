@@ -1,0 +1,108 @@
+﻿@page "/popover"
+@using SollyUI.Demo.Components.Shared
+
+<DemoPage Title="Popover" Subtitle="The primitive behind Select and DatePicker. Handles positioning, viewport flipping, outside-click and Escape.">
+
+    <DemoBlock Title="Basic" Code="@_basicCode">
+        <SPopover @ref="_p1">
+            <Anchor>
+                <SButton OnClick="() => _p1.ToggleAsync()">Open popover</SButton>
+            </Anchor>
+            <ChildContent>
+                <div class="demo-pop">
+                    <strong>Panel</strong>
+                    <p>Click outside or press Escape to dismiss.</p>
+                </div>
+            </ChildContent>
+        </SPopover>
+    </DemoBlock>
+
+    <DemoBlock Title="Menu" Code="@_menuCode">
+        <div class="demo-col">
+            <SPopover @ref="_p2">
+                <Anchor>
+                    <SButton Icon="@SIcons.List" OnClick="() => _p2.ToggleAsync()">Actions</SButton>
+                </Anchor>
+                <ChildContent>
+                    <div class="demo-menu">
+                        <button @onclick="@(() => Pick("Edit"))"><SIcon Name="@SIcons.Type" Size="14" /> Edit</button>
+                        <button @onclick="@(() => Pick("Duplicate"))"><SIcon Name="@SIcons.Layers" Size="14" /> Duplicate</button>
+                        <button @onclick="@(() => Pick("Delete"))"><SIcon Name="@SIcons.X" Size="14" /> Delete</button>
+                    </div>
+                </ChildContent>
+            </SPopover>
+            <span class="demo-note">Last: @(_picked ?? "—")</span>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Viewport flipping"
+               Description="Scroll so the button is near the bottom, then open. The panel flips above the anchor."
+               Code="@_flipCode">
+        <div class="demo-scroll">
+            <div style="height: 220px;"></div>
+            <SPopover @ref="_p3">
+                <Anchor>
+                    <SButton OnClick="() => _p3.ToggleAsync()">Open near the edge</SButton>
+                </Anchor>
+                <ChildContent>
+                    <div class="demo-pop" style="width: 14rem;">
+                        <strong>Flipped</strong>
+                        <p>Positioning is measured against the viewport.</p>
+                    </div>
+                </ChildContent>
+            </SPopover>
+            <div style="height: 220px;"></div>
+        </div>
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    SPopover? _p1, _p2, _p3;
+    string? _picked;
+
+    async Task Pick(string action)
+    {
+        _picked = action;
+        if (_p2 is not null) await _p2.CloseAsync();
+    }
+
+    const string _basicCode = """
+<SPopover @ref="_pop">
+    <Anchor>
+        <SButton OnClick="() => _pop!.ToggleAsync()">Open</SButton>
+    </Anchor>
+    <ChildContent>
+        <div style="padding:1rem;">Panel content</div>
+    </ChildContent>
+</SPopover>
+
+@code {
+    SPopover? _pop;
+}
+""";
+
+    const string _menuCode = """
+<SPopover @ref="_pop">
+    <Anchor>
+        <SButton Icon="@SIcons.List" OnClick="() => _pop!.ToggleAsync()">Actions</SButton>
+    </Anchor>
+    <ChildContent>
+        <button @onclick="@(() => Pick("Edit"))">Edit</button>
+    </ChildContent>
+</SPopover>
+
+@code {
+    async Task Pick(string a)
+    {
+        _picked = a;
+        await _pop!.CloseAsync();
+    }
+}
+""";
+
+    const string _flipCode = """
+@* No configuration needed — flipping is automatic. *@
+<SPopover @ref="_pop">…</SPopover>
+""";
+}
