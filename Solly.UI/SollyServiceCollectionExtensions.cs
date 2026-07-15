@@ -12,6 +12,7 @@ public static class SollyServiceCollectionExtensions
         services.Configure(configure ?? (_ => { }));
         services.AddScoped<SollyInterop>();
         services.AddScoped<SollyThemeService>();
+        services.AddScoped<SToastService>();
         return services;
     }
 }

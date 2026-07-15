@@ -1,0 +1,256 @@
+﻿@page "/toast"
+@using SollyUI.Demo.Components.Shared
+@inject SToastService Toasts
+@inject NavigationManager Nav
+
+<DemoPage Title="Toast" Subtitle="Injected service, six positions, auto-dismiss with a progress bar.">
+
+    <DemoBlock Title="Setup"
+               Description="Add GToastHost once in your layout, then inject GToastService anywhere."
+               Code="@_setupCode">
+        <p class="demo-note">This demo has the host mounted in <code>MainLayout.razor</code>.</p>
+    </DemoBlock>
+
+    <DemoBlock Title="Levels" Code="@_levelCode">
+        <div class="demo-row">
+            <SButton OnClick='() => Toasts.Info("{Deployment started")'>Info</SButton>
+            <SButton Variant="SVariant.Primary" OnClick='() => Toasts.Success("Changes saved")'>Success</SButton>
+            <SButton OnClick='() => Toasts.Warning("Your session expires in 5 minutes")'>Warning</SButton>
+            <SButton Variant="SVariant.Danger" OnClick='() => Toasts.Error("Could not reach the server")'>Error</SButton>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="With a title" Code="@_titleCode">
+        <div class="demo-row">
+            <SButton OnClick="@(() => Toasts.Success("All 42 records were imported.", "Import complete"))">
+                Success
+            </SButton>
+            <SButton Variant="SVariant.Danger"
+                     OnClick="@(() => Toasts.Error("The connection timed out after 30s.", "Request failed"))">
+                Error
+            </SButton>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Position"
+               Description="Set on GToastHost. Changing it here updates the layout live."
+               Code="@_posCode">
+        <div class="demo-col">
+            <div class="demo-pos-grid">
+                @foreach (var p in _positions)
+                {
+                    <SButton Variant="@(_layout?.ToastPosition == p ? SVariant.Primary : SVariant.Default)"
+                             OnClick="() => SetPos(p)">
+                        @Label(p)
+                    </SButton>
+                }
+            </div>
+            <SButton Icon="@SIcons.Info" OnClick="@(() => Toasts.Info($"Now at {Label(_layout!.ToastPosition)}"))">
+                Fire a toast
+            </SButton>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Duration"
+               Description="Hover a toast to pause its timer. DurationMs=0 makes it stick until dismissed."
+               Code="@_durCode">
+        <div class="demo-row">
+            <SButton OnClick="@(() => Show(1500, "Gone in 1.5s"))">1.5s</SButton>
+            <SButton OnClick="@(() => Show(4000, "Default — 4s"))">4s</SButton>
+            <SButton OnClick="@(() => Show(10000, "Plenty of time — 10s"))">10s</SButton>
+            <SButton OnClick="@(() => Show(0, "I stay until you dismiss me"))">Sticky</SButton>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Action button" Code="@_actionCode">
+        <div class="demo-col">
+            <SButton Icon="@SIcons.X" OnClick="DeleteAsync">Delete with undo</SButton>
+            <span class="demo-note">Items: @string.Join(", ", _items)</span>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Not dismissible" Code="@_noDismissCode">
+        <SButton OnClick="ShowProgress">Simulate a background job</SButton>
+    </DemoBlock>
+
+    <DemoBlock Title="Stacking & clearing" Code="@_stackCode">
+        <div class="demo-row">
+            <SButton OnClick="Spam">Fire 5 toasts</SButton>
+            <SButton Variant="SVariant.Ghost" OnClick="Toasts.Clear">Clear all</SButton>
+            <span class="demo-note">Active: @Toasts.Items.Count</span>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Real-world: save flow" Code="@_realCode">
+        <div class="demo-col">
+            <SInput @bind-Value="_name" Label="Name" Placeholder="Type a name…" Clearable />
+            <SButton Variant="SVariant.Primary" Icon="@SIcons.Check" OnClick="SaveAsync">Save</SButton>
+        </div>
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    [CascadingParameter] private MainLayout? _layout { get; set; }
+
+    string? _name;
+    List<string> _items = new() { "Alpha", "Beta", "Gamma" };
+
+    static readonly SToastPosition[] _positions =
+    {
+        SToastPosition.TopLeft, SToastPosition.TopCenter, SToastPosition.TopRight,
+        SToastPosition.BottomLeft, SToastPosition.BottomCenter, SToastPosition.BottomRight,
+    };
+
+    static string Label(SToastPosition p) => p switch
+    {
+        SToastPosition.TopLeft      => "Top left",
+        SToastPosition.TopCenter    => "Top center",
+        SToastPosition.TopRight     => "Top right",
+        SToastPosition.BottomLeft   => "Bottom left",
+        SToastPosition.BottomCenter => "Bottom center",
+        _                           => "Bottom right",
+    };
+
+    void SetPos(SToastPosition p) => _layout?.SetToastPosition(p);
+
+    void Show(int ms, string text) =>
+        Toasts.Show(new SToastMessage { Text = text, DurationMs = ms, Level = SToastLevel.Info });
+
+    async Task DeleteAsync()
+    {
+        if (_items.Count == 0) { Toasts.Warning("Nothing left to delete"); return; }
+
+        var removed = _items[^1];
+        _items.RemoveAt(_items.Count - 1);
+
+        Toasts.Show(new SToastMessage
+        {
+            Text = $"\"{removed}\" deleted",
+            Level = SToastLevel.Info,
+            DurationMs = 6000,
+            ActionText = "Undo",
+            OnAction = () =>
+            {
+                _items.Add(removed);
+                Toasts.Success($"\"{removed}\" restored");
+                return InvokeAsync(StateHasChanged);
+            }
+        });
+
+        await Task.CompletedTask;
+    }
+
+    void ShowProgress() =>
+        Toasts.Show(new SToastMessage
+        {
+            Title = "Exporting",
+            Text = "Your report is being generated…",
+            Level = SToastLevel.Info,
+            DurationMs = 3000,
+            Dismissible = false
+        });
+
+    void Spam()
+    {
+        for (var i = 1; i <= 5; i++)
+            Toasts.Info($"Toast #{i}");
+    }
+
+    async Task SaveAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_name))
+        {
+            Toasts.Warning("Name cannot be empty");
+            return;
+        }
+
+        await Task.Delay(700);
+        Toasts.Success($"Saved \"{_name}\"", "Done");
+        _name = null;
+    }
+
+    const string _setupCode = """// Program.cs — registered by AddGlassyUI()builder.Services.AddGlassyUI();@* MainLayout.razor — mount once *@<GToastHost Position="SToastPosition.BottomRight" />@* anywhere *@@inject SToastService Toasts """;
+
+    const string _levelCode = """
+@inject GToastService Toasts
+
+Toasts.Info("Deployment started");
+Toasts.Success("Changes saved");
+Toasts.Warning("Your session expires in 5 minutes");
+Toasts.Error("Could not reach the server");   // 7s by default
+""";
+
+    const string _titleCode = """
+Toasts.Success("All 42 records were imported.", "Import complete");
+Toasts.Error("The connection timed out after 30s.", "Request failed");
+""";
+
+    const string _posCode = """<GToastHost Position="SToastPosition.TopRight" />@* TopLeft · TopCenter · TopRightBottomLeft · BottomCenter · BottomRight *@ """;
+
+    const string _durCode = """
+Toasts.Show(new SToastMessage
+{
+    Text = "Gone in 1.5s",
+    DurationMs = 1500
+});
+
+// 0 = stays until dismissed
+Toasts.Show(new SToastMessage { Text = "Sticky", DurationMs = 0 });
+""";
+
+    const string _actionCode = """
+Toasts.Show(new SToastMessage
+{
+    Text = $"\"{removed}\" deleted",
+    DurationMs = 6000,
+    ActionText = "Undo",
+    OnAction = () =>
+    {
+        _items.Add(removed);
+        Toasts.Success("Restored");
+        return InvokeAsync(StateHasChanged);
+    }
+});
+""";
+
+    const string _noDismissCode = """
+Toasts.Show(new SToastMessage
+{
+    Title = "Exporting",
+    Text = "Your report is being generated…",
+    DurationMs = 3000,
+    Dismissible = false      // no X button
+});
+""";
+
+    const string _stackCode = """
+for (var i = 1; i <= 5; i++)
+    Toasts.Info($"Toast #{i}");
+
+Toasts.Clear();
+Toasts.Remove(someId);
+""";
+
+    const string _realCode = """
+async Task SaveAsync()
+{
+    if (string.IsNullOrWhiteSpace(_name))
+    {
+        Toasts.Warning("Name cannot be empty");
+        return;
+    }
+
+    try
+    {
+        await Http.PostAsJsonAsync("/api/items", _name);
+        Toasts.Success($"Saved \"{_name}\"", "Done");
+        _name = null;
+    }
+    catch (HttpRequestException ex)
+    {
+        Toasts.Error(ex.Message, "Save failed");
+    }
+}
+""";
+}

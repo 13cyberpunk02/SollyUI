@@ -16,7 +16,7 @@ body {
     background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%) fixed;
 }
 
-.demo-shell  { min-height: 100vh; display: flex; flex-direction: column; }
+
 .demo-header {
     display: flex; align-items: center; justify-content: space-between;
     padding: 1rem 1.5rem;
@@ -34,7 +34,7 @@ h1, h2 { color: var(--s-text); font-weight: 600; }
 /* ============ shell ============ */
 .demo-shell {
     display: flex;
-    min-height: 100vh;
+    min-height: 100vh;     
 }
 
 .demo-sidebar {
@@ -297,3 +297,13 @@ h1, h2 { color: var(--s-text); font-weight: 600; }
     .demo-link.active { border-left: none; border-bottom-color: var(--s-accent); }
     .demo-main { padding: 0 1rem 3rem; }
 }
+
+.demo-page { display: flex; flex-direction: column; }
+
+.demo-pos-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .5rem;
+    max-width: 30rem;
+}
+.demo-pos-grid .s-btn { width: 100%; font-size: .78rem; padding: .5rem .4rem; }

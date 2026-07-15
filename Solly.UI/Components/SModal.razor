@@ -1,0 +1,200 @@
+﻿@inherits SComponentBase
+@using Solly.UI.Core.Interop
+@implements IAsyncDisposable
+@inject SollyInterop Interop
+
+@if (_rendered)
+{
+    <div @ref="_root" class="s-modal-root @(_visible ? "s-in" : "s-out")">
+        <div class="s-modal-backdrop" @onclick="OnBackdropAsync"></div>
+
+        <div @ref="_dialog"
+             class="@Cls("s-modal", "s-glass", SizeClass)"
+             style="@Style"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="@($"{Uid}-t")"
+             tabindex="-1"
+             @attributes="Attributes">
+
+            @if (!string.IsNullOrEmpty(Title) || HeaderContent is not null || Closable)
+            {
+                <header class="s-modal-head">
+                    <div class="s-modal-title" id="@($"{Uid}-t")">
+                        @if (HeaderContent is not null)
+                        {
+                            @HeaderContent
+                        }
+                        else
+                        {
+                            @Title
+                        }
+                    </div>
+
+                    @if (Closable)
+                    {
+                        <button type="button" class="s-modal-x" aria-label="Close"
+                                @onclick="() => CloseAsync()">
+                            <SIcon Name="@SIcons.X" Size="16" />
+                        </button>
+                    }
+                </header>
+            }
+
+            <div class="s-modal-body">
+                @ChildContent
+            </div>
+
+            @if (FooterContent is not null)
+            {
+                <footer class="s-modal-foot">
+                    @FooterContent
+                </footer>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public RenderFragment? HeaderContent { get; set; }
+    [Parameter] public RenderFragment? FooterContent { get; set; }
+
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public SModalSize Size { get; set; } = SModalSize.Medium;
+
+    /// <summary>Show the X button and allow Escape to close.</summary>
+    [Parameter] public bool Closable { get; set; } = true;
+
+    /// <summary>Close when the backdrop is clicked.</summary>
+    [Parameter] public bool CloseOnBackdrop { get; set; } = true;
+
+    [Parameter] public EventCallback<bool> OpenChanged { get; set; }
+
+    /// <summary>Return false to cancel closing.</summary>
+    [Parameter] public Func<Task<bool>>? OnClosing { get; set; }
+
+    private ElementReference _root;
+    private ElementReference _dialog;
+
+    private bool _rendered;   // in DOM
+    private bool _visible;    // animation state
+    private bool _needsSetup;
+
+    private DotNetObjectReference<SModal>? _self;
+    private IJSObjectReference? _trap;
+    private IJSObjectReference? _lock;
+    private TaskCompletionSource<bool>? _result;
+
+    public bool IsOpen => _rendered;
+
+    private string SizeClass => Size switch
+    {
+        SModalSize.Small      => "s-modal-sm",
+        SModalSize.Large      => "s-modal-lg",
+        SModalSize.FullScreen => "s-modal-full",
+        _                     => "s-modal-md"
+    };
+
+    public async Task OpenAsync()
+    {
+        if (_rendered) return;
+
+        _rendered = true;
+        _needsSetup = true;
+        StateHasChanged();
+
+        // let the element mount, then flip the animation class
+        await Task.Yield();
+        _visible = true;
+        StateHasChanged();
+
+        await OpenChanged.InvokeAsync(true);
+    }
+
+    /// <summary>Opens and waits for a result. Returns false if dismissed.</summary>
+    public async Task<bool> ShowAsync()
+    {
+        _result = new TaskCompletionSource<bool>();
+        await OpenAsync();
+        return await _result.Task;
+    }
+
+    public async Task CloseAsync(bool result = false)
+    {
+        if (!_rendered) return;
+
+        if (OnClosing is not null && !await OnClosing())
+            return;
+
+        _visible = false;
+        StateHasChanged();
+
+        await Task.Delay(160);   // match --s-dur
+
+        await TeardownAsync();
+
+        _rendered = false;
+        StateHasChanged();
+
+        _result?.TrySetResult(result);
+        _result = null;
+
+        await OpenChanged.InvokeAsync(false);
+    }
+
+    [JSInvokable]
+    public async Task OnEscapeAsync()
+    {
+        if (!Closable) return;
+        await CloseAsync();
+        StateHasChanged();
+    }
+
+    private async Task OnBackdropAsync()
+    {
+        if (!CloseOnBackdrop || !Closable) return;
+        await CloseAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_needsSetup || !_rendered) return;
+        _needsSetup = false;
+
+        try
+        {
+            _lock = await Interop.LockScrollAsync();
+            _self ??= DotNetObjectReference.Create(this);
+            _trap = await Interop.TrapFocusAsync(_dialog, _self);
+        }
+        catch (JSException ex)
+        {
+            Console.Error.WriteLine($"[Glassy] modal setup failed: {ex.Message}");
+        }
+    }
+
+    private async ValueTask TeardownAsync()
+    {
+        await DisposeRefAsync(_trap);
+        _trap = null;
+        await DisposeRefAsync(_lock);
+        _lock = null;
+    }
+
+    private static async ValueTask DisposeRefAsync(IJSObjectReference? r)
+    {
+        if (r is null) return;
+        try { await r.InvokeVoidAsync("dispose"); await r.DisposeAsync(); }
+        catch (JSDisconnectedException) { }
+        catch (ObjectDisposedException) { }
+        catch (TaskCanceledException) { }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await TeardownAsync();
+        _self?.Dispose();
+        _result?.TrySetResult(false);
+    }
+}

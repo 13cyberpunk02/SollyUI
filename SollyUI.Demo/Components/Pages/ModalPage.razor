@@ -1,0 +1,324 @@
+﻿@page "/modal"
+@using SollyUI.Demo.Components.Shared
+@inject SToastService Toasts
+
+<DemoPage Title="Modal" Subtitle="Focus-trapped dialog with scroll lock, backdrop dismiss and Escape.">
+
+    <DemoBlock Title="Basic" Code="@_basicCode">
+        <div class="demo-col">
+            <SButton OnClick="() => _basic.OpenAsync()">Open modal</SButton>
+
+            <SModal @ref="_basic" Title="Hello">
+                <ChildContent>
+                    <p>A plain modal. Click the backdrop, press Escape, or use the X to close.</p>
+                </ChildContent>
+            </SModal>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Confirm dialog"
+               Description="ShowAsync() returns a bool — true if confirmed, false if dismissed."
+               Code="@_confirmCode">
+        <div class="demo-col">
+            <SButton Variant="SVariant.Danger" Icon="@SIcons.X" OnClick="ConfirmAsync">
+                Delete item
+            </SButton>
+            <span class="demo-note">Last result: @(_confirmed?.ToString() ?? "—")</span>
+
+            <SModal @ref="_confirm" Title="Delete item?" Size="SModalSize.Small">
+                <ChildContent>
+                    <p>This action cannot be undone. The item will be permanently removed.</p>
+                </ChildContent>
+                <FooterContent>
+                    <SButton Variant="SVariant.Ghost" OnClick="() => _confirm.CloseAsync(false)">
+                        Cancel
+                    </SButton>
+                    <SButton Variant="SVariant.Danger" OnClick="() => _confirm.CloseAsync(true)">
+                        Delete
+                    </SButton>
+                </FooterContent>
+            </SModal>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Sizes" Code="@_sizeCode">
+        <div class="demo-row">
+            <SButton OnClick="() => _sm.OpenAsync()">Small</SButton>
+            <SButton OnClick="() => _md.OpenAsync()">Medium</SButton>
+            <SButton OnClick="() => _lg.OpenAsync()">Large</SButton>
+            <SButton OnClick="() => _full.OpenAsync()">Full screen</SButton>
+        </div>
+
+        <SModal @ref="_sm" Title="Small" Size="SModalSize.Small">
+            <ChildContent><p>max-width: 22rem</p></ChildContent>
+        </SModal>
+        <SModal @ref="_md" Title="Medium" Size="SModalSize.Medium">
+            <ChildContent><p>max-width: 32rem — the default.</p></ChildContent>
+        </SModal>
+        <SModal @ref="_lg" Title="Large" Size="SModalSize.Large">
+            <ChildContent><p>max-width: 48rem</p></ChildContent>
+        </SModal>
+        <SModal @ref="_full" Title="Full screen" Size="SModalSize.FullScreen">
+            <ChildContent><p>Fills the viewport.</p></ChildContent>
+        </SModal>
+    </DemoBlock>
+
+    <DemoBlock Title="Form inside a modal"
+               Description="Tab is trapped inside the dialog. Focus returns to the trigger on close."
+               Code="@_formCode">
+        <div class="demo-col">
+            <SButton Icon="@SIcons.Type" OnClick="() => _form.OpenAsync()">Edit profile</SButton>
+            <span class="demo-note">Saved: @(_saved ?? "—")</span>
+
+            <SModal @ref="_form" Title="Edit profile">
+                <ChildContent>
+                    <div class="demo-col" style="max-width:none;">
+                        <SInput @bind-Value="_draft.Name" Label="Name" Clearable />
+                        <SInput @bind-Value="_draft.Email" Label="Email" Type="email" Clearable />
+                        <SSelect TValue="string" Items="_roles" @bind-Value="_draft.Role"
+                                 Label="Role" Searchable />
+                        <STextArea @bind-Value="_draft.Bio" Label="Bio" Rows="3" MaxLength="120" />
+                    </div>
+                </ChildContent>
+                <FooterContent>
+                    <SButton Variant="SVariant.Ghost" OnClick="() => _form.CloseAsync()">Cancel</SButton>
+                    <SButton Variant="SVariant.Primary" Icon="@SIcons.Check" OnClick="SaveAsync">Save</SButton>
+                </FooterContent>
+            </SModal>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Scrolling content"
+               Description="The body scrolls; the header and footer stay put. Page scroll is locked while open."
+               Code="@_scrollCode">
+        <div class="demo-col">
+            <SButton OnClick="() => _long.OpenAsync()">Open long modal</SButton>
+
+            <SModal @ref="_long" Title="Terms of service">
+                <ChildContent>
+                    @for (var i = 1; i <= 12; i++)
+                    {
+                        <p><strong>@i.</strong> @_lorem</p>
+                    }
+                </ChildContent>
+                <FooterContent>
+                    <SButton Variant="SVariant.Ghost" OnClick="() => _long.CloseAsync()">Decline</SButton>
+                    <SButton Variant="SVariant.Primary" OnClick="() => _long.CloseAsync(true)">Accept</SButton>
+                </FooterContent>
+            </SModal>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Non-dismissible"
+               Description="Closable=false removes the X and blocks Escape. The only way out is your own button."
+               Code="@_lockedCode">
+        <div class="demo-col">
+            <SButton OnClick="() => _locked.OpenAsync()">Open locked modal</SButton>
+
+            <SModal @ref="_locked" Title="Action required" Closable="false" Size="SModalSize.Small">
+                <ChildContent>
+                    <p>You must choose an option to continue. Escape and backdrop clicks are disabled.</p>
+                </ChildContent>
+                <FooterContent>
+                    <SButton Variant="SVariant.Primary" OnClick="() => _locked.CloseAsync(true)">
+                        Understood
+                    </SButton>
+                </FooterContent>
+            </SModal>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Guarded close"
+               Description="OnClosing returns false to cancel. Try closing with unsaved text."
+               Code="@_guardCode">
+        <div class="demo-col">
+            <SButton OnClick="() => _guard.OpenAsync()">Open guarded modal</SButton>
+
+            <SModal @ref="_guard" Title="Draft" OnClosing="GuardAsync">
+                <ChildContent>
+                    <STextArea @bind-Value="_guardText" Label="Notes" Rows="3"
+                               Placeholder="Type something, then try to close…" />
+                </ChildContent>
+                <FooterContent>
+                    <SButton Variant="SVariant.Ghost" OnClick="Discard">Discard</SButton>
+                    <SButton Variant="SVariant.Primary" OnClick="() => _guard.CloseAsync(true)">Save</SButton>
+                </FooterContent>
+            </SModal>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Custom header" Code="@_headerCode">
+        <div class="demo-col">
+            <SButton OnClick="() => _custom.OpenAsync()">Open</SButton>
+
+            <SModal @ref="_custom">
+                <HeaderContent>
+                    <span style="display:flex;align-items:center;gap:.5rem;">
+                        <SIcon Name="@SIcons.Star" Size="18" Style="color: var(--s-accent);" />
+                        Custom header
+                    </span>
+                </HeaderContent>
+                <ChildContent>
+                    <p>HeaderContent replaces the Title text entirely.</p>
+                </ChildContent>
+            </SModal>
+        </div>
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    class Profile
+    {
+        public string? Name { get; set; } = "Jane Doe";
+        public string? Email { get; set; } = "jane@example.com";
+        public string? Role { get; set; } = "Developer";
+        public string? Bio { get; set; }
+    }
+
+    SModal? _basic, _confirm, _sm, _md, _lg, _full, _form, _long, _locked, _guard, _custom;
+
+    bool? _confirmed;
+    string? _saved;
+    string? _guardText;
+
+    Profile _draft = new();
+    string[] _roles = { "Developer", "Designer", "Manager", "QA", "DevOps" };
+
+    const string _lorem = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
+
+    async Task ConfirmAsync()
+    {
+        _confirmed = await _confirm!.ShowAsync();
+        if (_confirmed == true) Toasts.Success("Item deleted");
+    }
+
+    async Task SaveAsync()
+    {
+        _saved = $"{_draft.Name} · {_draft.Role}";
+        await _form!.CloseAsync(true);
+        Toasts.Success("Profile saved");
+    }
+
+    async Task<bool> GuardAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_guardText)) return true;
+        Toasts.Warning("You have unsaved changes. Use Discard or Save.");
+        return false;
+    }
+
+    async Task Discard()
+    {
+        _guardText = null;
+        await _guard!.CloseAsync();
+    }
+
+    const string _basicCode = """
+<SButton OnClick="() => _modal!.OpenAsync()">Open modal</SButton>
+
+<SModal @ref="_modal" Title="Hello">
+    <ChildContent>
+        <p>A plain modal.</p>
+    </ChildContent>
+</SModal>
+
+@code {
+    SModal? _modal;
+}
+""";
+
+    const string _confirmCode = """
+<SModal @ref="_confirm" Title="Delete item?" Size="SModalSize.Small">
+    <ChildContent>
+        <p>This action cannot be undone.</p>
+    </ChildContent>
+    <FooterContent>
+        <SButton Variant="SVariant.Ghost" OnClick="() => _confirm!.CloseAsync(false)">Cancel</SButton>
+        <SButton Variant="SVariant.Danger" OnClick="() => _confirm!.CloseAsync(true)">Delete</SButton>
+    </FooterContent>
+</SModal>
+
+@code {
+    SModal? _confirm;
+
+    async Task ConfirmAsync()
+    {
+        if (await _confirm!.ShowAsync())
+            Toasts.Success("Deleted");
+    }
+}
+""";
+
+    const string _sizeCode = """
+<SModal Size="SModalSize.Small">…</SModal>       @* 22rem *@
+<SModal Size="SModalSize.Medium">…</SModal>      @* 32rem — default *@
+<SModal Size="SModalSize.Large">…</SModal>       @* 48rem *@
+<SModal Size="SModalSize.FullScreen">…</SModal>
+""";
+
+    const string _formCode = """
+<SModal @ref="_form" Title="Edit profile">
+    <ChildContent>
+        <SInput @bind-Value="_draft.Name" Label="Name" Clearable />
+        <SSelect TValue="string" Items="_roles" @bind-Value="_draft.Role" Label="Role" />
+    </ChildContent>
+    <FooterContent>
+        <SButton Variant="SVariant.Ghost" OnClick="() => _form!.CloseAsync()">Cancel</SButton>
+        <SButton Variant="SVariant.Primary" OnClick="SaveAsync">Save</SButton>
+    </FooterContent>
+</SModal>
+""";
+
+    const string _scrollCode = """
+@* Header and footer are pinned; only ChildContent scrolls. *@
+<SModal @ref="_long" Title="Terms of service">
+    <ChildContent>
+        @for (var i = 0; i < 12; i++) { <p>…</p> }
+    </ChildContent>
+    <FooterContent>
+        <SButton Variant="SVariant.Primary" OnClick="() => _long!.CloseAsync(true)">Accept</SButton>
+    </FooterContent>
+</SModal>
+""";
+
+    const string _lockedCode = """
+<SModal @ref="_locked" Title="Action required" Closable="false">
+    <ChildContent>
+        <p>You must choose an option to continue.</p>
+    </ChildContent>
+    <FooterContent>
+        <SButton Variant="SVariant.Primary" OnClick="() => _locked!.CloseAsync(true)">Understood</SButton>
+    </FooterContent>
+</SModal>
+""";
+
+    const string _guardCode = """
+<SModal @ref="_guard" Title="Draft" OnClosing="GuardAsync">
+    <ChildContent>
+        <STextArea @bind-Value="_text" Label="Notes" Rows="3" />
+    </ChildContent>
+</SModal>
+
+@code {
+    // return false to cancel the close
+    async Task<bool> GuardAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_text)) return true;
+        Toasts.Warning("You have unsaved changes.");
+        return false;
+    }
+}
+""";
+
+    const string _headerCode = """
+<SModal @ref="_modal">
+    <HeaderContent>
+        <span style="display:flex;align-items:center;gap:.5rem;">
+            <SIcon Name="@SIcons.Star" Size="18" />
+            Custom header
+        </span>
+    </HeaderContent>
+    <ChildContent>…</ChildContent>
+</SModal>
+""";
+}

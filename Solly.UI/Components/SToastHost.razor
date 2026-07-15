@@ -1,0 +1,27 @@
+﻿@implements IDisposable
+@inject SToastService Toasts
+
+<div class="s-toast-host @PositionClass">
+    @foreach (var t in Toasts.Items)
+    {
+        <SToastItem Message="t" @key="t.Id" />
+    }
+</div>
+
+@code {
+    [Parameter] public SToastPosition Position { get; set; } = SToastPosition.BottomRight;
+
+    private string PositionClass => Position switch
+    {
+        SToastPosition.TopLeft      => "s-toast-tl",
+        SToastPosition.TopCenter    => "s-toast-tc",
+        SToastPosition.TopRight     => "s-toast-tr",
+        SToastPosition.BottomLeft   => "s-toast-bl",
+        SToastPosition.BottomCenter => "s-toast-bc",
+        _                           => "s-toast-br"
+    };
+
+    protected override void OnInitialized() => Toasts.Changed += OnChanged;
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+    public void Dispose() => Toasts.Changed -= OnChanged;
+}

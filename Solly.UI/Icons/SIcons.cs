@@ -26,4 +26,8 @@ public static class SIcons
     public const string Palette   = "<path d='M12 3a9 9 0 1 0 0 18c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.2 0-1.1.9-2 2-2h2.5A4.5 4.5 0 0 0 22 10c0-3.9-4.5-7-10-7Z'/><circle cx='7.5' cy='10.5' r='1'/><circle cx='12' cy='7.5' r='1'/><circle cx='16.5' cy='10.5' r='1'/>";
     public const string Clipboard = "<rect x='8' y='3' width='8' height='4' rx='1'/><path d='M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2'/>";
     public const string Code      = "<path d='m9 18-6-6 6-6M15 6l6 6-6 6'/>";
+    public const string Info    = "<circle cx='12' cy='12' r='9'/><path d='M12 11v5M12 8h.01'/>";
+    public const string Warning = "<path d='M10.3 3.9 1.9 18a2 2 0 0 0 1.7 3h16.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z'/><path d='M12 9v4M12 17h.01'/>";
+    public const string CheckCircle = "<circle cx='12' cy='12' r='9'/><path d='m8.5 12 2.5 2.5 4.5-5'/>";
+    public const string XCircle = "<circle cx='12' cy='12' r='9'/><path d='m15 9-6 6M9 9l6 6'/>";
 }

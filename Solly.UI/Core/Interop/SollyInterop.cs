@@ -86,4 +86,38 @@ public sealed class SollyInterop(IJSRuntime js) : IAsyncDisposable
         catch (JSDisconnectedException) { return null; }
         catch (ObjectDisposedException) { return null; }
     }
+    
+    public async ValueTask<IJSObjectReference?> PortalAsync(ElementReference el)
+    {
+        try
+        {
+            var m = await Module;
+            return await m.InvokeAsync<IJSObjectReference>("portal", el);
+        }
+        catch (JSDisconnectedException) { return null; }
+        catch (ObjectDisposedException) { return null; }
+    }
+    
+    public async ValueTask<IJSObjectReference?> TrapFocusAsync<T>(
+        ElementReference el, DotNetObjectReference<T> target) where T : class
+    {
+        try
+        {
+            var m = await Module;
+            return await m.InvokeAsync<IJSObjectReference>("trapFocus", el, target);
+        }
+        catch (JSDisconnectedException) { return null; }
+        catch (ObjectDisposedException) { return null; }
+    }
+
+    public async ValueTask<IJSObjectReference?> LockScrollAsync()
+    {
+        try
+        {
+            var m = await Module;
+            return await m.InvokeAsync<IJSObjectReference>("lockScroll");
+        }
+        catch (JSDisconnectedException) { return null; }
+        catch (ObjectDisposedException) { return null; }
+    }
 }

@@ -58,28 +58,19 @@
         await CloseAsync();
         StateHasChanged();
     }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (!_needsPosition || !_open) return;
-        _needsPosition = false;
-
-        try
-        {
-            await Interop.AnchorAsync(_panel, _anchor);
-            _self ??= DotNetObjectReference.Create(this);
-            _dismiss = await Interop.RegisterDismissAsync(_root, _self);
-        }
-        catch (JSDisconnectedException) { }
-        catch (ObjectDisposedException) { }
-        catch (JSException ex)
-        {
-            Console.Error.WriteLine($"[Glassy] popover interop failed: {ex.Message}");
-        }
-    }
-
+    
     private async ValueTask DisposeDismissAsync()
     {
+        if (_portal is not null)
+        {
+            var p = _portal;
+            _portal = null;
+            try { await p.InvokeVoidAsync("dispose"); await p.DisposeAsync(); }
+            catch (JSDisconnectedException) { }
+            catch (ObjectDisposedException) { }
+            catch (TaskCanceledException) { }
+        }
+
         if (_dismiss is null) return;
         var d = _dismiss;
         _dismiss = null;
@@ -93,5 +84,24 @@
     {
         await DisposeDismissAsync();
         _self?.Dispose();
+    }
+    
+    private IJSObjectReference? _portal;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_needsPosition || !_open) return;
+        _needsPosition = false;
+
+        try
+        {
+            _portal = await Interop.PortalAsync(_panel);
+            await Interop.AnchorAsync(_panel, _anchor);
+            _self ??= DotNetObjectReference.Create(this);
+            _dismiss = await Interop.RegisterDismissAsync(_root, _self);
+        }
+        catch (JSDisconnectedException) { }
+        catch (ObjectDisposedException) { }
+        catch (JSException ex) { Console.Error.WriteLine($"[Glassy] {ex.Message}"); }
     }
 }

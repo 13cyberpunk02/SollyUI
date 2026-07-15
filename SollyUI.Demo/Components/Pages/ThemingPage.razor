@@ -56,7 +56,7 @@
                     <SButton>Default</SButton>
                     <SSwitch Value="true" Label="Switch" />
                 </div>
-                <SInput Value="@("Sample text")" Label="Input" Icon="@SIcons.Search" />
+                <SInput @bind-Value="_sample" Label="Input" Icon="@SIcons.Search" />
             </div>
         </div>
     </DemoBlock>
@@ -81,6 +81,7 @@
     int _radius = 14;
     int _blur = 16;
 
+    string? _sample = "Sample text";
     void OnRadius(ChangeEventArgs e)
     {
         if (int.TryParse(e.Value?.ToString(), out var v)) _radius = v;

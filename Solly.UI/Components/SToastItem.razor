@@ -1,0 +1,116 @@
+﻿@implements IDisposable
+@inject SToastService Toasts
+
+<div class="s-toast s-glass @LevelClass @(_leaving ? "s-out" : "s-in")"
+     role="@(Message.Level == SToastLevel.Error ? "alert" : "status")"
+     @onmouseenter="Pause"
+     @onmouseleave="Resume">
+
+    <span class="s-toast-icon">
+        <SIcon Name="@LevelIcon" Size="16" />
+    </span>
+
+    <div class="s-toast-body">
+        @if (!string.IsNullOrEmpty(Message.Title))
+        {
+            <strong class="s-toast-title">@Message.Title</strong>
+        }
+        <span class="s-toast-text">@Message.Text</span>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Message.ActionText))
+    {
+        <button type="button" class="s-toast-action" @onclick="ActAsync">
+            @Message.ActionText
+        </button>
+    }
+
+    @if (Message.Dismissible)
+    {
+        <button type="button" class="s-toast-x" aria-label="Dismiss" @onclick="DismissAsync">
+            <SIcon Name="@SIcons.X" Size="13" />
+        </button>
+    }
+
+    @if (Message.DurationMs > 0)
+    {
+        <span class="s-toast-bar"
+              style="@($"animation-duration:{Message.DurationMs}ms;animation-play-state:{(_paused ? "paused" : "running")}")"></span>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public SToastMessage Message { get; set; } = default!;
+
+    private CancellationTokenSource? _cts;
+    private bool _leaving;
+    private bool _paused;
+    private int _remaining;
+
+    protected override void OnInitialized()
+    {
+        _remaining = Message.DurationMs;
+        if (_remaining > 0) _ = StartAsync();
+    }
+
+    private async Task StartAsync()
+    {
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            await Task.Delay(_remaining, token);
+            if (!token.IsCancellationRequested) await DismissAsync();
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private void Pause()
+    {
+        if (Message.DurationMs <= 0) return;
+        _paused = true;
+        _cts?.Cancel();
+    }
+
+    private void Resume()
+    {
+        if (Message.DurationMs <= 0) return;
+        _paused = false;
+        _ = StartAsync();
+    }
+
+    private async Task ActAsync()
+    {
+        if (Message.OnAction is not null) await Message.OnAction();
+        await DismissAsync();
+    }
+    
+    private string LevelClass => Message.Level switch
+    {
+        SToastLevel.Success => "s-toast-success",
+        SToastLevel.Warning => "s-toast-warning",
+        SToastLevel.Error   => "s-toast-error",
+        _                   => "s-toast-info"
+    };
+
+    private string LevelIcon => Message.Level switch
+    {
+        SToastLevel.Success => SIcons.CheckCircle,
+        SToastLevel.Warning => SIcons.Warning,
+        SToastLevel.Error   => SIcons.XCircle,
+        _                   => SIcons.Info
+    };
+
+    private async Task DismissAsync()
+    {
+        if (_leaving) return;
+        _leaving = true;
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(180);
+        Toasts.Remove(Message.Id);
+    }
+
+    public void Dispose() => _cts?.Cancel();
+}

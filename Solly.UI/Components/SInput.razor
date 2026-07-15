@@ -28,13 +28,17 @@
                 <SIcon Name="@SIcons.X" Size="14" />
             </button>
         }
+        
     </div>
 
     @if (!string.IsNullOrEmpty(Hint))
     {
         <div class="s-hint">@Hint</div>
     }
-    <ValidationMessage For="@ValueExpressionOrNull" class="s-error" />
+    @if (EditContext is not null && ValueExpression is not null)
+    {
+        <ValidationMessage For="@ValueExpression" class="s-error" />
+    }
 </div>
 
 @code {
@@ -62,7 +66,7 @@
         CurrentValueAsString = e.Value?.ToString();
         return Task.CompletedTask;
     }
-
+    
     private void Clear() => CurrentValueAsString = null;
 
     protected override bool TryParseValueFromString(

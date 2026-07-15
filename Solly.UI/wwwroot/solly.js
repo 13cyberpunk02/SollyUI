@@ -86,3 +86,72 @@ export function autoGrow(el) {
     el.addEventListener('input', resize);
     return { dispose: () => el.removeEventListener('input', resize) };
 }
+
+export function portal(el) {
+    if (!el || el.parentElement === document.body) return null;
+    const home = el.parentElement;
+    const next = el.nextSibling;
+    document.body.appendChild(el);
+    return {
+        dispose: () => {
+            try { home?.insertBefore(el, next); } catch { }
+        }
+    };
+}
+
+export function trapFocus(el, dotnet) {
+    if (!el) return null;
+
+    const prev = document.activeElement;
+    const SEL = 'a[href],button:not([disabled]),textarea:not([disabled]),input:not([disabled]):not([type=hidden]),select:not([disabled]),[tabindex]:not([tabindex="-1"])';
+
+    const items = () => Array.from(el.querySelectorAll(SEL)).filter(n => n.offsetParent !== null);
+
+    const onKey = (e) => {
+        if (e.key === 'Escape') { dotnet.invokeMethodAsync('OnEscapeAsync'); return; }
+        if (e.key !== 'Tab') return;
+
+        const list = items();
+        if (list.length === 0) { e.preventDefault(); return; }
+
+        const first = list[0];
+        const last = list[list.length - 1];
+
+        if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+        } else if (!el.contains(document.activeElement)) {
+            e.preventDefault();
+            first.focus();
+        }
+    };
+
+    el.addEventListener('keydown', onKey);
+
+    const list = items();
+    (list[0] ?? el).focus({ preventScroll: true });
+
+    return {
+        dispose: () => {
+            el.removeEventListener('keydown', onKey);
+            try { prev?.focus?.({ preventScroll: true }); } catch { }
+        }
+    };
+}
+
+export function lockScroll() {
+    const w = window.innerWidth - document.documentElement.clientWidth;
+    const prevOverflow = document.body.style.overflow;
+    const prevPad = document.body.style.paddingRight;
+    document.body.style.overflow = 'hidden';
+    if (w > 0) document.body.style.paddingRight = `${w}px`;
+    return {
+        dispose: () => {
+            document.body.style.overflow = prevOverflow;
+            document.body.style.paddingRight = prevPad;
+        }
+    };
+}
