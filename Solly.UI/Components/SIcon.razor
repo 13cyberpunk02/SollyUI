@@ -1,5 +1,17 @@
-﻿<h3>SIcon</h3>
+﻿@inherits SComponentBase
+
+<svg class="@Cls("s-icon")"
+     style="@Style"
+     viewBox="0 0 24 24"
+     width="@Size" height="@Size"
+     fill="none" stroke="currentColor" stroke-width="1.75"
+     stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true" focusable="false"
+     @attributes="Attributes">
+    @((MarkupString)Name)
+</svg>
 
 @code {
-    
+    [Parameter, EditorRequired] public string Name { get; set; } = "";
+    [Parameter] public int Size { get; set; } = 18;
 }

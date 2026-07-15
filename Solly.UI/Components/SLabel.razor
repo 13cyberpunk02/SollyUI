@@ -1,5 +1,12 @@
-﻿<h3>SLabel</h3>
+﻿@inherits SComponentBase
+
+<label class="@Cls("s-label")" style="@Style" for="@For" @attributes="Attributes">
+    @ChildContent
+    @if (Required) { <span class="s-req" aria-hidden="true">*</span> }
+</label>
 
 @code {
-    
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string? For { get; set; }
+    [Parameter] public bool Required { get; set; }
 }

@@ -1,5 +1,455 @@
-﻿<h3>SSelect</h3>
+﻿@typeparam TValue
+@inherits SComponentBase
+@using System.Linq.Expressions
+@using Solly.UI.Core.Interop
+@implements IDisposable
+@inject SollyInterop Interop
+
+<div class="s-field @Class" style="@Style">
+    @if (!string.IsNullOrEmpty(Label))
+    {
+        <SLabel Required="@Required">@Label</SLabel>
+    }
+
+    <SPopover @ref="_pop" OpenChanged="OnOpenChangedAsync">
+        <Anchor>
+            <div class="s-select-trigger s-glass @(Disabled ? "s-disabled" : null)"
+                 role="combobox"
+                 aria-expanded="@IsOpen"
+                 aria-haspopup="listbox"
+                 tabindex="@(Disabled ? -1 : 0)"
+                 @onclick="ToggleAsync"
+                 @onkeydown="OnTriggerKeyDownAsync">
+
+                @if (Multiple && _selected.Count > 0)
+                {
+                    <span class="s-select-chips">
+                        @foreach (var item in _selected.Take(MaxChips))
+                        {
+                            <span class="s-chip">
+                                <span class="s-chip-text">@DisplayOf(item)</span>
+                                <span class="s-chip-x"
+                                      role="button"
+                                      aria-label="Remove"
+                                      @onclick:stopPropagation="true"
+                                      @onclick="() => ToggleItemAsync(item)">
+                                    <SIcon Name="@SIcons.X" Size="11" />
+                                </span>
+                            </span>
+                        }
+                        @if (_selected.Count > MaxChips)
+                        {
+                            <span class="s-chip s-chip-more">+@(_selected.Count - MaxChips)</span>
+                        }
+                    </span>
+                }
+                else
+                {
+                    <span class="s-select-value @(HasValue ? null : "s-placeholder")">
+                        @(HasValue ? DisplayOf(Value!) : Placeholder)
+                    </span>
+                }
+
+                <span class="s-select-actions">
+                    @if (Clearable && HasAnySelection && !Disabled)
+                    {
+                        <span class="s-select-clear"
+                              role="button"
+                              aria-label="Clear"
+                              @onclick:stopPropagation="true"
+                              @onclick="ClearAsync">
+                            <SIcon Name="@SIcons.X" Size="13" />
+                        </span>
+                    }
+                    <SIcon Name="@SIcons.ChevronDown"
+                           Class="@($"s-select-caret {(IsOpen ? "s-open" : null)}")" />
+                </span>
+            </div>
+        </Anchor>
+
+        <ChildContent>
+            @if (Searchable)
+            {
+                <div class="s-select-search">
+                    <SIcon Name="@SIcons.Search" Size="14" Class="s-select-search-icon" />
+                    <input @ref="_search"
+                           class="s-select-search-input"
+                           type="text"
+                           placeholder="@SearchPlaceholder"
+                           value="@_query"
+                           @oninput="OnSearchAsync"
+                           @onkeydown="OnListKeyDownAsync" />
+                    @if (_loading)
+                    {
+                        <SIcon Name="@SIcons.Loader" Size="14" Class="s-spin s-select-search-icon" />
+                    }
+                </div>
+            }
+
+            <div @ref="_list" class="s-select-list" role="listbox"
+                 aria-multiselectable="@Multiple">
+                @if (_loading && _filtered.Count == 0)
+                {
+                    <div class="s-select-empty">@LoadingText</div>
+                }
+                else if (_filtered.Count == 0)
+                {
+                    <div class="s-select-empty">@EmptyText</div>
+                }
+                else
+                {
+                    @for (var i = 0; i < _filtered.Count; i++)
+                    {
+                        var idx = i;
+                        var item = _filtered[i];
+                        var selected = IsSelected(item);
+
+                        <div class="s-select-item @(idx == _active ? "s-active" : null) @(selected ? "s-selected" : null)"
+                             data-gidx="@idx"
+                             role="option"
+                             aria-selected="@selected"
+                             @onclick="() => ChooseAsync(item)"
+                             @onpointerenter="() => SetActive(idx)">
+
+                            @if (Multiple)
+                            {
+                                <span class="s-select-tick s-glass @(selected ? "s-on" : null)">
+                                    <SIcon Name="@SIcons.Check" Size="10" />
+                                </span>
+                            }
+
+                            <span class="s-select-item-text">
+                                @if (ItemTemplate is not null)
+                                {
+                                    @ItemTemplate(item)
+                                }
+                                else
+                                {
+                                    @DisplayOf(item)
+                                }
+                            </span>
+
+                            @if (!Multiple && selected)
+                            {
+                                <SIcon Name="@SIcons.Check" Size="14" Class="s-select-check" />
+                            }
+                        </div>
+                    }
+                }
+            </div>
+        </ChildContent>
+    </SPopover>
+
+    @if (!string.IsNullOrEmpty(Hint))
+    {
+        <div class="s-hint">@Hint</div>
+    }
+    @if (_edit is not null && ValueExpression is not null)
+    {
+        <ValidationMessage For="@ValueExpression" class="s-error" />
+    }
+</div>
 
 @code {
+    [CascadingParameter] private EditContext? _edit { get; set; }
+
+    // --- single ---
+    [Parameter] public TValue? Value { get; set; }
+    [Parameter] public EventCallback<TValue?> ValueChanged { get; set; }
+    [Parameter] public Expression<Func<TValue?>>? ValueExpression { get; set; }
+
+    // --- multiple ---
+    [Parameter] public IEnumerable<TValue>? Values { get; set; }
+    [Parameter] public EventCallback<IEnumerable<TValue>> ValuesChanged { get; set; }
+    [Parameter] public bool Multiple { get; set; }
+    [Parameter] public int MaxChips { get; set; } = 3;
+
+    // --- data ---
+    [Parameter] public IEnumerable<TValue>? Items { get; set; }
+
+    /// <summary>Async source. Receives the search query; called on open and on each keystroke (debounced).</summary>
+    [Parameter] public Func<string, CancellationToken, Task<IEnumerable<TValue>>>? ItemsProvider { get; set; }
+
+    [Parameter] public Func<TValue, string>? Display { get; set; }
+    [Parameter] public Func<TValue, string, bool>? Filter { get; set; }
+    [Parameter] public RenderFragment<TValue>? ItemTemplate { get; set; }
+    [Parameter] public IEqualityComparer<TValue> Comparer { get; set; } = EqualityComparer<TValue>.Default;
+
+    // --- ui ---
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public string? Hint { get; set; }
+    [Parameter] public string Placeholder { get; set; } = "Select…";
+    [Parameter] public string SearchPlaceholder { get; set; } = "Search…";
+    [Parameter] public string EmptyText { get; set; } = "No options";
+    [Parameter] public string LoadingText { get; set; } = "Loading…";
+    [Parameter] public bool Searchable { get; set; }
+    [Parameter] public bool Clearable { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public bool Required { get; set; }
+    [Parameter] public int DebounceMs { get; set; } = 250;
+
+    private SPopover? _pop;
+    private ElementReference _list;
+    private ElementReference _search;
+
+    private List<TValue> _all = [];
+    private List<TValue> _filtered = [];
+    private List<TValue> _selected = [];
+    private string _query = "";
+    private int _active = -1;
+    private bool _loading;
+    private bool _focusSearch;
+
+    private CancellationTokenSource? _cts;
+    private FieldIdentifier _field;
+
+    private bool IsOpen => _pop?.IsOpen == true;
+    private bool HasValue => !Multiple && Value is not null;
+    private bool HasAnySelection => Multiple ? _selected.Count > 0 : Value is not null;
+
+    private string DisplayOf(TValue v) => Display?.Invoke(v) ?? v?.ToString() ?? "";
+
+    protected override void OnParametersSet()
+    {
+        if (_edit is not null && ValueExpression is not null)
+            _field = FieldIdentifier.Create(ValueExpression);
+
+        _selected = Values?.ToList() ?? [];
+
+        if (ItemsProvider is null)
+        {
+            _all = Items?.ToList() ?? [];
+            ApplyFilter();
+        }
+    }
+
+    private bool IsSelected(TValue item) => Multiple
+        ? _selected.Any(x => Comparer.Equals(x, item))
+        : Value is not null && Comparer.Equals(item, Value);
+
+    private void ApplyFilter()
+    {
+        if (string.IsNullOrWhiteSpace(_query))
+        {
+            _filtered = _all.ToList();
+            return;
+        }
+
+        var q = _query.Trim();
+        _filtered = _all.Where(x => Filter is not null
+                ? Filter(x, q)
+                : DisplayOf(x).Contains(q, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+    }
+
+    private void SetActive(int i)
+    {
+        if (_active == i) return;
+        _active = i;
+        StateHasChanged();
+    }
+
+    private async Task ToggleAsync()
+    {
+        if (Disabled || _pop is null) return;
+        await _pop.ToggleAsync();
+    }
+
+    private async Task OnOpenChangedAsync(bool open)
+    {
+        if (open)
+        {
+            _query = "";
+            _focusSearch = Searchable;
+
+            if (ItemsProvider is not null)
+                await LoadAsync();
+            else
+                ApplyFilter();
+
+            _active = _filtered.FindIndex(IsSelected);
+            if (_active < 0 && _filtered.Count > 0) _active = 0;
+        }
+        else
+        {
+            _active = -1;
+            _cts?.Cancel();
+        }
+
+        StateHasChanged();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_focusSearch) return;
+        _focusSearch = false;
+        try { await Interop.FocusAsync(_search); }
+        catch (JSException) { }
+        catch (JSDisconnectedException) { }
+    }
+
+    private async Task LoadAsync()
+    {
+        if (ItemsProvider is null) return;
+
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        _loading = true;
+        StateHasChanged();
+
+        try
+        {
+            var result = await ItemsProvider(_query, token);
+            if (token.IsCancellationRequested) return;
+
+            _all = result.ToList();
+            _filtered = _all.ToList();   // provider already filtered
+            _active = _filtered.Count > 0 ? 0 : -1;
+        }
+        catch (OperationCanceledException) { }
+        finally
+        {
+            if (!token.IsCancellationRequested)
+            {
+                _loading = false;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task OnSearchAsync(ChangeEventArgs e)
+    {
+        _query = e.Value?.ToString() ?? "";
+
+        if (ItemsProvider is not null)
+        {
+            _cts?.Cancel();
+            _cts = new CancellationTokenSource();
+            var token = _cts.Token;
+
+            try
+            {
+                await Task.Delay(DebounceMs, token);
+                if (token.IsCancellationRequested) return;
+                await LoadAsync();
+            }
+            catch (OperationCanceledException) { }
+        }
+        else
+        {
+            ApplyFilter();
+            _active = _filtered.Count > 0 ? 0 : -1;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ChooseAsync(TValue item)
+    {
+        if (Multiple) await ToggleItemAsync(item);
+        else await SelectSingleAsync(item);
+    }
+
+    private async Task SelectSingleAsync(TValue item)
+    {
+        Value = item;
+        await ValueChanged.InvokeAsync(item);
+        NotifyEdit();
+        if (_pop is not null) await _pop.CloseAsync();
+    }
+
+    private async Task ToggleItemAsync(TValue item)
+    {
+        var existing = _selected.FirstOrDefault(x => Comparer.Equals(x, item));
+
+        if (existing is not null || _selected.Any(x => Comparer.Equals(x, item)))
+            _selected.RemoveAll(x => Comparer.Equals(x, item));
+        else
+            _selected.Add(item);
+
+        await ValuesChanged.InvokeAsync(_selected.ToList());
+        NotifyEdit();
+        StateHasChanged();
+    }
+
+    private async Task ClearAsync()
+    {
+        if (Multiple)
+        {
+            _selected.Clear();
+            await ValuesChanged.InvokeAsync(Array.Empty<TValue>());
+        }
+        else
+        {
+            Value = default;
+            await ValueChanged.InvokeAsync(default);
+        }
+        NotifyEdit();
+        StateHasChanged();
+    }
+
+    private void NotifyEdit()
+    {
+        if (_edit is not null && ValueExpression is not null)
+            _edit.NotifyFieldChanged(_field);
+    }
+
+    private Task OnTriggerKeyDownAsync(KeyboardEventArgs e) => HandleKeyAsync(e, fromTrigger: true);
+    private Task OnListKeyDownAsync(KeyboardEventArgs e) => HandleKeyAsync(e, fromTrigger: false);
+
+    private async Task HandleKeyAsync(KeyboardEventArgs e, bool fromTrigger)
+    {
+        if (Disabled || _pop is null) return;
+
+        var open = _pop.IsOpen;
+
+        if (!open)
+        {
+            if (e.Key is "ArrowDown" or "Enter" or " ")
+                await _pop.OpenAsync();
+            return;
+        }
+
+        switch (e.Key)
+        {
+            case "ArrowDown":
+                _active = Math.Min(_active + 1, _filtered.Count - 1);
+                break;
+
+            case "ArrowUp":
+                _active = Math.Max(_active - 1, 0);
+                break;
+
+            case "Home":
+                _active = 0;
+                break;
+
+            case "End":
+                _active = _filtered.Count - 1;
+                break;
+
+            case "Enter":
+
+            case " " when fromTrigger:
+                if (_active >= 0 && _active < _filtered.Count)
+                    await ChooseAsync(_filtered[_active]);
+                return;
+
+            case "Escape":
+            case "Tab":
+                await _pop.CloseAsync();
+                return;
+
+            default:
+                return;
+        }
+
+        StateHasChanged();
+        try { await Interop.ScrollIntoViewAsync(_list, _active); }
+        catch (JSException) { }
+        catch (JSDisconnectedException) { }
+    }
     
+    public void Dispose() => _cts?.Cancel();
 }

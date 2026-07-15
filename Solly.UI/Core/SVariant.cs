@@ -1,6 +1,9 @@
 ﻿namespace Solly.UI.Core;
 
-public class SVariant
+public enum SVariant
 {
-    
+    Default,
+    Primary,
+    Ghost,
+    Danger
 }

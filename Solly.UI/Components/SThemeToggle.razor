@@ -1,5 +1,29 @@
-﻿<h3>SThemeToggle</h3>
+﻿@inherits SComponentBase
+@implements IDisposable
+@inject SollyThemeService Theme
+
+<button type="button"
+        class="@Cls("s-theme-toggle", "s-glass")"
+        style="@Style"
+        aria-label="@(Theme.IsDark ? "Switch to light theme" : "Switch to dark theme")"
+        @onclick="Theme.ToggleAsync"
+        @attributes="Attributes">
+    <span class="s-tt-track">
+        <span class="s-tt-thumb @(Theme.IsDark ? null : "s-tt-light")">
+            <SIcon Name="@(Theme.IsDark ? SIcons.Moon : SIcons.Sun)" Size="13" />
+        </span>
+    </span>
+</button>
 
 @code {
-    
+    protected override void OnInitialized() => Theme.Changed += OnChanged;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) await Theme.ApplyAsync();
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Theme.Changed -= OnChanged;
 }

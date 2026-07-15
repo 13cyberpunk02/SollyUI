@@ -1,6 +1,17 @@
-﻿namespace Solly.UI;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Solly.UI.Core;
+using Solly.UI.Core.Interop;
 
-public class SollyServiceCollectionExtensions
+namespace Solly.UI;
+
+public static class SollyServiceCollectionExtensions
 {
-    
+    public static IServiceCollection AddSollyUI(this IServiceCollection services,
+        Action<SollyOptions>? configure = null)
+    {
+        services.Configure(configure ?? (_ => { }));
+        services.AddScoped<SollyInterop>();
+        services.AddScoped<SollyThemeService>();
+        return services;
+    }
 }

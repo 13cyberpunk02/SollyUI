@@ -1,5 +1,56 @@
-﻿<h3>SButton</h3>
+﻿@inherits SComponentBase
+
+<button type="@Type"
+        class="@Cls("s-btn", "s-glass", Variant.ToCssClass())"
+        style="@(RippleStyle + Style)"
+        disabled="@(Disabled || _busy)"
+        @onclick="HandleClickAsync"
+        @onpointermove="OnPointerMove"
+        @attributes="Attributes">
+    @if (_busy)
+    {
+        <SIcon Name="@SIcons.Spinner" Class="s-spin" Size="@IconSize" />
+    }
+    else if (!string.IsNullOrEmpty(Icon))
+    {
+        <SIcon Name="@Icon" Size="@IconSize" />
+    }
+    @if (ChildContent is not null)
+    {
+        <span class="s-btn-text">@ChildContent</span>
+    }
+</button>
 
 @code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string? Icon { get; set; }
+    [Parameter] public int IconSize { get; set; } = 18;
+    [Parameter] public SVariant Variant { get; set; } = SVariant.Default;
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public string Type { get; set; } = "button";
+    [Parameter] public EventCallback<MouseEventArgs> OnClick { get; set; }
+
+    private bool _busy;
+
+    private async Task HandleClickAsync(MouseEventArgs e)
+    {
+        if (_busy || Disabled) return;
+        if (!OnClick.HasDelegate) return;
+
+        _busy = true;
+        try { await OnClick.InvokeAsync(e); }
+        finally { _busy = false; }
+    }
     
+    private void OnPointerMove(PointerEventArgs e)
+    {
+        _x = e.OffsetX;
+        _y = e.OffsetY;
+    }
+
+    private double _x, _y;
+
+    private string RippleStyle =>
+        $"--gx:{_x.ToString(System.Globalization.CultureInfo.InvariantCulture)}px;" +
+        $"--gy:{_y.ToString(System.Globalization.CultureInfo.InvariantCulture)}px;";
 }

@@ -1,5 +1,97 @@
-﻿<h3>SPopover</h3>
+﻿@inherits SComponentBase
+@using Solly.UI.Core.Interop
+@implements IAsyncDisposable
+@inject SollyInterop Interop
+
+<div @ref="_root" class="s-pop-root @Class" style="@Style">
+    <div @ref="_anchor" class="s-pop-anchor">
+        @Anchor
+    </div>
+
+    @if (_open)
+    {
+        <div @ref="_panel" class="s-pop-panel s-glass" role="dialog">
+            @ChildContent
+        </div>
+    }
+</div>
 
 @code {
-    
+    [Parameter] public RenderFragment? Anchor { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public EventCallback<bool> OpenChanged { get; set; }
+
+    private ElementReference _root;
+    private ElementReference _anchor;
+    private ElementReference _panel;
+
+    private bool _open;
+    private bool _needsPosition;
+    private DotNetObjectReference<SPopover>? _self;
+    private IJSObjectReference? _dismiss;
+
+    public bool IsOpen => _open;
+
+    public async Task OpenAsync()
+    {
+        if (_open) return;
+        _open = true;
+        _needsPosition = true;
+        StateHasChanged();
+        await OpenChanged.InvokeAsync(true);
+    }
+
+    public async Task CloseAsync()
+    {
+        if (!_open) return;
+        _open = false;
+        await DisposeDismissAsync();
+        StateHasChanged();
+        await OpenChanged.InvokeAsync(false);
+    }
+
+    public Task ToggleAsync() => _open ? CloseAsync() : OpenAsync();
+
+    [JSInvokable]
+    public async Task OnDismissAsync()
+    {
+        await CloseAsync();
+        StateHasChanged();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_needsPosition || !_open) return;
+        _needsPosition = false;
+
+        try
+        {
+            await Interop.AnchorAsync(_panel, _anchor);
+            _self ??= DotNetObjectReference.Create(this);
+            _dismiss = await Interop.RegisterDismissAsync(_root, _self);
+        }
+        catch (JSDisconnectedException) { }
+        catch (ObjectDisposedException) { }
+        catch (JSException ex)
+        {
+            Console.Error.WriteLine($"[Glassy] popover interop failed: {ex.Message}");
+        }
+    }
+
+    private async ValueTask DisposeDismissAsync()
+    {
+        if (_dismiss is null) return;
+        var d = _dismiss;
+        _dismiss = null;
+        try { await d.InvokeVoidAsync("dispose"); await d.DisposeAsync(); }
+        catch (JSDisconnectedException) { }
+        catch (ObjectDisposedException) { }
+        catch (TaskCanceledException) { }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await DisposeDismissAsync();
+        _self?.Dispose();
+    }
 }
