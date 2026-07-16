@@ -1,0 +1,106 @@
+﻿@inherits SComponentBase
+@implements IDisposable
+
+<CascadingValue Value="this" IsFixed="true">
+    <div class="s-tabs @Class" style="@Style">
+        <div class="s-tabs-bar @(Fill ? "s-fill" : null)" role="tablist" @onkeydown="OnKeyDown">
+            @foreach (var t in _tabs)
+            {
+                var active = t.Id == ActiveId;
+                <button type="button"
+                        class="s-tab @(active ? "s-active" : null) @(t.Disabled ? "s-disabled" : null)"
+                        role="tab"
+                        aria-selected="@active"
+                        tabindex="@(active ? 0 : -1)"
+                        disabled="@t.Disabled"
+                        @onclick="() => ActivateAsync(t.Id)">
+                    @if (!string.IsNullOrEmpty(t.Icon))
+                    {
+                        <SIcon Name="@t.Icon" Size="15" />
+                    }
+                    @if (t.HeaderContent is not null)
+                    {
+                        @t.HeaderContent
+                    }
+                    else
+                    {
+                        <span>@t.Title</span>
+                    }
+                    @if (t.Badge is not null)
+                    {
+                        <span class="s-tab-badge">@t.Badge</span>
+                    }
+                </button>
+            }
+        </div>
+
+        <div class="s-tabs-body" role="tabpanel">
+            @foreach (var t in _tabs)
+            {
+                @if (t.Id == ActiveId)
+                {
+                    @t.ChildContent
+                }
+                else if (t.KeepAlive)
+                {
+                    <div style="display:none;">@t.ChildContent</div>
+                }
+            }
+        </div>
+    </div>
+</CascadingValue>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string? ActiveId { get; set; }
+    [Parameter] public EventCallback<string> ActiveIdChanged { get; set; }
+    [Parameter] public bool Fill { get; set; }
+
+    private readonly List<STab> _tabs = new();
+
+    internal void Add(STab tab)
+    {
+        if (_tabs.Contains(tab)) return;
+        _tabs.Add(tab);
+        ActiveId ??= tab.Id;
+        StateHasChanged();
+    }
+
+    internal void Remove(STab tab)
+    {
+        _tabs.Remove(tab);
+        if (ActiveId == tab.Id) ActiveId = _tabs.FirstOrDefault()?.Id;
+        StateHasChanged();
+    }
+
+    internal void Refresh() => StateHasChanged();
+
+    private async Task ActivateAsync(string id)
+    {
+        if (ActiveId == id) return;
+        ActiveId = id;
+        await ActiveIdChanged.InvokeAsync(id);
+        StateHasChanged();
+    }
+
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        var enabled = _tabs.Where(t => !t.Disabled).ToList();
+        if (enabled.Count == 0) return;
+
+        var i = enabled.FindIndex(t => t.Id == ActiveId);
+        var next = e.Key switch
+        {
+            "ArrowRight" => (i + 1) % enabled.Count,
+            "ArrowLeft"  => (i - 1 + enabled.Count) % enabled.Count,
+            "Home"       => 0,
+            "End"        => enabled.Count - 1,
+            _            => -1
+        };
+
+        if (next < 0) return;
+        await ActivateAsync(enabled[next].Id);
+    }
+
+    public void Dispose() => _tabs.Clear();
+}

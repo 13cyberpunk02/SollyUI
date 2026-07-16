@@ -1,0 +1,85 @@
+﻿@typeparam TValue
+@using System.Linq.Expressions
+@inherits SComponentBase
+
+<CascadingValue Value="this" IsFixed="false">
+    <div class="s-field @Class" style="@Style" role="radiogroup" aria-labelledby="@($"{Uid}-l")">
+        @if (!string.IsNullOrEmpty(Label))
+        {
+            <span id="@($"{Uid}-l")">
+                <SLabel Required="@Required">@Label</SLabel>
+            </span>
+        }
+
+        <div class="s-radio-list @(Horizontal ? "s-horizontal" : null)">
+            @if (Items is not null)
+            {
+                @foreach (var item in Items)
+                {
+                    <SRadio TValue="TValue" Value="item" @key="item">
+                        @(ItemTemplate is not null ? ItemTemplate(item) : (RenderFragment)(b => b.AddContent(0, DisplayOf(item))))
+                    </SRadio>
+                }
+            }
+            @ChildContent
+        </div>
+
+        @if (!string.IsNullOrEmpty(Hint))
+        {
+            <div class="s-hint">@Hint</div>
+        }
+        @if (_edit is not null && ValueExpression is not null)
+        {
+            <ValidationMessage For="@ValueExpression" class="s-error" />
+        }
+    </div>
+</CascadingValue>
+
+@code {
+    [CascadingParameter] private EditContext? _edit { get; set; }
+
+    [Parameter] public TValue? Value { get; set; }
+    [Parameter] public EventCallback<TValue?> ValueChanged { get; set; }
+    [Parameter] public Expression<Func<TValue?>>? ValueExpression { get; set; }
+
+    [Parameter] public IEnumerable<TValue>? Items { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public RenderFragment<TValue>? ItemTemplate { get; set; }
+    [Parameter] public Func<TValue, string>? Display { get; set; }
+    [Parameter] public IEqualityComparer<TValue> Comparer { get; set; } = EqualityComparer<TValue>.Default;
+
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public string? Hint { get; set; }
+    [Parameter] public bool Horizontal { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public bool Required { get; set; }
+
+    internal string Name { get; } = $"gr{Guid.NewGuid():N}"[..10];
+    internal bool GroupDisabled => Disabled;
+
+    private FieldIdentifier _field;
+
+    protected override void OnParametersSet()
+    {
+        if (_edit is not null && ValueExpression is not null)
+            _field = FieldIdentifier.Create(ValueExpression);
+    }
+
+    private string DisplayOf(TValue v) => Display?.Invoke(v) ?? v?.ToString() ?? "";
+
+    internal bool IsSelected(TValue v) =>
+        Value is not null && Comparer.Equals(Value, v);
+
+    internal async Task SelectAsync(TValue v)
+    {
+        if (IsSelected(v)) return;
+
+        Value = v;
+        await ValueChanged.InvokeAsync(v);
+
+        if (_edit is not null && ValueExpression is not null)
+            _edit.NotifyFieldChanged(_field);
+
+        StateHasChanged();
+    }
+}

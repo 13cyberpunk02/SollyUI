@@ -1,5 +1,4 @@
-﻿@using Solly.UI.Core.Interop
-@inherits InputBase<DateTime?>
+﻿@inherits InputBase<DateTime?>
 @inject SollyInterop Interop
 
 <div class="s-field @Class" style="@Style">
@@ -12,6 +11,8 @@
         <Anchor>
             <div class="s-dp-trigger s-glass @(Disabled ? "s-disabled" : null)"
                  tabindex="@(Disabled ? -1 : 0)"
+                 role="combobox"
+                 aria-expanded="@(_pop?.IsOpen == true)"
                  @onclick="ToggleAsync"
                  @onkeydown="OnTriggerKeyDownAsync">
                 <SIcon Name="@SIcons.Calendar" Class="s-dp-icon" />
@@ -29,7 +30,7 @@
         </Anchor>
 
         <ChildContent>
-            <div class="s-cal">
+            <div class="s-cal" @onkeydown="OnCalKeyAsync" tabindex="-1" @ref="_cal">
                 <div class="s-cal-head">
                     <button type="button" class="s-cal-nav" @onclick="PrevMonth" aria-label="Previous month">
                         <SIcon Name="@SIcons.ChevronLeft" Size="16" />
@@ -40,7 +41,7 @@
                     </button>
                 </div>
 
-                <div class="s-cal-grid">
+                <div class="s-cal-grid" role="grid">
                     @foreach (var d in DayNames)
                     {
                         <div class="s-cal-dow">@d</div>
@@ -50,24 +51,31 @@
                         var outside = day.Month != _view.Month;
                         var selected = CurrentValue?.Date == day.Date;
                         var today = day.Date == DateTime.Today;
+                        var focused = day.Date == _focus.Date;
                         var disabled = IsDisabled(day);
 
                         <button type="button"
-                                class="s-cal-day @(outside ? "s-outside" : null) @(selected ? "s-selected" : null) @(today ? "s-today" : null)"
+                                class="s-cal-day @(outside ? "s-outside" : null) @(selected ? "s-selected" : null) @(today ? "s-today" : null) @(focused ? "s-focus" : null)"
+                                tabindex="-1"
+                                role="gridcell"
+                                aria-selected="@selected"
                                 disabled="@disabled"
                                 @onclick="() => PickAsync(day)">
                             @day.Day
                         </button>
                     }
                 </div>
+
+                <div class="s-cal-foot">
+                    <button type="button" class="s-cal-today" @onclick="GoToday">Today</button>
+                    @if (Clearable && CurrentValue.HasValue)
+                    {
+                        <button type="button" class="s-cal-today" @onclick="ClearAsync">Clear</button>
+                    }
+                </div>
             </div>
         </ChildContent>
     </SPopover>
-
-    @if (EditContext is not null)
-    {
-        <ValidationMessage For="@ValueExpression" class="s-error" />
-    }
 </div>
 
 @code {
@@ -82,6 +90,9 @@
     [Parameter] public string? Class { get; set; }
     [Parameter] public string? Style { get; set; }
 
+    private ElementReference _cal;
+    private DateTime _focus = DateTime.Today;
+    private bool _focusCal;
     private SPopover? _pop;
     private DateTime _view = DateTime.Today;
 
@@ -112,9 +123,35 @@
 
     private void OnOpenChanged(bool open)
     {
-        if (open) _view = CurrentValue ?? DateTime.Today;
+        if (!open) return;
+        _view = CurrentValue ?? DateTime.Today;
+        _focus = ClampToRange(CurrentValue ?? DateTime.Today);
+        _focusCal = true;
+    }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_focusCal) return;
+        _focusCal = false;
+        try { await Interop.FocusAsync(_cal); }
+        catch (JSException) { }
+        catch (JSDisconnectedException) { }
+    }
+    
+    private DateTime ClampToRange(DateTime d)
+    {
+        if (Min.HasValue && d.Date < Min.Value.Date) return Min.Value.Date;
+        if (Max.HasValue && d.Date > Max.Value.Date) return Max.Value.Date;
+        return d.Date;
     }
 
+    
+    private async Task OnTriggerKeyAsync(KeyboardEventArgs e)
+    {
+        if (Disabled || _pop is null) return;
+        if (e.Key is "Enter" or " " or "ArrowDown") await _pop.OpenAsync();
+    }
+    
     private async Task ToggleAsync()
     {
         if (Disabled || _pop is null) return;
@@ -159,5 +196,68 @@
         result = null;
         validationErrorMessage = $"The {FieldIdentifier.FieldName} field is not a valid date.";
         return false;
+    }
+    
+    private async Task OnCalKeyAsync(KeyboardEventArgs e)
+    {
+        if (_pop is null) return;
+
+        var next = _focus;
+
+        switch (e.Key)
+        {
+            case "ArrowLeft":  next = _focus.AddDays(-1); break;
+            case "ArrowRight": next = _focus.AddDays(1); break;
+            case "ArrowUp":    next = _focus.AddDays(-7); break;
+            case "ArrowDown":  next = _focus.AddDays(7); break;
+
+            case "Home":
+            {
+                var dow = (int)Culture.DateTimeFormat.FirstDayOfWeek;
+                var off = ((int)_focus.DayOfWeek - dow + 7) % 7;
+                next = _focus.AddDays(-off);
+                break;
+            }
+            case "End":
+            {
+                var dow = (int)Culture.DateTimeFormat.FirstDayOfWeek;
+                var off = ((int)_focus.DayOfWeek - dow + 7) % 7;
+                next = _focus.AddDays(6 - off);
+                break;
+            }
+
+            case "PageUp":
+                next = e.ShiftKey ? _focus.AddYears(-1) : _focus.AddMonths(-1);
+                break;
+            case "PageDown":
+                next = e.ShiftKey ? _focus.AddYears(1) : _focus.AddMonths(1);
+                break;
+
+            case "Enter":
+            case " ":
+                if (!IsDisabled(_focus)) await PickAsync(_focus);
+                return;
+
+            case "Escape":
+                await _pop.CloseAsync();
+                return;
+
+            default:
+                return;
+        }
+
+        if (IsDisabled(next)) return;
+
+        _focus = next;
+        if (_focus.Month != _view.Month || _focus.Year != _view.Year)
+            _view = new DateTime(_focus.Year, _focus.Month, 1);
+
+        StateHasChanged();
+    }
+
+    private void GoToday()
+    {
+        _focus = ClampToRange(DateTime.Today);
+        _view = new DateTime(_focus.Year, _focus.Month, 1);
     }
 }

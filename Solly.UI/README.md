@@ -423,7 +423,7 @@ public void Dispose() => Theme.Changed -= OnChanged;
 
 ### Design tokens
 
-Override any of these in your own stylesheet, loaded **after** `glassy.css`:
+Override any of these in your own stylesheet, loaded **after** `solly.css`:
 
 ```css
 :root, [data-solly-theme="dark"] {
@@ -532,15 +532,15 @@ All classes are prefixed `s-`. Nothing is scoped, so you can override anything:
 
 ## Troubleshooting
 
-| Symptom | Cause |
-|---|---|
-| Components render but clicks do nothing, console is empty | Static SSR. Add `@rendermode="InteractiveServer"` to `<Routes>` |
-| Everything is unstyled / text is black on white | `glassy.css` returned 404. Check `_content/Glassy.UI/glassy.css` in Network |
-| Glass effect invisible | Flat background. `body` needs a gradient or image |
-| Green outline on inputs | Blazor template's `.valid.modified` in `app.css`. Delete it |
-| Popovers open but sit in the wrong place | `glassy.js` failed to load. Check the Network tab |
-| Selected item not highlighted in `SSelect` | `TValue` is a `class` with reference equality. Use a `record` or pass a `Comparer` |
-| Theme flashes dark then light on load | The inline script in `<head>` is missing |
+| Symptom | Cause                                                                                                                        |
+|---|------------------------------------------------------------------------------------------------------------------------------|
+| Components render but clicks do nothing, console is empty | Static SSR. Add `@rendermode="InteractiveServer"` to `<Routes>`                                                              |
+| Everything is unstyled / text is black on white | `solly.css` returned 404. Check `_content/Solly.UI/solly.css` in Network                                                     |
+| Glass effect invisible | Flat background. `body` needs a gradient or image                                                                            |
+| Green outline on inputs | Blazor template's `.valid.modified` in `app.css`. Delete it                                                                  |
+| Popovers open but sit in the wrong place | `solly.js` failed to load. Check the Network tab                                                                             |
+| Selected item not highlighted in `SSelect` | `TValue` is a `class` with reference equality. Use a `record` or pass a `Comparer`                                           |
+| Theme flashes dark then light on load | The inline script in `<head>` is missing                                                                                     |
 | `requires a value for the 'ValueExpression' parameter` | An `InputBase`-derived component (`SInput`, `STextArea`, `SDatePicker`) used with a literal `Value` instead of `@bind-Value` |
 
 ---

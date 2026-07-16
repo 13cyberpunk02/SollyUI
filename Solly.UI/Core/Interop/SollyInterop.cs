@@ -120,4 +120,15 @@ public sealed class SollyInterop(IJSRuntime js) : IAsyncDisposable
         catch (JSDisconnectedException) { return null; }
         catch (ObjectDisposedException) { return null; }
     }
+    
+    public async ValueTask AnchorTipAsync(ElementReference tip, ElementReference anchor, string placement)
+    {
+        try
+        {
+            var m = await Module;
+            await m.InvokeVoidAsync("anchorTip", tip, anchor, placement);
+        }
+        catch (JSDisconnectedException) { }
+        catch (ObjectDisposedException) { }
+    }
 }

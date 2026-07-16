@@ -30,4 +30,9 @@ public static class SIcons
     public const string Warning = "<path d='M10.3 3.9 1.9 18a2 2 0 0 0 1.7 3h16.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z'/><path d='M12 9v4M12 17h.01'/>";
     public const string CheckCircle = "<circle cx='12' cy='12' r='9'/><path d='m8.5 12 2.5 2.5 4.5-5'/>";
     public const string XCircle = "<circle cx='12' cy='12' r='9'/><path d='m15 9-6 6M9 9l6 6'/>";
+    public const string Circle  = "<circle cx='12' cy='12' r='9'/><circle cx='12' cy='12' r='3.5'/>";
+    public const string Sliders = "<path d='M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0'/><circle cx='16' cy='6' r='2'/><circle cx='10' cy='12' r='2'/><circle cx='18' cy='18' r='2'/>";
+    public const string Columns = "<rect x='3' y='4' width='18' height='16' rx='2'/><path d='M9 4v16'/>";
+    public const string Square   = "<rect x='4' y='5' width='16' height='14' rx='2'/><path d='M4 9h16'/>";
+    public const string Bell     = "<path d='M18 9a6 6 0 1 0-12 0c0 5-2 6-2 6h16s-2-1-2-6'/><path d='M10.5 20a2 2 0 0 0 3 0'/>";
 }

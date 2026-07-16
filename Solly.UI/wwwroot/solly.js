@@ -155,3 +155,47 @@ export function lockScroll() {
         }
     };
 }
+
+export function anchorTip(el, anchorEl, placement) {
+    if (!el || !anchorEl) return;
+
+    el.style.visibility = 'hidden';
+    el.style.position = 'fixed';
+    el.style.top = '0px';
+    el.style.left = '0px';
+
+    const a = anchorEl.getBoundingClientRect();
+    const p = el.getBoundingClientRect();
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const gap = 8;
+
+    const fits = {
+        top:    a.top - gap - p.height > 0,
+        bottom: a.bottom + gap + p.height < vh,
+        left:   a.left - gap - p.width > 0,
+        right:  a.right + gap + p.width < vw,
+    };
+
+    let place = placement;
+    if (!fits[place]) {
+        const flip = { top: 'bottom', bottom: 'top', left: 'right', right: 'left' };
+        if (fits[flip[place]]) place = flip[place];
+        else place = Object.keys(fits).find(k => fits[k]) || placement;
+    }
+
+    let top, left;
+    switch (place) {
+        case 'top':    top = a.top - gap - p.height; left = a.left + a.width / 2 - p.width / 2; break;
+        case 'bottom': top = a.bottom + gap;         left = a.left + a.width / 2 - p.width / 2; break;
+        case 'left':   top = a.top + a.height / 2 - p.height / 2; left = a.left - gap - p.width; break;
+        default:       top = a.top + a.height / 2 - p.height / 2; left = a.right + gap; break;
+    }
+
+    left = Math.max(8, Math.min(left, vw - p.width - 8));
+    top  = Math.max(8, Math.min(top, vh - p.height - 8));
+
+    el.style.top = `${Math.round(top)}px`;
+    el.style.left = `${Math.round(left)}px`;
+    el.dataset.place = place;
+    el.style.visibility = 'visible';
+}

@@ -1,0 +1,126 @@
+﻿@page "/radio"
+@using System.ComponentModel.DataAnnotations
+
+<DemoPage Title="Radio" Subtitle="Generic group with cascading selection. Works inside and outside EditForm.">
+
+    <DemoBlock Title="Basic" Code="@_basicCode">
+        <div class="demo-col">
+            <SRadioGroup TValue="string" Items="_sizes" @bind-Value="_size" Label="Size" />
+            <span class="demo-note">Value: @(_size ?? "—")</span>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Horizontal" Code="@_horizCode">
+        <SRadioGroup TValue="string" Items="_yesNo" @bind-Value="_answer"
+                     Label="Do you agree?" Horizontal />
+    </DemoBlock>
+
+    <DemoBlock Title="Custom display" Code="@_displayCode">
+        <div class="demo-col">
+            <SRadioGroup TValue="Plan" Items="_plans" @bind-Value="_plan"
+                         Display="@(p => $"{p.Name} — ${p.Price}/mo")"
+                         Label="Plan" />
+            <span class="demo-note">Value: @(_plan?.Name ?? "—")</span>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Item template" Code="@_tmplCode">
+        <SRadioGroup TValue="Plan" Items="_plans" @bind-Value="_plan2" Label="Plan">
+            <ItemTemplate Context="p">
+                <span class="demo-plan">
+                    <strong>@p.Name</strong>
+                    <small>@p.Blurb · $@p.Price/mo</small>
+                </span>
+            </ItemTemplate>
+        </SRadioGroup>
+    </DemoBlock>
+
+    <DemoBlock Title="Explicit children"
+               Description="Use SRadio directly when options aren't a uniform collection."
+               Code="@_childCode">
+        <SRadioGroup TValue="string" @bind-Value="_ship" Label="Shipping">
+            <SRadio TValue="string" Value="@("standard")" Label="Standard — 5-7 days, free" />
+            <SRadio TValue="string" Value="@("express")" Label="Express — 2 days, $9" />
+            <SRadio TValue="string" Value="@("overnight")" Label="Overnight — $29" Disabled />
+        </SRadioGroup>
+    </DemoBlock>
+
+    <DemoBlock Title="Disabled group" Code="@_disabledCode">
+        <SRadioGroup TValue="string" Items="_sizes" Value="@("Medium")" Label="Locked" Disabled />
+    </DemoBlock>
+
+    <DemoBlock Title="Validation" Code="@_validCode">
+        <EditForm Model="_m" OnValidSubmit="() => _ok = true">
+            <DataAnnotationsValidator />
+            <div class="demo-col">
+                <SRadioGroup TValue="string" Items="_plans.Select(p => p.Name)"
+                             @bind-Value="_m.Plan" Label="Pick a plan" Required />
+                <GButton Type="submit" Variant="GVariant.Primary">Submit</GButton>
+                @if (_ok) { <span class="demo-note">Selected: @_m.Plan</span> }
+            </div>
+        </EditForm>
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    record Plan(string Name, int Price, string Blurb);
+
+    class Model
+    {
+        [Required(ErrorMessage = "Pick a plan to continue")]
+        public string? Plan { get; set; }
+    }
+
+    Model _m = new();
+    bool _ok;
+
+    string[] _sizes = { "Small", "Medium", "Large" };
+    string[] _yesNo = { "Yes", "No", "Maybe" };
+
+    Plan[] _plans =
+    {
+        new("Hobby", 0, "For side projects"),
+        new("Pro", 19, "For working developers"),
+        new("Team", 49, "Up to 10 seats"),
+    };
+
+    string? _size, _answer, _ship = "standard";
+    Plan? _plan, _plan2;
+
+    const string _basicCode = """
+<SRadioGroup TValue="string" Items="_sizes" @bind-Value="_size" Label="Size" />
+""";
+
+    const string _horizCode = """
+<SRadioGroup TValue="string" Items="_yesNo" @bind-Value="_answer"
+             Label="Do you agree?" Horizontal />
+""";
+
+    const string _displayCode = """record Plan(string Name, int Price, string Blurb);<SRadioGroup TValue="Plan" Items="_plans" @bind-Value="_plan"Display="@(p => $"{p.Name} — ${p.Price}/mo")"Label="Plan" />""";
+
+    const string _tmplCode = """<SRadioGroup TValue="Plan" Items="_plans" @bind-Value="_plan" Label="Plan"><ItemTemplate Context="p"><span style="display:flex;flex-direction:column;"><strong>@p.Name</strong><small>@p.Blurb · $@p.Price/mo</small></span></ItemTemplate></SRadioGroup>""";
+
+    const string _childCode = """
+<SRadioGroup TValue="string" @bind-Value="_ship" Label="Shipping">
+    <SRadio TValue="string" Value="@("standard")" Label="Standard — free" />
+    <SRadio TValue="string" Value="@("express")" Label="Express — $9" />
+    <SRadio TValue="string" Value="@("overnight")" Label="Overnight" Disabled />
+</SRadioGroup>
+""";
+
+    const string _disabledCode = """
+<SRadioGroup TValue="string" Items="_sizes" Value="@("Medium")" Label="Locked" Disabled />
+""";
+
+    const string _validCode = """
+class Model
+{
+    [Required(ErrorMessage = "Pick a plan to continue")]
+    public string? Plan { get; set; }
+}
+
+<SRadioGroup TValue="string" Items="_names" @bind-Value="_m.Plan"
+             Label="Pick a plan" Required />
+""";
+}

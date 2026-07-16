@@ -1,5 +1,4 @@
 ﻿@page "/theming"
-@using SollyUI.Demo.Components.Shared
 @implements IDisposable
 @inject SollyThemeService Theme
 
@@ -20,7 +19,7 @@
     </DemoBlock>
 
     <DemoBlock Title="Tokens"
-               Description="Every value is a CSS custom property. Override them in your own stylesheet, loaded after glassy.css."
+               Description="Every value is a CSS custom property. Override them in your own stylesheet, loaded after solly.css."
                Code="@_tokenCode">
         <div class="demo-swatches">
             @foreach (var t in _tokens)
@@ -63,7 +62,7 @@
 
     <DemoBlock Title="Custom theme" Code="@_customCode">
         <p class="demo-note">
-            Define a new <code>[data-glassy-theme="…"]</code> block and call
+            Define a new <code>[data-solly-theme="…"]</code> block and call
             <code>Theme.SetAsync("ocean")</code>.
         </p>
     </DemoBlock>
@@ -102,7 +101,7 @@
     public void Dispose() => Theme.Changed -= OnChanged;
 
     const string _switchCode = """
-@inject GlassyThemeService Theme
+@inject SollyThemeService Theme
 
 <SButton OnClick="@(() => Theme.SetAsync("light"))">Light</SButton>
 <SButton OnClick="Theme.ToggleAsync">Toggle</SButton>

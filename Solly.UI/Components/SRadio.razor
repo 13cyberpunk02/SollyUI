@@ -1,0 +1,41 @@
+﻿@typeparam TValue
+
+<label class="s-radio @(IsDisabled ? "s-disabled" : null)">
+    <input type="radio"
+           class="s-radio-native"
+           name="@Group?.Name"
+           checked="@Selected"
+           disabled="@IsDisabled"
+           @onchange="OnChangeAsync" />
+
+    <span class="s-radio-dot s-glass"></span>
+
+    <span class="s-radio-label">
+        @if (ChildContent is not null)
+        {
+            @ChildContent
+        }
+        else
+        {
+            @Label
+        }
+    </span>
+</label>
+
+@code {
+    [CascadingParameter] public SRadioGroup<TValue>? Group { get; set; }
+
+    [Parameter, EditorRequired] public TValue Value { get; set; } = default!;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+
+    private bool Selected => Group?.IsSelected(Value) == true;
+    private bool IsDisabled => Disabled || Group?.GroupDisabled == true;
+
+    private async Task OnChangeAsync(ChangeEventArgs e)
+    {
+        if (Group is null) return;
+        await Group.SelectAsync(Value);
+    }
+}

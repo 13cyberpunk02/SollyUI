@@ -175,7 +175,7 @@ h1, h2 { color: var(--s-text); font-weight: 600; }
     line-height: 1.6;
     color: var(--s-text);
 }
-[data-glassy-theme="light"] .demo-code { background: rgba(255, 255, 255, .5); }
+[data-solly-theme="light"] .demo-code { background: rgba(255, 255, 255, .5); }
 
 /* ============ home cards ============ */
 .demo-cards {
@@ -307,3 +307,10 @@ h1, h2 { color: var(--s-text); font-weight: 600; }
     max-width: 30rem;
 }
 .demo-pos-grid .s-btn { width: 100%; font-size: .78rem; padding: .5rem .4rem; }
+
+.demo-plan { display: flex; flex-direction: column; }
+.demo-plan small { opacity: .6; font-size: .75rem; }
+.demo-underline {
+    border-bottom: 1px dashed var(--s-text-dim);
+    cursor: help;
+}

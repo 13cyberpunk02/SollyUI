@@ -1,0 +1,116 @@
+﻿@inherits SComponentBase
+
+@implements IAsyncDisposable
+@inject SollyInterop Interop
+
+<span @ref="_anchor"
+      class="@Cls("s-tip-anchor")"
+      style="@Style"
+      @onmouseenter="ShowAsync"
+      @onmouseleave="HideAsync"
+      @onfocusin="ShowAsync"
+      @onfocusout="HideAsync"
+      @attributes="Attributes">
+    @ChildContent
+</span>
+
+@if (_shown)
+{
+    <div @ref="_tip" class="s-tip s-glass" role="tooltip">
+        @if (TipContent is not null)
+        {
+            @TipContent
+        }
+        else
+        {
+            @Text
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public RenderFragment? TipContent { get; set; }
+    [Parameter] public string? Text { get; set; }
+    [Parameter] public SPlacement Placement { get; set; } = SPlacement.Top;
+    [Parameter] public int DelayMs { get; set; } = 400;
+    [Parameter] public bool Disabled { get; set; }
+
+    private ElementReference _anchor;
+    private ElementReference _tip;
+
+    private bool _shown;
+    private bool _needsPosition;
+    private CancellationTokenSource? _cts;
+    private IJSObjectReference? _portal;
+
+    private string PlacementStr => Placement switch
+    {
+        SPlacement.Bottom => "bottom",
+        SPlacement.Left   => "left",
+        SPlacement.Right  => "right",
+        _                 => "top"
+    };
+
+    private async Task ShowAsync()
+    {
+        if (Disabled || _shown) return;
+        if (TipContent is null && string.IsNullOrEmpty(Text)) return;
+
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            if (DelayMs > 0) await Task.Delay(DelayMs, token);
+            if (token.IsCancellationRequested) return;
+
+            _shown = true;
+            _needsPosition = true;
+            StateHasChanged();
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private async Task HideAsync()
+    {
+        _cts?.Cancel();
+        if (!_shown) return;
+
+        await TeardownAsync();
+        _shown = false;
+        StateHasChanged();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_needsPosition || !_shown) return;
+        _needsPosition = false;
+
+        try
+        {
+            _portal = await Interop.PortalAsync(_tip);
+            await Interop.AnchorTipAsync(_tip, _anchor, PlacementStr);
+        }
+        catch (JSException) { }
+        catch (JSDisconnectedException) { }
+    }
+
+    private async ValueTask TeardownAsync()
+    {
+        if (_portal is null) return;
+        var p = _portal;
+        _portal = null;
+        try { await p.InvokeVoidAsync("dispose"); await p.DisposeAsync(); }
+        catch (JSDisconnectedException) { }
+        catch (ObjectDisposedException) { }
+        catch (TaskCanceledException) { }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _cts?.Cancel();
+        await TeardownAsync();
+    }
+}

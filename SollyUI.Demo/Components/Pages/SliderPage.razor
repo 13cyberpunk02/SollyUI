@@ -1,0 +1,117 @@
+﻿@page "/slider"
+
+<DemoPage Title="Slider" Subtitle="Range input with a styled track, live value, and optional ticks.">
+
+    <DemoBlock Title="Basic" Code="@_basicCode">
+        <div class="demo-col">
+            <SSlider @bind-Value="_a" Label="Volume" />
+            <span class="demo-note">Value: @_a</span>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Min, max, step" Code="@_rangeCode">
+        <div class="demo-col">
+            <SSlider @bind-Value="_temp" Label="Temperature" Min="16" Max="30" Step="0.5"
+                     Format="@(v => $"{v:0.0} °C")" />
+            <SSlider @bind-Value="_pct" Label="Opacity" Min="0" Max="1" Step="0.05"
+                     Format="@(v => $"{v:P0}")" />
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Ticks" Code="@_tickCode">
+        <SSlider @bind-Value="_rating" Label="Rating" Min="1" Max="5" Step="1"
+                 Ticks="@([1, 2, 3, 4, 5])"
+                 Format="@(v => $"{v:0}")" />
+    </DemoBlock>
+
+    <DemoBlock Title="Without the value" Code="@_noValCode">
+        <SSlider @bind-Value="_b" Label="Brightness" ShowValue="false"
+                 Hint="The number is hidden, the label stays" />
+    </DemoBlock>
+
+    <DemoBlock Title="OnChangeEnd"
+               Description="Fires on release, not while dragging. Use it to avoid hammering an API."
+               Code="@_endCode">
+        <div class="demo-col">
+            <SSlider @bind-Value="_c" Label="Drag me" OnChangeEnd="OnEnd" />
+            <span class="demo-note">
+                Input events: @_inputs · Change-end events: @_ends
+            </span>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Disabled" Code="@_disabledCode">
+        <SSlider Value="40" Label="Locked" Disabled />
+    </DemoBlock>
+
+    <DemoBlock Title="Live theming"
+               Description="The same sliders that power the Theming page."
+               Code="@_themeCode">
+        <div style="@($"--g-radius:{_radius}px; --g-blur:{_blur}px;")">
+            <div class="demo-col">
+                <SSlider @bind-Value="_radius" Label="Radius" Min="0" Max="28"
+                         Format="@(v => $"{v:0}px")" />
+                <SSlider @bind-Value="_blur" Label="Blur" Min="0" Max="40"
+                         Format="@(v => $"{v:0}px")" />
+                <div class="demo-row">
+                    <SButton Variant="SVariant.Primary">Preview</SButton>
+                    <SButton>Default</SButton>
+                </div>
+            </div>
+        </div>
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    double _a = 50, _b = 70, _c = 30;
+    double _temp = 22, _pct = 0.6, _rating = 3;
+    double _radius = 14, _blur = 16;
+    int _inputs, _ends;
+
+    protected override void OnInitialized() { }
+
+    void OnEnd(double v) => _ends++;
+
+    const string _basicCode = """
+<SSlider @bind-Value="_volume" Label="Volume" />
+""";
+
+    const string _rangeCode = """
+<SSlider @bind-Value="_temp" Label="Temperature" Min="16" Max="30" Step="0.5"
+         Format="@(v => $"{v:0.0} °C")" />
+
+<SSlider @bind-Value="_pct" Label="Opacity" Min="0" Max="1" Step="0.05"
+         Format="@(v => $"{v:P0}")" />
+""";
+
+    const string _tickCode = """
+<SSlider @bind-Value="_rating" Label="Rating" Min="1" Max="5" Step="1"
+         Ticks="@(new double[] { 1, 2, 3, 4, 5 })" />
+""";
+
+    const string _noValCode = """
+<SSlider @bind-Value="_x" Label="Brightness" ShowValue="false" />
+""";
+
+    const string _endCode = """
+<SSlider @bind-Value="_x" Label="Drag me" OnChangeEnd="Save" />
+
+@code {
+    // ValueChanged fires on every pixel; OnChangeEnd only on release
+    async Task Save(double v) => await Http.PutAsJsonAsync("/api/setting", v);
+}
+""";
+
+    const string _disabledCode = """
+<SSlider Value="40" Label="Locked" Disabled />
+""";
+
+    const string _themeCode = """
+@* Tokens cascade — scope them to any subtree *@
+<div style="@($"--g-radius:{_radius}px")">
+    <SSlider @bind-Value="_radius" Min="0" Max="28" />
+    <SButton Variant="SVariant.Primary">Preview</SButton>
+</div>
+""";
+}

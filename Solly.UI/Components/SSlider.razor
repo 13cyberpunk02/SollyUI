@@ -1,0 +1,117 @@
+﻿@* Components/GSlider.razor *@
+@using System.Linq.Expressions
+@inherits SComponentBase
+
+<div class="s-field @Class" style="@Style">
+    @if (!string.IsNullOrEmpty(Label) || ShowValue)
+    {
+        <div class="s-slider-head">
+            @if (!string.IsNullOrEmpty(Label))
+            {
+                <SLabel For="@Uid">@Label</SLabel>
+            }
+            @if (ShowValue)
+            {
+                <span class="s-slider-num">@FormatOf(Value)</span>
+            }
+        </div>
+    }
+
+    <div class="s-slider @(Disabled ? "s-disabled" : null)" style="@($"--s-pct:{Percent}%")">
+        <div class="s-slider-track">
+            <div class="s-slider-fill"></div>
+        </div>
+
+        <input id="@Uid"
+               class="s-slider-native"
+               type="range"
+               min="@Min" max="@Max" step="@Step"
+               value="@Value"
+               disabled="@Disabled"
+               aria-valuetext="@FormatOf(Value)"
+               @oninput="OnInputAsync"
+               @onchange="OnChangeAsync"
+               @attributes="Attributes" />
+
+        <div class="s-slider-thumb"></div>
+    </div>
+
+    @if (Ticks is not null && Ticks.Any())
+    {
+        <div class="s-slider-ticks">
+            @foreach (var t in Ticks)
+            {
+                <span class="s-slider-tick" style="@($"left:{PercentOf(t)}%")">
+                    <span class="s-slider-tick-mark"></span>
+                    <span class="s-slider-tick-label">@FormatOf(t)</span>
+                </span>
+            }
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(Hint))
+    {
+        <div class="s-hint">@Hint</div>
+    }
+</div>
+
+@code {
+    [CascadingParameter] private EditContext? _edit { get; set; }
+
+    [Parameter] public double Value { get; set; }
+    [Parameter] public EventCallback<double> ValueChanged { get; set; }
+    [Parameter] public Expression<Func<double>>? ValueExpression { get; set; }
+
+    [Parameter] public double Min { get; set; } = 0;
+    [Parameter] public double Max { get; set; } = 100;
+    [Parameter] public double Step { get; set; } = 1;
+
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public string? Hint { get; set; }
+    [Parameter] public bool ShowValue { get; set; } = true;
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public IEnumerable<double>? Ticks { get; set; }
+
+    /// <summary>Formats the displayed value. Default: invariant round-trip.</summary>
+    [Parameter] public Func<double, string>? Format { get; set; }
+
+    /// <summary>Fires only on release, not while dragging.</summary>
+    [Parameter] public EventCallback<double> OnChangeEnd { get; set; }
+
+    private FieldIdentifier _field;
+
+    private double Percent => PercentOf(Value);
+
+    private double PercentOf(double v) =>
+        Max - Min <= 0 ? 0 : Math.Clamp((v - Min) / (Max - Min) * 100, 0, 100);
+
+    private string FormatOf(double v) =>
+        Format?.Invoke(v) ?? v.ToString(System.Globalization.CultureInfo.CurrentCulture);
+
+    protected override void OnParametersSet()
+    {
+        if (_edit is not null && ValueExpression is not null)
+            _field = FieldIdentifier.Create(ValueExpression);
+    }
+
+    private async Task OnInputAsync(ChangeEventArgs e)
+    {
+        if (!double.TryParse(e.Value?.ToString(),
+            System.Globalization.NumberStyles.Float,
+            System.Globalization.CultureInfo.InvariantCulture, out var v)) return;
+
+        if (Math.Abs(v - Value) < double.Epsilon) return;
+
+        Value = v;
+        await ValueChanged.InvokeAsync(v);
+
+        if (_edit is not null && ValueExpression is not null)
+            _edit.NotifyFieldChanged(_field);
+    }
+
+    private async Task OnChangeAsync(ChangeEventArgs e)
+    {
+        if (!OnChangeEnd.HasDelegate) return;
+        await OnChangeEnd.InvokeAsync(Value);
+    }
+}

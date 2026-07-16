@@ -1,5 +1,4 @@
 ﻿@inherits SComponentBase
-@using Solly.UI.Core.Interop
 @implements IAsyncDisposable
 @inject SollyInterop Interop
 
@@ -102,6 +101,6 @@
         }
         catch (JSDisconnectedException) { }
         catch (ObjectDisposedException) { }
-        catch (JSException ex) { Console.Error.WriteLine($"[Glassy] {ex.Message}"); }
+        catch (JSException ex) { Console.Error.WriteLine($"[Sollly] {ex.Message}"); }
     }
 }
