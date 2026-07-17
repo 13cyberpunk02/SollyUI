@@ -2,6 +2,7 @@
 @implements IDisposable
 
 <CascadingValue Value="this" IsFixed="true">
+    @ChildContent
     <div class="s-tabs @Class" style="@Style">
         <div class="s-tabs-bar @(Fill ? "s-fill" : null)" role="tablist" @onkeydown="OnKeyDown">
             @foreach (var t in _tabs)
@@ -14,22 +15,10 @@
                         tabindex="@(active ? 0 : -1)"
                         disabled="@t.Disabled"
                         @onclick="() => ActivateAsync(t.Id)">
-                    @if (!string.IsNullOrEmpty(t.Icon))
-                    {
-                        <SIcon Name="@t.Icon" Size="15" />
-                    }
-                    @if (t.HeaderContent is not null)
-                    {
-                        @t.HeaderContent
-                    }
-                    else
-                    {
-                        <span>@t.Title</span>
-                    }
-                    @if (t.Badge is not null)
-                    {
-                        <span class="s-tab-badge">@t.Badge</span>
-                    }
+                    @if (!string.IsNullOrEmpty(t.Icon)) { <SIcon Name="@t.Icon" Size="15" /> }
+                    @if (t.HeaderContent is not null) { @t.HeaderContent }
+                    else { <span>@t.Title</span> }
+                    @if (t.Badge is not null) { <span class="s-tab-badge">@t.Badge</span> }
                 </button>
             }
         </div>
@@ -37,19 +26,12 @@
         <div class="s-tabs-body" role="tabpanel">
             @foreach (var t in _tabs)
             {
-                @if (t.Id == ActiveId)
-                {
-                    @t.ChildContent
-                }
-                else if (t.KeepAlive)
-                {
-                    <div style="display:none;">@t.ChildContent</div>
-                }
+                @if (t.Id == ActiveId) { @t.ChildContent }
+                else if (t.KeepAlive) { <div style="display:none;">@t.ChildContent</div> }
             }
         </div>
     </div>
 </CascadingValue>
-
 @code {
     [Parameter] public RenderFragment? ChildContent { get; set; }
     [Parameter] public string? ActiveId { get; set; }
@@ -63,17 +45,17 @@
         if (_tabs.Contains(tab)) return;
         _tabs.Add(tab);
         ActiveId ??= tab.Id;
-        StateHasChanged();
+        InvokeAsync(StateHasChanged);
     }
 
     internal void Remove(STab tab)
     {
-        _tabs.Remove(tab);
+        if (!_tabs.Remove(tab)) return;
         if (ActiveId == tab.Id) ActiveId = _tabs.FirstOrDefault()?.Id;
-        StateHasChanged();
+        InvokeAsync(StateHasChanged);
     }
 
-    internal void Refresh() => StateHasChanged();
+    internal void Refresh() => InvokeAsync(StateHasChanged);
 
     private async Task ActivateAsync(string id)
     {

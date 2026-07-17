@@ -22,7 +22,7 @@
         Parent.Add(this);
     }
 
-    protected override void OnParametersSet() => Parent?.Refresh();
+   // protected override void OnParametersSet() => Parent?.Refresh();
 
     public void Dispose() => Parent?.Remove(this);
 }

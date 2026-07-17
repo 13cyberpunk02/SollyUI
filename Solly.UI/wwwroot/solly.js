@@ -31,14 +31,19 @@ export function anchor(el, anchorEl) {
     el.style.visibility = 'visible';
 }
 
-export function registerDismiss(root, dotnet) {
+export function registerDismiss(root, panel, dotnet) {
+    const inside = (t) => root?.contains(t) || panel?.contains(t);
+
     const onPointerDown = (e) => {
-        if (root && !root.contains(e.target)) dotnet.invokeMethodAsync('OnDismissAsync');
+        if (!inside(e.target)) dotnet.invokeMethodAsync('OnDismissAsync');
     };
     const onKeyDown = (e) => {
         if (e.key === 'Escape') dotnet.invokeMethodAsync('OnDismissAsync');
     };
-    const onReflow = () => dotnet.invokeMethodAsync('OnDismissAsync');
+    const onReflow = (e) => {
+        if (e?.target && panel?.contains(e.target)) return;
+        dotnet.invokeMethodAsync('OnDismissAsync');
+    };
 
     document.addEventListener('pointerdown', onPointerDown, true);
     document.addEventListener('keydown', onKeyDown, true);

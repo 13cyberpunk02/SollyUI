@@ -97,7 +97,7 @@
             _portal = await Interop.PortalAsync(_panel);
             await Interop.AnchorAsync(_panel, _anchor);
             _self ??= DotNetObjectReference.Create(this);
-            _dismiss = await Interop.RegisterDismissAsync(_root, _self);
+            _dismiss = await Interop.RegisterDismissAsync(_root, _panel, _self);
         }
         catch (JSDisconnectedException) { }
         catch (ObjectDisposedException) { }

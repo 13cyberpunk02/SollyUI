@@ -19,10 +19,10 @@ public sealed class SollyInterop(IJSRuntime js) : IAsyncDisposable
 
     /// <summary>Registers outside-click/Escape handling. Returns a disposable handle.</summary>
     public async ValueTask<IJSObjectReference> RegisterDismissAsync<T>(
-        ElementReference root, DotNetObjectReference<T> target) where T : class
+        ElementReference root, ElementReference panel, DotNetObjectReference<T> target) where T : class
     {
         var m = await Module;
-        return await m.InvokeAsync<IJSObjectReference>("registerDismiss", root, target);
+        return await m.InvokeAsync<IJSObjectReference>("registerDismiss", root, panel, target);
     }
 
     public async ValueTask FocusAsync(ElementReference el)

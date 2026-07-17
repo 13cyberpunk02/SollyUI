@@ -26,6 +26,7 @@
     --s-accent:     #6344e0;
     --s-danger:     #d92d54;
     --s-shadow:     0 8px 32px rgba(31, 38, 135, 0.14);
+    --s-modal-bg:   rgba(255, 255, 255, 0.88);
 }
 
 @property --gx { syntax: '<length-percentage>'; inherits: false; initial-value: 50%; }
@@ -650,12 +651,12 @@
     position: absolute;
     inset: 0;
     background: rgba(0, 0, 0, .45);
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     opacity: 0;
     transition: opacity var(--s-dur) var(--s-ease);
 }
-[data-solly-theme="light"] .s-modal-backdrop { background: rgba(20, 20, 40, .3); }
+[data-solly-theme="light"] .s-modal-backdrop { background: rgba(20, 20, 40, .4); }
 
 .s-modal {
     position: relative;
@@ -664,10 +665,26 @@
     max-height: calc(100vh - 3rem);
     width: 100%;
     outline: none;
+    background: var(--s-modal-bg);
+    backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid var(--s-border);
+    border-radius: var(--s-radius);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, .45);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
     opacity: 0;
     transform: translateY(8px) scale(.97);
     transition: opacity var(--s-dur) var(--s-ease),
     transform var(--s-dur) var(--s-ease);
+}
+
+.s-modal { box-shadow: var(--s-modal-shadow); }
+
+:root, [data-solly-theme="dark"] {
+    --s-modal-shadow: 0 24px 64px rgba(0, 0, 0, .45);
+}
+
+[data-s-theme="light"] {
+    --s-modal-shadow: 0 24px 64px rgba(31, 38, 135, .18);
 }
 
 .s-modal-root.s-in  .s-modal-backdrop { opacity: 1; }
@@ -724,8 +741,8 @@
     color: var(--s-text);
     flex: 1;
 }
-.s-modal-head + .s-modal-body { paddins-top: 0; }
-.s-modal-body:first-child { paddins-top: 1.35rem; }
+.s-modal-head + .s-modal-body { padding-top: 0; }
+.s-modal-body:first-child { padding-top: 1.35rem; }
 
 .s-modal-foot {
     display: flex;
@@ -1047,12 +1064,6 @@
     background: var(--s-surface);
     border: 1px solid var(--s-border);
     overflow: hidden;
-}
-.s-slider-fill {
-    height: 100%;
-    width: var(--s-pct);
-    background: var(--s-accent);
-    transition: width 60ms linear;
 }
 
 .s-slider-thumb {
