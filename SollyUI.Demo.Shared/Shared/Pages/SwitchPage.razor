@@ -1,0 +1,52 @@
+﻿@page "/switch"
+
+<DemoPage Title="Switch" Subtitle="Same binding model as Checkbox.">
+
+    <DemoBlock Title="Basic" Code="@_basicCode">
+        <div class="demo-col">
+            <SSwitch @bind-Value="_a" Label="Dark mode" />
+            <span class="demo-note">Value: @_a</span>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="With hint" Code="@_hintCode">
+        <SSwitch @bind-Value="_b" Label="Beta features" Hint="May be unstable" />
+    </DemoBlock>
+
+    <DemoBlock Title="Disabled" Code="@_disabledCode">
+        <div class="demo-col">
+            <SSwitch Value="false" Disabled Label="Disabled off" />
+            <SSwitch Value="true" Disabled Label="Disabled on" />
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Settings panel" Code="@_panelCode">
+        <div class="demo-col">
+            <SSwitch @bind-Value="_notif" Label="Notifications" />
+            <SSwitch @bind-Value="_sound" Label="Sound" Disabled="@(!_notif)" />
+            <SSwitch @bind-Value="_vibrate" Label="Vibrate" Disabled="@(!_notif)" />
+        </div>
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    bool _a, _b, _notif = true, _sound = true, _vibrate;
+
+    const string _basicCode = """
+                              <SSwitch @bind-Value="_dark" Label="Dark mode" />
+                              """;
+
+    const string _hintCode = """
+                             <SSwitch @bind-Value="_beta" Label="Beta features" Hint="May be unstable" />
+                             """;
+
+    const string _disabledCode = """
+                                 <SSwitch Value="true" Disabled Label="Disabled on" />
+                                 """;
+
+    const string _panelCode = """
+                              <SSwitch @bind-Value="_notif" Label="Notifications" />
+                              <SSwitch @bind-Value="_sound" Label="Sound" Disabled="@(!_notif)" />
+                              """;
+}

@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
-<html lang="ru" data-solly-theme="dark">
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SollyUI Demo</title>
+    <title>Solly UI — WASM</title>
     <base href="/" />
 
     <script>
@@ -18,10 +18,21 @@
 
     <link rel="stylesheet" href="_content/Solly.UI/solly.css" />
     <link rel="stylesheet" href="_content/SollyUI.Demo.Shared/app.css" />
-    <HeadOutlet />
 </head>
 <body>
-<Routes @rendermode="InteractiveServer" />
-<script src="_framework/blazor.web.js"></script>
+<div id="app">
+    <div class="wasm-boot">
+        <div class="wasm-boot-ring"></div>
+        <span>Loading .NET runtime…</span>
+    </div>
+</div>
+
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+<script src="_framework/blazor.webassembly.js"></script>
 </body>
 </html>

@@ -1,0 +1,78 @@
+﻿@page "/checkbox"
+@using System.ComponentModel.DataAnnotations
+
+<DemoPage Title="Checkbox" Subtitle="Works inside and outside EditForm.">
+
+    <DemoBlock Title="Basic" Code="@_basicCode">
+        <div class="demo-col">
+            <SCheckbox @bind-Value="_a" Label="I agree to the terms" />
+            <span class="demo-note">Value: @_a</span>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="With hint" Code="@_hintCode">
+        <SCheckbox @bind-Value="_b" Label="Send me updates" Hint="Weekly, no spam" />
+    </DemoBlock>
+
+    <DemoBlock Title="Indeterminate"
+               Description="Visual state only — does not affect Value."
+               Code="@_indetCode">
+        <SCheckbox Value="false" Indeterminate Label="Partially selected" />
+    </DemoBlock>
+
+    <DemoBlock Title="Disabled" Code="@_disabledCode">
+        <div class="demo-col">
+            <SCheckbox Value="false" Disabled Label="Disabled off" />
+            <SCheckbox Value="true" Disabled Label="Disabled on" />
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Validation" Code="@_validCode">
+        <EditForm Model="_model" OnValidSubmit="() => _ok = true">
+            <DataAnnotationsValidator />
+            <div class="demo-col">
+                <SCheckbox @bind-Value="_model.Agree" Label="I accept the terms" />
+                <SButton Type="submit" Variant="SVariant.Primary">Submit</SButton>
+                @if (_ok) { <span class="demo-note">Accepted.</span> }
+            </div>
+        </EditForm>
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    class Model
+    {
+        [Range(typeof(bool), "true", "true", ErrorMessage = "You must accept the terms")]
+        public bool Agree { get; set; }
+    }
+
+    Model _model = new();
+    bool _ok, _a, _b;
+
+    const string _basicCode = """
+<SCheckbox @bind-Value="_agree" Label="I agree to the terms" />
+""";
+
+    const string _hintCode = """
+<SCheckbox @bind-Value="_news" Label="Send me updates" Hint="Weekly, no spam" />
+""";
+
+    const string _indetCode = """
+<SCheckbox Value="false" Indeterminate Label="Partially selected" />
+""";
+
+    const string _disabledCode = """
+<SCheckbox Value="true" Disabled Label="Disabled on" />
+""";
+
+    const string _validCode = """
+class Model
+{
+    [Range(typeof(bool), "true", "true", ErrorMessage = "You must accept")]
+    public bool Agree { get; set; }
+}
+
+<SCheckbox @bind-Value="_model.Agree" Label="I accept the terms" />
+""";
+}

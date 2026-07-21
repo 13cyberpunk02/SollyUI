@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <AddRazorSupportForMvc>false</AddRazorSupportForMvc>
+        <StaticWebAssetBasePath>_content/SollyUI.Demo.Shared</StaticWebAssetBasePath>
+    </PropertyGroup>
+    
+    <ItemGroup>
+        <SupportedPlatform Include="browser"/>
+        <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.10"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Solly.UI\Solly.UI.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <AdditionalFiles Include="Components\App.razor" />
+      <AdditionalFiles Include="Components\Routes.razor" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <UpToDateCheckInput Remove="Pages\ButtonPage.razor" />
+      <UpToDateCheckInput Remove="Pages\CheckboxPage.razor" />
+      <UpToDateCheckInput Remove="Pages\DatePickerPage.razor" />
+      <UpToDateCheckInput Remove="Pages\FormPage.razor" />
+      <UpToDateCheckInput Remove="Pages\Home.razor" />
+      <UpToDateCheckInput Remove="Pages\IconPage.razor" />
+      <UpToDateCheckInput Remove="Pages\InputPage.razor" />
+      <UpToDateCheckInput Remove="Pages\ModalPage.razor" />
+      <UpToDateCheckInput Remove="Pages\PopoverPage.razor" />
+      <UpToDateCheckInput Remove="Pages\RadioPage.razor" />
+      <UpToDateCheckInput Remove="Pages\SelectPage.razor" />
+      <UpToDateCheckInput Remove="Pages\SliderPage.razor" />
+      <UpToDateCheckInput Remove="Pages\SwitchPage.razor" />
+      <UpToDateCheckInput Remove="Pages\TabsPage.razor" />
+      <UpToDateCheckInput Remove="Pages\TextAreaPage.razor" />
+      <UpToDateCheckInput Remove="Pages\ThemingPage.razor" />
+      <UpToDateCheckInput Remove="Pages\ToastPage.razor" />
+      <UpToDateCheckInput Remove="Pages\TooltipPage.razor" />
+      <UpToDateCheckInput Remove="Layout\DemoLink.razor" />
+      <UpToDateCheckInput Remove="Layout\MainLayout.razor" />
+      <UpToDateCheckInput Remove="Layout\ReconnectModal.razor" />
+    </ItemGroup>
+
+</Project>

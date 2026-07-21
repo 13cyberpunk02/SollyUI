@@ -1,0 +1,69 @@
+﻿@page "/datepicker"
+@using System.Globalization
+
+<DemoPage Title="DatePicker" Subtitle="Culture-aware — month names, day names and first day of week follow CurrentCulture.">
+
+    <DemoBlock Title="Basic" Code="@_basicCode">
+        <div class="demo-col">
+            <SDatePicker @bind-Value="_a" Label="Date" />
+            <span class="demo-note">Value: @(_a?.ToString("O")[..10] ?? "—")</span>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Format" Code="@_fmtCode">
+        <div class="demo-col">
+            <SDatePicker @bind-Value="_b" Label="ISO" Format="yyyy-MM-dd" />
+            <SDatePicker @bind-Value="_c" Label="Long" Format="dd MMMM yyyy" />
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Min / Max"
+               Description="Out-of-range days are rendered disabled."
+               Code="@_rangeCode">
+        <SDatePicker @bind-Value="_d" Label="Next 30 days"
+                     Min="DateTime.Today"
+                     Max="DateTime.Today.AddDays(30)" />
+    </DemoBlock>
+
+    <DemoBlock Title="Date range" Code="@_pairCode">
+        <div class="demo-row">
+            <SDatePicker @bind-Value="_from" Label="From" Max="_to" />
+            <SDatePicker @bind-Value="_to" Label="To" Min="_from" />
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Disabled" Code="@_disabledCode">
+        <SDatePicker @bind-Value="_e" Label="Locked" Disabled />
+    </DemoBlock>
+
+    <p class="demo-note">Current culture: <code>@CultureInfo.CurrentCulture.Name</code></p>
+
+</DemoPage>
+
+@code {
+    DateTime? _a, _b, _c, _d, _from, _to;
+    DateTime? _e = DateTime.Today;
+
+    const string _basicCode = """
+<SDatePicker @bind-Value="_date" Label="Date" />
+""";
+
+    const string _fmtCode = """
+<SDatePicker @bind-Value="_d" Label="ISO" Format="yyyy-MM-dd" />
+<SDatePicker @bind-Value="_d" Label="Long" Format="dd MMMM yyyy" />
+""";
+
+    const string _rangeCode = """
+<SDatePicker @bind-Value="_d" Label="Next 30 days"
+             Min="DateTime.Today" Max="DateTime.Today.AddDays(30)" />
+""";
+
+    const string _pairCode = """
+<SDatePicker @bind-Value="_from" Label="From" Max="_to" />
+<SDatePicker @bind-Value="_to" Label="To" Min="_from" />
+""";
+
+    const string _disabledCode = """
+<SDatePicker @bind-Value="_d" Label="Locked" Disabled />
+""";
+}

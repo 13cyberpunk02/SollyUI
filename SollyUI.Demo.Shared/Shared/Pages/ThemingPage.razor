@@ -1,0 +1,155 @@
+﻿@page "/theming"
+@implements IDisposable
+@inject SollyThemeService Theme
+
+<DemoPage Title="Theming" Subtitle="Design tokens, persistence, custom themes.">
+
+    <DemoBlock Title="Switching" Code="@_switchCode">
+        <div class="demo-col">
+            <div class="demo-row">
+                <SButton OnClick="@(() => Theme.SetAsync("dark"))" Icon="@SIcons.Moon">Dark</SButton>
+                <SButton OnClick="@(() => Theme.SetAsync("light"))" Icon="@SIcons.Sun">Light</SButton>
+                <SButton OnClick="@(() => Theme.SetAsync("auto"))">Auto (OS)</SButton>
+                <SThemeToggle />
+            </div>
+            <span class="demo-note">
+                Current: <code>@Theme.Theme</code> · IsDark: <code>@Theme.IsDark</code>
+            </span>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Tokens"
+               Description="Every value is a CSS custom property. Override them in your own stylesheet, loaded after solly.css."
+               Code="@_tokenCode">
+        <div class="demo-swatches">
+            @foreach (var t in _tokens)
+            {
+                <div class="demo-swatch">
+                    <span class="demo-swatch-chip" style="background: var(@t);"></span>
+                    <code>@t</code>
+                </div>
+            }
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Live tweak"
+               Description="Changes apply to this page only via an inline style on the preview."
+               Code="@_liveCode">
+        <div style="@($"--s-accent: {_accent}; --s-radius: {_radius}px; --s-blur: {_blur}px;")">
+            <div class="demo-col">
+                <div class="demo-row">
+                    <label class="demo-note">Accent
+                        <input type="color" value="@_accent" @oninput="e => _accent = e.Value?.ToString() ?? _accent" />
+                    </label>
+                    <label class="demo-note">Radius
+                        <input type="range" min="0" max="28" value="@_radius" @oninput="OnRadius" />
+                        @_radius px
+                    </label>
+                    <label class="demo-note">Blur
+                        <input type="range" min="0" max="40" value="@_blur" @oninput="OnBlur" />
+                        @_blur px
+                    </label>
+                </div>
+                <div class="demo-row">
+                    <SButton Variant="SVariant.Primary" Icon="@SIcons.Check">Primary</SButton>
+                    <SButton>Default</SButton>
+                    <SSwitch Value="true" Label="Switch" />
+                </div>
+                <SInput @bind-Value="_sample" Label="Input" Icon="@SIcons.Search" />
+            </div>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Custom theme" Code="@_customCode">
+        <p class="demo-note">
+            Define a new <code>[data-solly-theme="…"]</code> block and call
+            <code>Theme.SetAsync("ocean")</code>.
+        </p>
+    </DemoBlock>
+
+    <DemoBlock Title="Preventing the flash"
+               Description="Blazor boots after first paint, so the initial theme must be applied by an inline script. This cannot be done from C#."
+               Code="@_flashCode">
+        <p class="demo-note">See <code>App.razor</code> in this demo.</p>
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    string _accent = "#7c5cff";
+    int _radius = 14;
+    int _blur = 16;
+
+    string? _sample = "Sample text";
+    void OnRadius(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var v)) _radius = v;
+    }
+
+    void OnBlur(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var v)) _blur = v;
+    }
+    static readonly string[] _tokens =
+    {
+        "--s-surface", "--s-surface-hi", "--s-border",
+        "--s-text", "--s-text-dim", "--s-accent", "--s-danger",
+    };
+
+    protected override void OnInitialized() => Theme.Changed += OnChanged;
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+    public void Dispose() => Theme.Changed -= OnChanged;
+
+    const string _switchCode = """
+@inject SollyThemeService Theme
+
+<SButton OnClick="@(() => Theme.SetAsync("light"))">Light</SButton>
+<SButton OnClick="Theme.ToggleAsync">Toggle</SButton>
+<SThemeToggle />
+
+@code {
+    protected override void OnInitialized() => Theme.Changed += OnChanged;
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+    public void Dispose() => Theme.Changed -= OnChanged;
+}
+""";
+
+    const string _tokenCode = """
+/* your app.css, loaded after solly.css */
+:root, [data-solly-theme="dark"] {
+  --s-accent: #00b4d8;
+  --s-radius: 20px;
+  --s-blur: 24px;
+}
+""";
+
+    const string _liveCode = """
+@* Tokens cascade — scope them to any subtree *@
+<div style="--s-accent: #00b4d8; --s-radius: 20px;">
+    <SButton Variant="SVariant.Primary">Themed locally</SButton>
+</div>
+""";
+
+    const string _customCode = """
+[data-solly-theme="ocean"] {
+  --s-surface: rgba(0, 119, 182, 0.12);
+  --s-accent:  #00b4d8;
+  --s-text:    rgba(255, 255, 255, 0.94);
+}
+
+await Theme.SetAsync("ocean");
+""";
+
+    const string _flashCode = """
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem('solly-theme') || 'dark';
+      if (t === 'auto') t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-solly-theme', t);
+    } catch (e) { }
+  })();
+</script>
+<link rel="stylesheet" href="_content/Solly.UI/solly.css" />
+""";
+}

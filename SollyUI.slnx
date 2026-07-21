@@ -1,4 +1,6 @@
 <Solution>
   <Project Path="Solly.UI/Solly.UI.csproj" Id="a51a0d6d-f0f8-4909-a72b-953cf26fa957" />
+  <Project Path="SollyUI.Demo.Shared/SollyUI.Demo.Shared.csproj" />
+  <Project Path="SollyUI.Demo.Wasm/SollyUI.Demo.Wasm.csproj" />
   <Project Path="SollyUI.Demo/SollyUI.Demo.csproj" />
 </Solution>

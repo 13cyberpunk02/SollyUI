@@ -1,0 +1,124 @@
+﻿@page "/tooltip"
+
+<DemoPage Title="Tooltip" Subtitle="Hover or focus. Flips automatically when it hits a viewport edge.">
+
+    <DemoBlock Title="Placement" Code="@_placeCode">
+        <div class="demo-row" style="gap:2rem;">
+            <STooltip Text="Appears above" Placement="SPlacement.Top">
+                <SButton>Top</SButton>
+            </STooltip>
+            <STooltip Text="Appears below" Placement="SPlacement.Bottom">
+                <SButton>Bottom</SButton>
+            </STooltip>
+            <STooltip Text="Appears to the left" Placement="SPlacement.Left">
+                <SButton>Left</SButton>
+            </STooltip>
+            <STooltip Text="Appears to the right" Placement="SPlacement.Right">
+                <SButton>Right</SButton>
+            </STooltip>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="On icon buttons"
+               Description="The main reason tooltips exist — icon-only controls need a label."
+               Code="@_iconCode">
+        <div class="demo-row">
+            <STooltip Text="Save changes">
+                <SButton Icon="@SIcons.Check" Variant="SVariant.Primary" />
+            </STooltip>
+            <STooltip Text="Delete permanently">
+                <SButton Icon="@SIcons.X" Variant="SVariant.Danger" />
+            </STooltip>
+            <STooltip Text="Search the archive">
+                <SButton Icon="@SIcons.Search" />
+            </STooltip>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Delay" Code="@_delayCode">
+        <div class="demo-row">
+            <STooltip Text="Instant" DelayMs="0"><SButton>0ms</SButton></STooltip>
+            <STooltip Text="Default" DelayMs="400"><SButton>400ms</SButton></STooltip>
+            <STooltip Text="Patient" DelayMs="1000"><SButton>1000ms</SButton></STooltip>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Rich content" Code="@_richCode">
+        <STooltip Placement="SPlacement.Right">
+            <ChildContent>
+                <SButton Icon="@SIcons.Info">Hover me</SButton>
+            </ChildContent>
+            <TipContent>
+                <strong style="display:block;margin-bottom:.2rem;">Keyboard shortcut</strong>
+                Press <code style="opacity:.7;">Ctrl+K</code> to open the command palette from anywhere.
+            </TipContent>
+        </STooltip>
+    </DemoBlock>
+
+    <DemoBlock Title="Edge flipping"
+               Description="Placement is a preference, not a guarantee. Hover the button near the right edge."
+               Code="@_flipCode">
+        <div style="display:flex;justify-content:flex-end;">
+            <STooltip Text="I wanted to be on the right, but there was no room." Placement="SPlacement.Right">
+                <SButton>Near the edge</SButton>
+            </STooltip>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="On text" Code="@_textCode">
+        <p class="demo-note">
+            The build uses
+            <STooltip Text="Ahead-of-time compilation — trades build time for startup speed.">
+                <span class="demo-underline">AOT</span>
+            </STooltip>
+            and targets
+            <STooltip Text="WebAssembly — runs .NET in the browser sandbox.">
+                <span class="demo-underline">WASM</span>
+            </STooltip>.
+        </p>
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    const string _placeCode = """
+<STooltip Text="Appears above" Placement="SPlacement.Top">
+    <SButton>Top</SButton>
+</STooltip>
+""";
+
+    const string _iconCode = """
+<STooltip Text="Save changes">
+    <SButton Icon="@SIcons.Check" Variant="SVariant.Primary" />
+</STooltip>
+""";
+
+    const string _delayCode = """
+<STooltip Text="Instant" DelayMs="0">…</STooltip>
+<STooltip Text="Default" DelayMs="400">…</STooltip>
+""";
+
+    const string _richCode = """
+<STooltip Placement="SPlacement.Right">
+    <ChildContent>
+        <SButton Icon="@SIcons.Info">Hover me</SButton>
+    </ChildContent>
+    <TipContent>
+        <strong>Keyboard shortcut</strong>
+        Press Ctrl+K to open the command palette.
+    </TipContent>
+</STooltip>
+""";
+
+    const string _flipCode = """
+@* No configuration needed — flipping is automatic. *@
+<STooltip Text="…" Placement="SPlacement.Right">…</STooltip>
+""";
+
+    const string _textCode = """
+The build uses
+<STooltip Text="Ahead-of-time compilation">
+    <span class="underline">AOT</span>
+</STooltip>
+""";
+}

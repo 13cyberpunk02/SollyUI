@@ -1,0 +1,35 @@
+.wasm-boot {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    font-family: var(--s-font);
+    font-size: .85rem;
+    color: var(--s-text-dim);
+}
+.wasm-boot-ring {
+    width: 32px;
+    height: 32px;
+    border: 2px solid var(--s-border);
+    border-top-color: var(--s-accent);
+    border-radius: 999px;
+    animation: s-spin 700ms linear infinite;
+}
+
+#blazor-error-ui {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 20000;
+    padding: .7rem 1.25rem;
+    background: var(--s-danger);
+    color: #fff;
+    font-family: var(--s-font);
+    font-size: .85rem;
+    box-shadow: 0 -2px 16px rgba(0,0,0,.3);
+}
+#blazor-error-ui .reload { color: #fff; }
+#blazor-error-ui .dismiss { float: right; cursor: pointer; }

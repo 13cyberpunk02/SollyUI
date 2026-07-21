@@ -1,0 +1,72 @@
+﻿@page "/button"
+
+<DemoPage Title="Button" Subtitle="Four variants, optional icon, automatic async spinner.">
+
+    <DemoBlock Title="Variants" Code="@_variantsCode">
+        <div class="demo-row">
+            <SButton>Default</SButton>
+            <SButton Variant="SVariant.Primary">Primary</SButton>
+            <SButton Variant="SVariant.Danger">Danger</SButton>
+            <SButton Variant="SVariant.Ghost">Ghost</SButton>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="With icons" Code="@_iconsCode">
+        <div class="demo-row">
+            <SButton Icon="@SIcons.Check" Variant="SVariant.Primary">Save</SButton>
+            <SButton Icon="@SIcons.X" Variant="SVariant.Danger">Delete</SButton>
+            <SButton Icon="@SIcons.Search">Search</SButton>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Disabled" Code="@_disabledCode">
+        <div class="demo-row">
+            <SButton Disabled>Default</SButton>
+            <SButton Variant="SVariant.Primary" Disabled>Primary</SButton>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Async"
+               Description="The spinner appears automatically while OnClick is awaited. Re-entry is blocked."
+               Code="@_asyncCode">
+        <div class="demo-row">
+            <SButton Variant="SVariant.Primary" OnClick="SlowAsync">Click me (1.2s)</SButton>
+            <span class="demo-note">Clicks: @_clicks</span>
+        </div>
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    int _clicks;
+
+    async Task SlowAsync()
+    {
+        await Task.Delay(1200);
+        _clicks++;
+    }
+
+    const string _variantsCode = """
+<SButton>Default</SButton>
+<SButton Variant="SVariant.Primary">Primary</SButton>
+<SButton Variant="SVariant.Danger">Danger</SButton>
+<SButton Variant="SVariant.Ghost">Ghost</SButton>
+""";
+
+    const string _iconsCode = """
+<SButton Icon="@SIcons.Check" Variant="SVariant.Primary">Save</SButton>
+<SButton Icon="@SIcons.X" Variant="SVariant.Danger">Delete</SButton>
+""";
+
+    const string _disabledCode = """
+<SButton Disabled>Default</SButton>
+""";
+
+    const string _asyncCode = """
+<SButton Variant="SVariant.Primary" OnClick="SlowAsync">Click me</SButton>
+
+@code {
+    async Task SlowAsync() => await Task.Delay(1200);
+}
+""";
+}

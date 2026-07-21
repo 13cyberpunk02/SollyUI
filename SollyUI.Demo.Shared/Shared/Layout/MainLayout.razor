@@ -6,7 +6,6 @@
             <div class="demo-brand">
                 <span class="demo-brand-dot"></span>
                 Solly UI
-                <span class="demo-env">@Env</span>
             </div>
 
             <nav class="demo-nav">
@@ -56,7 +55,7 @@
 
 @code {
     public SToastPosition ToastPosition { get; private set; } = SToastPosition.BottomRight;
-    string Env => OperatingSystem.IsBrowser() ? "WASM" : "Server";
+
     public void SetToastPosition(SToastPosition p)
     {
         ToastPosition = p;

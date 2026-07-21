@@ -1,0 +1,16 @@
+﻿<div class="demo-page">
+    <header class="demo-page-head">
+        <h1>@Title</h1>
+        @if (!string.IsNullOrEmpty(Subtitle))
+        {
+            <p class="demo-page-sub">@Subtitle</p>
+        }
+    </header>
+    @ChildContent
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string? Subtitle { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

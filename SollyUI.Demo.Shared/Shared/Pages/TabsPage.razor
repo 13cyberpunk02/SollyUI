@@ -1,0 +1,190 @@
+﻿@page "/tabs"
+
+<DemoPage Title="Tabs" Subtitle="Cascading registration, keyboard navigation, optional state preservation.">
+
+    <DemoBlock Title="Basic" Code="@_basicCode">
+        <STabs>
+            <STab Title="Overview">
+                <p>Tabs register themselves with the parent via a cascading parameter.</p>
+            </STab>
+            <STab Title="Details">
+                <p>Only the active panel is rendered by default.</p>
+            </STab>
+            <STab Title="History">
+                <p>Use <code>←</code> <code>→</code> <code>Home</code> <code>End</code> to navigate.</p>
+            </STab>
+        </STabs>
+    </DemoBlock>
+
+    <DemoBlock Title="Icons and badges" Code="@_iconCode">
+        <STabs>
+            <STab Title="Inbox" Icon="@SIcons.Info" Badge="12">
+                <p>You have 12 unread messages.</p>
+            </STab>
+            <STab Title="Starred" Icon="@SIcons.Star" Badge="3">
+                <p>Three starred conversations.</p>
+            </STab>
+            <STab Title="Archive" Icon="@SIcons.Layers">
+                <p>Nothing archived yet.</p>
+            </STab>
+        </STabs>
+    </DemoBlock>
+
+    <DemoBlock Title="Fill" Code="@_fillCode">
+        <STabs Fill>
+            <STab Title="Day"><p>Daily view.</p></STab>
+            <STab Title="Week"><p>Weekly view.</p></STab>
+            <STab Title="Month"><p>Monthly view.</p></STab>
+        </STabs>
+    </DemoBlock>
+
+    <DemoBlock Title="Controlled"
+               Description="Bind ActiveId to drive tabs from outside."
+               Code="@_ctrlCode">
+        <div class="demo-col" style="max-width:none;">
+            <div class="demo-row">
+                <SButton OnClick='() => _active = "a"'>Go to A</SButton>
+                <SButton OnClick='() => _active = "c"'>Go to C</SButton>
+                <span class="demo-note">Active: <code>@_active</code></span>
+            </div>
+
+            <STabs @bind-ActiveId="_active">
+                <STab Id="a" Title="Panel A"><p>First.</p></STab>
+                <STab Id="b" Title="Panel B"><p>Second.</p></STab>
+                <STab Id="c" Title="Panel C"><p>Third.</p></STab>
+            </STabs>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Disabled tab" Code="@_disabledCode">
+        <STabs>
+            <STab Title="Available"><p>This one works.</p></STab>
+            <STab Title="Locked" Disabled><p>Never shown.</p></STab>
+            <STab Title="Also available"><p>This one too.</p></STab>
+        </STabs>
+    </DemoBlock>
+
+    <DemoBlock Title="KeepAlive"
+               Description="Without KeepAlive the panel unmounts and loses state. Type in both, switch away, come back."
+               Code="@_keepCode">
+        <STabs>
+            <STab Title="Default">
+                <div class="demo-col">
+                    <SInput @bind-Value="_t1" Label="This resets" Placeholder="Type, switch tabs, come back" />
+                </div>
+            </STab>
+            <STab Title="KeepAlive" KeepAlive>
+                <div class="demo-col">
+                    <SInput @bind-Value="_t2" Label="This persists" Placeholder="Type, switch tabs, come back" />
+                </div>
+            </STab>
+        </STabs>
+    </DemoBlock>
+
+    <DemoBlock Title="Form in tabs" Code="@_formCode">
+        <EditForm Model="_m" OnValidSubmit="() => _ok = true">
+            <DataAnnotationsValidator />
+            <STabs>
+                <STab Title="Account" Icon="@SIcons.Type">
+                    <div class="demo-col">
+                        <SInput @bind-Value="_m.Name" Label="Name" Required Clearable />
+                        <SInput @bind-Value="_m.Email" Label="Email" Type="email" Required Clearable />
+                    </div>
+                </STab>
+                <STab Title="Preferences" Icon="@SIcons.Sliders">
+                    <div class="demo-col">
+                        <SSwitch @bind-Value="_m.Notify" Label="Email notifications" />
+                        <SSlider @bind-Value="_m.Volume" Label="Volume" />
+                    </div>
+                </STab>
+            </STabs>
+
+            <div class="demo-row" style="margin-top:1rem;">
+                <SButton Type="submit" Variant="SVariant.Primary">Save</SButton>
+                @if (_ok) { <span class="demo-note">Saved.</span> }
+            </div>
+        </EditForm>
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    class Model
+    {
+        [System.ComponentModel.DataAnnotations.Required]
+        public string? Name { get; set; }
+        [System.ComponentModel.DataAnnotations.Required]
+        [System.ComponentModel.DataAnnotations.EmailAddress]
+        public string? Email { get; set; }
+        public bool Notify { get; set; } = true;
+        public double Volume { get; set; } = 50;
+    }
+
+    Model _m = new();
+    bool _ok;
+    string _active = "b";
+    string? _t1, _t2;
+
+    const string _basicCode = """
+<STabs>
+    <STab Title="Overview">
+        <p>Content.</p>
+    </STab>
+    <STab Title="Details">
+        <p>More content.</p>
+    </STab>
+</STabs>
+""";
+
+    const string _iconCode = """
+<STabs>
+    <STab Title="Inbox" Icon="@SIcons.Info" Badge="12">…</STab>
+    <STab Title="Starred" Icon="@SIcons.Star" Badge="3">…</STab>
+</STabs>
+""";
+
+    const string _fillCode = """
+<STabs Fill>
+    <STab Title="Day">…</STab>
+    <STab Title="Week">…</STab>
+</STabs>
+""";
+
+    const string _ctrlCode = """
+<STabs @bind-ActiveId="_active">
+    <STab Id="a" Title="Panel A">…</STab>
+    <STab Id="b" Title="Panel B">…</STab>
+</STabs>
+
+@code {
+    string _active = "b";
+}
+""";
+
+    const string _disabledCode = """
+<STab Title="Locked" Disabled>…</STab>
+""";
+
+    const string _keepCode = """
+@* Panel unmounts on switch — state is lost *@
+<STab Title="Default">…</STab>
+
+@* Panel stays mounted (display:none) — state persists *@
+<STab Title="KeepAlive" KeepAlive>…</STab>
+""";
+
+    const string _formCode = """
+<EditForm Model="_m" OnValidSubmit="Save">
+    <DataAnnotationsValidator />
+    <STabs>
+        <STab Title="Account">
+            <SInput @bind-Value="_m.Name" Label="Name" Required />
+        </STab>
+        <STab Title="Preferences">
+            <SSwitch @bind-Value="_m.Notify" Label="Notifications" />
+        </STab>
+    </STabs>
+    <SButton Type="submit" Variant="SVariant.Primary">Save</SButton>
+</EditForm>
+""";
+}

@@ -9,6 +9,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Solly.UI\Solly.UI.csproj" />
+      <ProjectReference Include="..\SollyUI.Demo.Shared\SollyUI.Demo.Shared.csproj" />
     </ItemGroup>
 
     <ItemGroup>
