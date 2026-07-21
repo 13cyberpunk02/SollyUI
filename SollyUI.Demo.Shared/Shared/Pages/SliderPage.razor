@@ -47,7 +47,7 @@
     <DemoBlock Title="Live theming"
                Description="The same sliders that power the Theming page."
                Code="@_themeCode">
-        <div style="@($"--g-radius:{_radius}px; --g-blur:{_blur}px;")">
+        <div style="@($"--s-radius:{_radius}px; --s-blur:{_blur}px;")">
             <div class="demo-col">
                 <SSlider @bind-Value="_radius" Label="Radius" Min="0" Max="28"
                          Format="@(v => $"{v:0}px")" />
@@ -109,7 +109,7 @@
 
     const string _themeCode = """
 @* Tokens cascade — scope them to any subtree *@
-<div style="@($"--g-radius:{_radius}px")">
+<div style="@($"--s-radius:{_radius}px")">
     <SSlider @bind-Value="_radius" Min="0" Max="28" />
     <SButton Variant="SVariant.Primary">Preview</SButton>
 </div>
