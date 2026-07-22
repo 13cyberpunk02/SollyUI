@@ -3,4 +3,5 @@
   <Project Path="SollyUI.Demo.Shared/SollyUI.Demo.Shared.csproj" />
   <Project Path="SollyUI.Demo.Wasm/SollyUI.Demo.Wasm.csproj" />
   <Project Path="SollyUI.Demo/SollyUI.Demo.csproj" />
+  <Project Path="SollyUI.Tests/SollyUI.Tests.csproj" />
 </Solution>

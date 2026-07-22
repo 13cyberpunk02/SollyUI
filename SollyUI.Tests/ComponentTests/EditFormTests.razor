@@ -1,0 +1,62 @@
+﻿@inherits SollyTestContext
+
+@code {
+    private class Model
+    {
+        [Required(ErrorMessage = "Name required")]
+        public string? Name { get; set; }
+
+        [Range(typeof(bool), "true", "true", ErrorMessage = "Must agree")]
+        public bool Agree { get; set; }
+    }
+
+    [Fact]
+    public void Input_shows_validation_error_on_submit()
+    {
+        var model = new Model();
+
+        var cut = Render(@<EditForm Model="model">
+                             <DataAnnotationsValidator />
+                             <SInput @bind-Value="model.Name" Label="Name" />
+                             <button type="submit">Go</button>
+                         </EditForm>);
+
+        cut.Find("form").Submit();
+
+        cut.Markup.Should().Contain("Name required");
+    }
+
+    [Fact]
+    public void Checkbox_participates_in_validation()
+    {
+        var model = new Model { Name = "x" };
+
+        var cut = Render(@<EditForm Model="model">
+                             <DataAnnotationsValidator />
+                             <SCheckbox @bind-Value="model.Agree" Label="Agree" />
+                             <button type="submit">Go</button>
+                         </EditForm>);
+
+        cut.Find("form").Submit();
+
+        cut.Markup.Should().Contain("Must agree");
+    }
+
+    [Fact]
+    public void Valid_form_submits()
+    {
+        var model = new Model { Name = "Jane", Agree = true };
+        var submitted = false;
+
+        var cut = Render(@<EditForm Model="model" OnValidSubmit="() => submitted = true">
+                             <DataAnnotationsValidator />
+                             <SInput @bind-Value="model.Name" />
+                             <SCheckbox @bind-Value="model.Agree" />
+                             <button type="submit">Go</button>
+                         </EditForm>);
+
+        cut.Find("form").Submit();
+
+        submitted.Should().BeTrue();
+    }
+}

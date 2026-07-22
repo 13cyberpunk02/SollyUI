@@ -1,0 +1,63 @@
+﻿@inherits SollyTestContext
+
+@code {
+    [Fact]
+    public void Registers_child_tabs()
+    {
+        var cut = Render(@<STabs>
+                             <STab Title="One"><span>Content one</span></STab>
+                             <STab Title="Two"><span>Content two</span></STab>
+                         </STabs>);
+
+        cut.FindAll(".s-tab").Should().HaveCount(2);
+    }
+
+    [Fact]
+    public void Shows_only_active_panel()
+    {
+        var cut = Render(@<STabs>
+                             <STab Title="One"><span>Content one</span></STab>
+                             <STab Title="Two"><span>Content two</span></STab>
+                         </STabs>);
+
+        cut.Markup.Should().Contain("Content one");
+        cut.Markup.Should().NotContain("Content two");
+    }
+
+    [Fact]
+    public void Clicking_tab_switches_panel()
+    {
+        var cut = Render(@<STabs>
+                             <STab Title="One"><span>Content one</span></STab>
+                             <STab Title="Two"><span>Content two</span></STab>
+                         </STabs>);
+
+        cut.FindAll(".s-tab")[1].Click();
+
+        cut.Markup.Should().Contain("Content two");
+        cut.Markup.Should().NotContain("Content one");
+    }
+
+    [Fact]
+    public void First_tab_active_by_default()
+    {
+        var cut = Render(@<STabs>
+                             <STab Title="One"><span>c1</span></STab>
+                             <STab Title="Two"><span>c2</span></STab>
+                         </STabs>);
+
+        cut.FindAll(".s-tab.s-active").Should().HaveCount(1);
+        cut.Find(".s-tab.s-active").TextContent.Should().Contain("One");
+    }
+
+    [Fact]
+    public void KeepAlive_keeps_panel_mounted()
+    {
+        var cut = Render(@<STabs>
+                             <STab Title="One"><span>c1</span></STab>
+                             <STab Title="Two" KeepAlive><span>kept</span></STab>
+                         </STabs>);
+
+        cut.Markup.Should().Contain("kept");
+    }
+}

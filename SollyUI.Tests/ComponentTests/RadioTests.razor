@@ -1,0 +1,36 @@
+﻿@inherits GlassyTestContext
+
+@code {
+    [Fact]
+    public void Renders_items_from_collection()
+    {
+        var cut = Render(@<SRadioGroup TValue="string" Items="@(new[] { "A", "B", "C" })" Value="@("A")" />);
+
+        cut.FindAll(".s-radio").Should().HaveCount(3);
+    }
+
+    [Fact]
+    public void Selected_item_is_checked()
+    {
+        var cut = Render(@<SRadioGroup TValue="string" Items="@(new[] { "A", "B" })" Value="@("B")" />);
+
+        var inputs = cut.FindAll("input[type=radio]");
+        inputs[0].IsChecked().Should().BeFalse();
+        inputs[1].IsChecked().Should().BeTrue();
+    }
+
+    [Fact]
+    public void Selecting_invokes_ValueChanged()
+    {
+        string? value = "A";
+
+        var cut = Render(@<SRadioGroup TValue="string"
+                                       Items="@(new[] { "A", "B" })"
+                                       Value="value"
+                                       ValueChanged="@((string? v) => value = v)" />);
+
+        cut.FindAll("input[type=radio]")[1].Change(true);
+
+        value.Should().Be("B");
+    }
+}
