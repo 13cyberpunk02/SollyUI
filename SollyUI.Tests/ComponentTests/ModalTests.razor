@@ -1,0 +1,200 @@
+﻿@inherits SopllyTestContext
+
+@code {
+    [Fact]
+    public void Not_rendered_until_opened()
+    {
+        var cut = Render(@<SModal Title="Hi">
+                             <ChildContent><p id="body">content</p></ChildContent>
+                         </SModal>);
+
+        cut.FindAll("#body").Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task OpenAsync_renders_the_dialog()
+    {
+        var cut = Render(@<SModal Title="Hi">
+                             <ChildContent><p id="body">content</p></ChildContent>
+                         </SModal>);
+
+        var modal = cut.FindComponent<SModal>();
+        await cut.InvokeAsync(() => modal.Instance.OpenAsync());
+
+        cut.FindAll("#body").Should().HaveCount(1);
+        modal.Instance.IsOpen.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Renders_title()
+    {
+        var cut = Render(@<SModal Title="Delete item?">
+                             <ChildContent><p>content</p></ChildContent>
+                         </SModal>);
+
+        var modal = cut.FindComponent<SModal>();
+        await cut.InvokeAsync(() => modal.Instance.OpenAsync());
+
+        cut.Find(".s-modal-title").TextContent.Should().Contain("Delete item?");
+    }
+
+    [Fact]
+    public async Task Renders_footer_content()
+    {
+        var cut = Render(@<SModal Title="Hi">
+                             <ChildContent><p>body</p></ChildContent>
+                             <FooterContent><button id="ok">OK</button></FooterContent>
+                         </SModal>);
+
+        var modal = cut.FindComponent<SModal>();
+        await cut.InvokeAsync(() => modal.Instance.OpenAsync());
+
+        cut.FindAll("#ok").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task Closable_renders_the_x_button()
+    {
+        var cut = Render(@<SModal Title="Hi" Closable="true">
+                             <ChildContent><p>body</p></ChildContent>
+                         </SModal>);
+
+        var modal = cut.FindComponent<SModal>();
+        await cut.InvokeAsync(() => modal.Instance.OpenAsync());
+
+        cut.FindAll(".s-modal-x").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task Non_closable_hides_the_x_button()
+    {
+        var cut = Render(@<SModal Title="Hi" Closable="false">
+                             <ChildContent><p>body</p></ChildContent>
+                         </SModal>);
+
+        var modal = cut.FindComponent<SModal>();
+        await cut.InvokeAsync(() => modal.Instance.OpenAsync());
+
+        cut.FindAll(".s-modal-x").Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Escape_closes_when_closable()
+    {
+        var cut = Render(@<SModal Title="Hi" Closable="true">
+                             <ChildContent><p>body</p></ChildContent>
+                         </SModal>);
+
+        var modal = cut.FindComponent<SModal>();
+        await cut.InvokeAsync(() => modal.Instance.OpenAsync());
+        await cut.InvokeAsync(() => modal.Instance.OnEscapeAsync());
+
+        modal.Instance.IsOpen.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Escape_is_ignored_when_not_closable()
+    {
+        var cut = Render(@<SModal Title="Hi" Closable="false">
+                             <ChildContent><p>body</p></ChildContent>
+                         </SModal>);
+
+        var modal = cut.FindComponent<SModal>();
+        await cut.InvokeAsync(() => modal.Instance.OpenAsync());
+        await cut.InvokeAsync(() => modal.Instance.OnEscapeAsync());
+
+        modal.Instance.IsOpen.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ShowAsync_returns_true_when_confirmed()
+    {
+        var cut = Render(@<SModal Title="Confirm">
+                             <ChildContent><p>body</p></ChildContent>
+                         </SModal>);
+
+        var modal = cut.FindComponent<SModal>();
+
+        Task<bool>? pending = null;
+        await cut.InvokeAsync(() => { pending = modal.Instance.ShowAsync(); });
+        await cut.InvokeAsync(() => modal.Instance.CloseAsync(true));
+
+        (await pending!).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ShowAsync_returns_false_when_dismissed()
+    {
+        var cut = Render(@<SModal Title="Confirm">
+                             <ChildContent><p>body</p></ChildContent>
+                         </SModal>);
+
+        var modal = cut.FindComponent<SModal>();
+
+        Task<bool>? pending = null;
+        await cut.InvokeAsync(() => { pending = modal.Instance.ShowAsync(); });
+        await cut.InvokeAsync(() => modal.Instance.CloseAsync(false));
+
+        (await pending!).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task OnClosing_returning_false_cancels_the_close()
+    {
+        var cut = Render(@<SModal Title="Guarded" OnClosing="@(() => Task.FromResult(false))">
+                             <ChildContent><p>body</p></ChildContent>
+                         </SModal>);
+
+        var modal = cut.FindComponent<SModal>();
+        await cut.InvokeAsync(() => modal.Instance.OpenAsync());
+        await cut.InvokeAsync(() => modal.Instance.CloseAsync());
+
+        modal.Instance.IsOpen.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task OnClosing_returning_true_allows_the_close()
+    {
+        var cut = Render(@<SModal Title="Guarded" OnClosing="@(() => Task.FromResult(true))">
+                             <ChildContent><p>body</p></ChildContent>
+                         </SModal>);
+
+        var modal = cut.FindComponent<SModal>();
+        await cut.InvokeAsync(() => modal.Instance.OpenAsync());
+        await cut.InvokeAsync(() => modal.Instance.CloseAsync());
+
+        modal.Instance.IsOpen.Should().BeFalse();
+    }
+
+    [Theory]
+    [InlineData(SModalSize.Small, "s-modal-sm")]
+    [InlineData(SModalSize.Medium, "s-modal-md")]
+    [InlineData(SModalSize.Large, "s-modal-lg")]
+    [InlineData(SModalSize.FullScreen, "s-modal-full")]
+    public async Task Size_applies_class(SModalSize size, string expected)
+    {
+        var cut = Render(@<SModal Title="Hi" Size="size">
+                             <ChildContent><p>body</p></ChildContent>
+                         </SModal>);
+
+        var modal = cut.FindComponent<SModal>();
+        await cut.InvokeAsync(() => modal.Instance.OpenAsync());
+
+        cut.Find(".s-modal").ClassList.Should().Contain(expected);
+    }
+
+    [Fact]
+    public async Task Has_dialog_role_and_aria_modal()
+    {
+        var cut = Render(@<SModal Title="Hi">
+                             <ChildContent><p>body</p></ChildContent>
+                         </SModal>);
+
+        var modal = cut.FindComponent<SModal>();
+        await cut.InvokeAsync(() => modal.Instance.OpenAsync());
+
+        var dialog = cut.Find(".s-modal");
+        dialog.GetAttribute("role").Should().Be("dialog");
+        dialog.GetAttribute("aria-modal").Should().Be("true");
+    }
+}

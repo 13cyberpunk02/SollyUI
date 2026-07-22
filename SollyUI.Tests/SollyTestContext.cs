@@ -1,4 +1,5 @@
 ﻿using Bunit;
+using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using Solly.UI;
 
@@ -17,7 +18,6 @@ public abstract class SollyTestContext : BunitContext
 
         var module = JSInterop.SetupModule("./_content/Solly.UI/solly.js");
 
-        // void calls
         module.SetupVoid("anchor", _ => true);
         module.SetupVoid("anchorTip", _ => true);
         module.SetupVoid("focusEl", _ => true);
@@ -26,19 +26,22 @@ public abstract class SollyTestContext : BunitContext
 
         foreach (var fn in new[] { "registerDismiss", "portal", "trapFocus", "lockScroll", "autoGrow" })
         {
-            var handle = module.SetupModule(fn, _ => true);
+            var handle = module.SetupModule(fn);
             handle.SetupVoid("dispose", _ => true);
         }
 
+        // calls returning values
         module.Setup<string?>("getStoredTheme", _ => true).SetResult(null);
         module.Setup<string>("getSystemTheme", _ => true).SetResult("dark");
     }
 
-    /// <summary>A no-op IJSObjectReference so `.InvokeVoidAsync("dispose")` succeeds.</summary>
-    private sealed class StubModule : IJSObjectReference
-    {
-        public ValueTask<T> InvokeAsync<T>(string identifier, object?[]? args) => default!;
-        public ValueTask<T> InvokeAsync<T>(string identifier, CancellationToken ct, object?[]? args) => default!;
-        public ValueTask DisposeAsync() => default;
-    }
+    /// <summary>
+    /// Disambiguates Render&lt;T&gt;(Action&lt;...&gt;) from Render(RenderFragment).
+    /// </summary>
+    protected IRenderedComponent<T> RenderC<T>(
+        Action<ComponentParameterCollectionBuilder<T>> configure) where T : IComponent
+        => Render(configure);
+
+    protected IRenderedComponent<T> RenderC<T>() where T : IComponent
+        => Render<T>(_ => { });
 }

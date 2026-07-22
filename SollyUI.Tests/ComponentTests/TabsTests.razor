@@ -13,7 +13,31 @@
     }
 
     [Fact]
-    public void Shows_only_active_panel()
+    public void Renders_tab_titles()
+    {
+        var cut = Render(@<STabs>
+                             <STab Title="Overview"><span>c1</span></STab>
+                             <STab Title="Details"><span>c2</span></STab>
+                         </STabs>);
+
+        cut.FindAll(".s-tab")[0].TextContent.Should().Contain("Overview");
+        cut.FindAll(".s-tab")[1].TextContent.Should().Contain("Details");
+    }
+
+    [Fact]
+    public void First_tab_is_active_by_default()
+    {
+        var cut = Render(@<STabs>
+                             <STab Title="One"><span>c1</span></STab>
+                             <STab Title="Two"><span>c2</span></STab>
+                         </STabs>);
+
+        cut.FindAll(".s-tab.s-active").Should().HaveCount(1);
+        cut.Find(".s-tab.s-active").TextContent.Should().Contain("One");
+    }
+
+    [Fact]
+    public void Shows_only_the_active_panel()
     {
         var cut = Render(@<STabs>
                              <STab Title="One"><span>Content one</span></STab>
@@ -25,7 +49,7 @@
     }
 
     [Fact]
-    public void Clicking_tab_switches_panel()
+    public void Clicking_a_tab_switches_the_panel()
     {
         var cut = Render(@<STabs>
                              <STab Title="One"><span>Content one</span></STab>
@@ -39,25 +63,70 @@
     }
 
     [Fact]
-    public void First_tab_active_by_default()
+    public void Clicking_a_tab_moves_the_active_class()
     {
         var cut = Render(@<STabs>
                              <STab Title="One"><span>c1</span></STab>
                              <STab Title="Two"><span>c2</span></STab>
                          </STabs>);
 
-        cut.FindAll(".s-tab.s-active").Should().HaveCount(1);
-        cut.Find(".s-tab.s-active").TextContent.Should().Contain("One");
+        cut.FindAll(".s-tab")[1].Click();
+
+        cut.Find(".s-tab.s-active").TextContent.Should().Contain("Two");
     }
 
     [Fact]
-    public void KeepAlive_keeps_panel_mounted()
+    public void KeepAlive_keeps_the_panel_mounted()
     {
         var cut = Render(@<STabs>
                              <STab Title="One"><span>c1</span></STab>
-                             <STab Title="Two" KeepAlive><span>kept</span></STab>
+                             <STab Title="Two" KeepAlive><span>kept alive</span></STab>
                          </STabs>);
 
-        cut.Markup.Should().Contain("kept");
+        // tab two is inactive, but KeepAlive means it stays in the DOM
+        cut.Markup.Should().Contain("kept alive");
+    }
+
+    [Fact]
+    public void Disabled_tab_has_attribute()
+    {
+        var cut = Render(@<STabs>
+                             <STab Title="One"><span>c1</span></STab>
+                             <STab Title="Locked" Disabled><span>c2</span></STab>
+                         </STabs>);
+
+        cut.FindAll(".s-tab")[1].HasAttribute("disabled").Should().BeTrue();
+    }
+
+    [Fact]
+    public void Explicit_ActiveId_selects_that_tab()
+    {
+        var cut = Render(@<STabs ActiveId="b">
+                             <STab Id="a" Title="A"><span>panel a</span></STab>
+                             <STab Id="b" Title="B"><span>panel b</span></STab>
+                         </STabs>);
+
+        cut.Markup.Should().Contain("panel b");
+        cut.Markup.Should().NotContain("panel a");
+    }
+
+    [Fact]
+    public void Renders_badge()
+    {
+        var cut = Render(@<STabs>
+                             <STab Title="Inbox" Badge="12"><span>c1</span></STab>
+                         </STabs>);
+
+        cut.Find(".s-tab-badge").TextContent.Should().Contain("12");
+    }
+
+    [Fact]
+    public void Fill_applies_class()
+    {
+        var cut = Render(@<STabs Fill>
+                             <STab Title="One"><span>c1</span></STab>
+                         </STabs>);
+
+        cut.Find(".s-tabs-bar").ClassList.Should().Contain("s-fill");
     }
 }

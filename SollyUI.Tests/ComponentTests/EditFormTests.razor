@@ -6,8 +6,14 @@
         [Required(ErrorMessage = "Name required")]
         public string? Name { get; set; }
 
+        [EmailAddress(ErrorMessage = "Bad email")]
+        public string? Email { get; set; }
+
         [Range(typeof(bool), "true", "true", ErrorMessage = "Must agree")]
         public bool Agree { get; set; }
+
+        [Required(ErrorMessage = "Pick one")]
+        public string? Choice { get; set; }
     }
 
     [Fact]
@@ -27,9 +33,41 @@
     }
 
     [Fact]
+    public void Input_shows_no_error_when_valid()
+    {
+        var model = new Model { Name = "Jane" };
+
+        var cut = Render(@<EditForm Model="model">
+                             <DataAnnotationsValidator />
+                             <SInput @bind-Value="model.Name" Label="Name" />
+                             <button type="submit">Go</button>
+                         </EditForm>);
+
+        cut.Find("form").Submit();
+
+        cut.Markup.Should().NotContain("Name required");
+    }
+
+    [Fact]
+    public void Email_annotation_is_enforced()
+    {
+        var model = new Model { Name = "Jane", Email = "not-an-email", Agree = true, Choice = "A" };
+
+        var cut = Render(@<EditForm Model="model">
+                             <DataAnnotationsValidator />
+                             <SInput @bind-Value="model.Email" Label="Email" Type="email" />
+                             <button type="submit">Go</button>
+                         </EditForm>);
+
+        cut.Find("form").Submit();
+
+        cut.Markup.Should().Contain("Bad email");
+    }
+
+    [Fact]
     public void Checkbox_participates_in_validation()
     {
-        var model = new Model { Name = "x" };
+        var model = new Model { Name = "x", Choice = "A" };
 
         var cut = Render(@<EditForm Model="model">
                              <DataAnnotationsValidator />
@@ -43,20 +81,76 @@
     }
 
     [Fact]
+    public void Select_participates_in_validation()
+    {
+        var model = new Model { Name = "x", Agree = true };
+
+        var cut = Render(@<EditForm Model="model">
+                             <DataAnnotationsValidator />
+                             <SSelect TValue="string"
+                                      Items="@(new[] { "A", "B" })"
+                                      @bind-Value="model.Choice"
+                                      Label="Choice" />
+                             <button type="submit">Go</button>
+                         </EditForm>);
+
+        cut.Find("form").Submit();
+
+        cut.Markup.Should().Contain("Pick one");
+    }
+
+    [Fact]
     public void Valid_form_submits()
     {
-        var model = new Model { Name = "Jane", Agree = true };
+        var model = new Model { Name = "Jane", Agree = true, Choice = "A" };
         var submitted = false;
 
         var cut = Render(@<EditForm Model="model" OnValidSubmit="() => submitted = true">
                              <DataAnnotationsValidator />
                              <SInput @bind-Value="model.Name" />
                              <SCheckbox @bind-Value="model.Agree" />
+                             <SSelect TValue="string" Items="@(new[] { "A", "B" })" @bind-Value="model.Choice" />
                              <button type="submit">Go</button>
                          </EditForm>);
 
         cut.Find("form").Submit();
 
         submitted.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Invalid_form_does_not_submit()
+    {
+        var model = new Model();
+        var submitted = false;
+
+        var cut = Render(@<EditForm Model="model" OnValidSubmit="() => submitted = true">
+                             <DataAnnotationsValidator />
+                             <SInput @bind-Value="model.Name" />
+                             <button type="submit">Go</button>
+                         </EditForm>);
+
+        cut.Find("form").Submit();
+
+        submitted.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Editing_a_field_clears_its_error()
+    {
+        var model = new Model();
+
+        var cut = Render(@<EditForm Model="model">
+                             <DataAnnotationsValidator />
+                             <SInput @bind-Value="model.Name" Label="Name" />
+                             <button type="submit">Go</button>
+                         </EditForm>);
+
+        cut.Find("form").Submit();
+        cut.Markup.Should().Contain("Name required");
+
+        cut.Find("input").Input("Jane");
+
+        cut.Markup.Should().NotContain("Name required");
     }
 }

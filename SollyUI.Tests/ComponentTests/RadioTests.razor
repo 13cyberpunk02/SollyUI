@@ -1,6 +1,8 @@
 ﻿@inherits GlassyTestContext
 
 @code {
+    private record Plan(string Name, int Price);
+
     [Fact]
     public void Renders_items_from_collection()
     {
@@ -20,6 +22,14 @@
     }
 
     [Fact]
+    public void Nothing_checked_when_value_is_null()
+    {
+        var cut = Render(@<SRadioGroup TValue="string" Items="@(new[] { "A", "B" })" />);
+
+        cut.FindAll("input[type=radio]").Any(i => i.IsChecked()).Should().BeFalse();
+    }
+
+    [Fact]
     public void Selecting_invokes_ValueChanged()
     {
         string? value = "A";
@@ -32,5 +42,97 @@
         cut.FindAll("input[type=radio]")[1].Change(true);
 
         value.Should().Be("B");
+    }
+
+    [Fact]
+    public void All_radios_share_a_name()
+    {
+        var cut = Render(@<SRadioGroup TValue="string" Items="@(new[] { "A", "B", "C" })" Value="@("A")" />);
+
+        var names = cut.FindAll("input[type=radio]")
+            .Select(i => i.GetAttribute("name"))
+            .Distinct()
+            .ToArray();
+
+        names.Should().HaveCount(1);
+        names[0].Should().NotBeNullOrEmpty();
+    }
+
+    [Fact]
+    public void Uses_Display_function()
+    {
+        var plans = new[] { new Plan("Hobby", 0), new Plan("Pro", 19) };
+
+        var cut = Render(@<SRadioGroup TValue="Plan"
+                                       Items="plans"
+                                       Display="@(p => $"{p.Name} — ${p.Price}")"
+                                       Value="plans[0]" />);
+
+        cut.Markup.Should().Contain("Hobby — $0");
+        cut.Markup.Should().Contain("Pro — $19");
+    }
+
+    [Fact]
+    public void Record_equality_selects_matching_instance()
+    {
+        var plans = new[] { new Plan("Hobby", 0), new Plan("Pro", 19) };
+
+        var cut = Render(@<SRadioGroup TValue="Plan"
+                                       Items="plans"
+                                       Display="@(p => p.Name)"
+                                       Value="@(new Plan("Pro", 19))" />);
+
+        cut.FindAll("input[type=radio]")[1].IsChecked().Should().BeTrue();
+    }
+
+    [Fact]
+    public void Renders_label()
+    {
+        var cut = Render(@<SRadioGroup TValue="string" Items="@(new[] { "A" })" Label="Size" Value="@("A")" />);
+
+        cut.Find("label.s-label").TextContent.Should().Contain("Size");
+    }
+
+    [Fact]
+    public void Horizontal_applies_class()
+    {
+        var cut = Render(@<SRadioGroup TValue="string" Items="@(new[] { "A" })" Horizontal Value="@("A")" />);
+
+        cut.Find(".s-radio-list").ClassList.Should().Contain("s-horizontal");
+    }
+
+    [Fact]
+    public void Group_disabled_disables_every_radio()
+    {
+        var cut = Render(@<SRadioGroup TValue="string" Items="@(new[] { "A", "B" })" Disabled Value="@("A")" />);
+
+        cut.FindAll("input[type=radio]").Should().OnlyContain(i => i.HasAttribute("disabled"));
+    }
+
+    [Fact]
+    public void Explicit_children_work()
+    {
+        string? value = "standard";
+
+        var cut = Render(@<SRadioGroup TValue="string" Value="value" ValueChanged="@((string? v) => value = v)">
+                             <SRadio TValue="string" Value="@("standard")" Label="Standard" />
+                             <SRadio TValue="string" Value="@("express")" Label="Express" />
+                         </SRadioGroup>);
+
+        cut.FindAll(".s-radio").Should().HaveCount(2);
+        cut.FindAll("input[type=radio]")[0].IsChecked().Should().BeTrue();
+    }
+
+    [Fact]
+    public void Individual_radio_can_be_disabled()
+    {
+        var cut = Render(@<SRadioGroup TValue="string" Value="@("a")">
+                             <SRadio TValue="string" Value="@("a")" Label="A" />
+                             <SRadio TValue="string" Value="@("b")" Label="B" Disabled />
+                         </SRadioGroup>);
+
+        var inputs = cut.FindAll("input[type=radio]");
+        inputs[0].HasAttribute("disabled").Should().BeFalse();
+        inputs[1].HasAttribute("disabled").Should().BeTrue();
     }
 }

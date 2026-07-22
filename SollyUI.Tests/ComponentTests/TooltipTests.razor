@@ -1,0 +1,101 @@
+﻿@inherits SollyTestContext
+
+@code {
+    [Fact]
+    public void Renders_the_anchor_content()
+    {
+        var cut = Render(@<STooltip Text="Save changes">
+                             <button id="trigger">Save</button>
+                         </STooltip>);
+
+        cut.FindAll("#trigger").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void Tooltip_hidden_before_hover()
+    {
+        var cut = Render(@<STooltip Text="Save changes">
+                             <button id="trigger">Save</button>
+                         </STooltip>);
+
+        cut.FindAll(".s-tip").Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Shows_after_hover_with_no_delay()
+    {
+        var cut = Render(@<STooltip Text="Save changes" DelayMs="0">
+                             <button id="trigger">Save</button>
+                         </STooltip>);
+
+        await cut.Find(".s-tip-anchor").MouseEnterAsync(new MouseEventArgs());
+
+        cut.WaitForAssertion(() =>
+            cut.Find(".s-tip").TextContent.Should().Contain("Save changes"));
+    }
+
+    [Fact]
+    public async Task Hides_on_mouse_leave()
+    {
+        var cut = Render(@<STooltip Text="Save changes" DelayMs="0">
+                             <button id="trigger">Save</button>
+                         </STooltip>);
+
+        await cut.Find(".s-tip-anchor").MouseEnterAsync(new MouseEventArgs());
+        cut.WaitForAssertion(() => cut.FindAll(".s-tip").Should().NotBeEmpty());
+
+        await cut.Find(".s-tip-anchor").MouseLeaveAsync(new MouseEventArgs());
+
+        cut.WaitForAssertion(() => cut.FindAll(".s-tip").Should().BeEmpty());
+    }
+
+    [Fact]
+    public async Task Disabled_tooltip_never_shows()
+    {
+        var cut = Render(@<STooltip Text="Save changes" DelayMs="0" Disabled="true">
+                             <button id="trigger">Save</button>
+                         </STooltip>);
+
+        await cut.Find(".s-tip-anchor").MouseEnterAsync(new MouseEventArgs());
+
+        cut.FindAll(".s-tip").Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Empty_text_never_shows()
+    {
+        var cut = Render(@<STooltip DelayMs="0">
+                             <button id="trigger">Save</button>
+                         </STooltip>);
+
+        await cut.Find(".s-tip-anchor").MouseEnterAsync(new MouseEventArgs());
+
+        cut.FindAll(".s-tip").Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task TipContent_takes_precedence_over_Text()
+    {
+        var cut = Render(@<STooltip Text="plain" DelayMs="0">
+                             <ChildContent><button>Save</button></ChildContent>
+                             <TipContent><strong id="rich">rich content</strong></TipContent>
+                         </STooltip>);
+
+        await cut.Find(".s-tip-anchor").MouseEnterAsync(new MouseEventArgs());
+
+        cut.WaitForAssertion(() => cut.FindAll("#rich").Should().HaveCount(1));
+    }
+
+    [Fact]
+    public async Task Has_tooltip_role()
+    {
+        var cut = Render(@<STooltip Text="Save changes" DelayMs="0">
+                             <button>Save</button>
+                         </STooltip>);
+
+        await cut.Find(".s-tip-anchor").MouseEnterAsync(new MouseEventArgs());
+
+        cut.WaitForAssertion(() =>
+            cut.Find(".s-tip").GetAttribute("role").Should().Be("tooltip"));
+    }
+}
