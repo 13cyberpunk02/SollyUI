@@ -1,9 +1,9 @@
 ﻿const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 const KEY = 'solly-theme';
+
 export function anchor(el, anchorEl) {
     if (!el || !anchorEl) return;
 
-    // measure without flashing
     el.style.visibility = 'hidden';
     el.style.position = 'fixed';
     el.style.top = '0px';
@@ -26,7 +26,6 @@ export function anchor(el, anchorEl) {
 
     el.style.top = `${Math.round(top)}px`;
     el.style.left = `${Math.round(left)}px`;
-    el.style.minWidth = `${Math.round(a.width)}px`;
     el.style.maxHeight = `${Math.round(height)}px`;
     el.style.visibility = 'visible';
 }
@@ -203,4 +202,19 @@ export function anchorTip(el, anchorEl, placement) {
     el.style.left = `${Math.round(left)}px`;
     el.dataset.place = place;
     el.style.visibility = 'visible';
+}
+
+export function setPalette(h, s, l) {
+    const r = document.documentElement;
+    r.style.setProperty('--s-h', String(h));
+    r.style.setProperty('--s-s', s + '%');
+    r.style.setProperty('--s-l', l + '%');
+    try { localStorage.setItem('solly-palette', JSON.stringify([h, s, l])); } catch { }
+}
+
+export function getStoredPalette() {
+    try {
+        const raw = localStorage.getItem('solly-palette');
+        return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
 }

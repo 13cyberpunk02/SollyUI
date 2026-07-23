@@ -19,7 +19,8 @@ public class CheckboxTests : SollyTestContext
     [Fact]
     public void Unchecked_by_default()
     {
-        var cut = RenderC<SCheckbox>();
+        var cut = RenderC<SCheckbox>(p => p
+            .Add(x => x.Value, false));
 
         cut.Find("input[type=checkbox]").IsChecked().Should().BeFalse();
     }

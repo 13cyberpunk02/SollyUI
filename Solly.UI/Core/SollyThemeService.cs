@@ -6,6 +6,11 @@ namespace Solly.UI.Core;
 public sealed class SollyThemeService(SollyInterop interop, IOptions<SollyOptions> options)
 {
     private string _theme = options.Value.Theme;
+    private (int H, int S, int L) _hsl = options.Value.Palette == SPalette.Custom ?
+            (options.Value.Hue, options.Value.Saturation, options.Value.Lightness)
+            : options.Value.Palette.ToHsl();
+
+    public (int H, int S, int L) Palette => _hsl;
 
 
     public async Task InitAsync()
@@ -25,6 +30,20 @@ public sealed class SollyThemeService(SollyInterop interop, IOptions<SollyOption
         if (_theme == theme) return;
         _theme = theme;
         await interop.SetThemeAsync(theme);
+        Changed?.Invoke();
+    }
+    
+    public async Task SetPaletteAsync(SPalette p)
+    {
+        _hsl = p.ToHsl();
+        await interop.SetPaletteAsync(_hsl.H, _hsl.S, _hsl.L);
+        Changed?.Invoke();
+    }
+
+    public async Task SetPaletteAsync(int h, int s = 100, int l = 47)
+    {
+        _hsl = (h, s, l);
+        await interop.SetPaletteAsync(h, s, l);
         Changed?.Invoke();
     }
 

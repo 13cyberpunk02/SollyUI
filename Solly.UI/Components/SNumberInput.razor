@@ -1,0 +1,286 @@
+@typeparam TValue
+@using System.Linq.Expressions
+@inherits SComponentBase
+
+<div class="s-field @Class" style="@Style">
+    @if (!string.IsNullOrEmpty(Label))
+    {
+        <SLabel For="@Uid" Required="@Required">@Label</SLabel>
+    }
+
+    <div class="s-num-wrap @(Disabled ? "s-disabled" : null)">
+        @if (!string.IsNullOrEmpty(Prefix))
+        {
+            <span class="s-num-affix s-num-prefix">@Prefix</span>
+        }
+
+        <input id="@Uid"
+               class="s-num"
+               type="text"
+               inputmode="@InputMode"
+               autocomplete="off"
+               placeholder="@Placeholder"
+               disabled="@Disabled"
+               value="@_text"
+               @oninput="OnInputAsync"
+               @onblur="OnBlurAsync"
+               @onkeydown="OnKeyDownAsync"
+               @attributes="Attributes" />
+
+        @if (!string.IsNullOrEmpty(Suffix))
+        {
+            <span class="s-num-affix s-num-suffix">@Suffix</span>
+        }
+
+        @if (ShowSteppers)
+        {
+            <div class="s-num-steppers">
+                <button type="button" class="s-num-step" tabindex="-1"
+                        aria-label="Increment"
+                        disabled="@(Disabled || AtMax)"
+                        @onclick="() => StepAsync(1)">
+                    <SIcon Name="@SIcons.ChevronUp" Size="13" Weight="2.4" />
+                </button>
+                <button type="button" class="s-num-step" tabindex="-1"
+                        aria-label="Decrement"
+                        disabled="@(Disabled || AtMin)"
+                        @onclick="() => StepAsync(-1)">
+                    <SIcon Name="@SIcons.ChevronDown" Size="13" Weight="2.4" />
+                </button>
+            </div>
+        }
+    </div>
+
+    @if (!string.IsNullOrEmpty(Hint))
+    {
+        <div class="s-hint">@Hint</div>
+    }
+    @if (_edit is not null && ValueExpression is not null)
+    {
+        <ValidationMessage For="@ValueExpression" class="s-error" />
+    }
+</div>
+
+@code {
+    [CascadingParameter] private EditContext? _edit { get; set; }
+
+    [Parameter] public TValue? Value { get; set; }
+    [Parameter] public EventCallback<TValue?> ValueChanged { get; set; }
+    [Parameter] public Expression<Func<TValue?>>? ValueExpression { get; set; }
+
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public string? Hint { get; set; }
+    [Parameter] public string? Placeholder { get; set; }
+    [Parameter] public string? Prefix { get; set; }
+    [Parameter] public string? Suffix { get; set; }
+
+    [Parameter] public decimal Min { get; set; } = decimal.MinValue;
+    [Parameter] public decimal Max { get; set; } = decimal.MaxValue;
+    [Parameter] public decimal Step { get; set; } = 1;
+
+    /// <summary>Decimal places. 0 = integers only.</summary>
+    [Parameter] public int Decimals { get; set; } = 0;
+
+    [Parameter] public bool ShowSteppers { get; set; } = true;
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public bool Required { get; set; }
+
+    /// <summary>Clamp to Min/Max on blur instead of rejecting the input.</summary>
+    [Parameter] public bool ClampOnBlur { get; set; } = true;
+
+    private string _text = "";
+    private FieldIdentifier _field;
+
+    private string InputMode => Decimals > 0 ? "decimal" : "numeric";
+
+    private decimal? Current => TryParse(_text, out var d) ? d : null;
+    private bool AtMax => Current is { } c && c >= Max;
+    private bool AtMin => Current is { } c && c <= Min;
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    protected override void OnParametersSet()
+    {
+        if (_edit is not null && ValueExpression is not null)
+            _field = FieldIdentifier.Create(ValueExpression);
+
+        // keep the box in sync with the model unless the user is mid-edit
+        var incoming = ToDecimal(Value);
+        if (incoming is null)
+        {
+            if (Current is not null) _text = "";
+        }
+        else if (Current != incoming)
+        {
+            _text = Format(incoming.Value);
+        }
+    }
+
+    private bool TryParse(string? s, out decimal result)
+    {
+        result = 0;
+        if (string.IsNullOrWhiteSpace(s)) return false;
+        return decimal.TryParse(s, NumberStyles.Number, Culture, out result)
+            || decimal.TryParse(s, NumberStyles.Number, CultureInfo.InvariantCulture, out result);
+    }
+
+    private string Format(decimal d) =>
+        Decimals > 0 ? d.ToString($"0.{new string('#', Decimals)}", Culture)
+                     : d.ToString("0", Culture);
+
+    private static decimal? ToDecimal(TValue? v) => v switch
+    {
+        null => null,
+        int i => i,
+        long l => l,
+        double db => (decimal)db,
+        float f => (decimal)f,
+        decimal m => m,
+        short s => s,
+        byte b => b,
+        _ => null
+    };
+
+    private static TValue? FromDecimal(decimal d)
+    {
+        var t = Nullable.GetUnderlyingType(typeof(TValue)) ?? typeof(TValue);
+
+        object boxed = t switch
+        {
+            _ when t == typeof(int)     => (int)d,
+            _ when t == typeof(long)    => (long)d,
+            _ when t == typeof(double)  => (double)d,
+            _ when t == typeof(float)   => (float)d,
+            _ when t == typeof(decimal) => d,
+            _ when t == typeof(short)   => (short)d,
+            _ when t == typeof(byte)    => (byte)d,
+            _ => d
+        };
+
+        return (TValue)boxed;
+    }
+
+    /// <summary>Strips anything that isn't a digit, sign, or the culture's decimal separator.</summary>
+    private string Sanitize(string raw)
+    {
+        var sep = Culture.NumberFormat.NumberDecimalSeparator;
+        var sb = new StringBuilder(raw.Length);
+        var seenSep = false;
+
+        for (var i = 0; i < raw.Length; i++)
+        {
+            var ch = raw[i];
+
+            if (char.IsDigit(ch)) { sb.Append(ch); continue; }
+
+            // leading minus only, and only when negatives are allowed
+            if ((ch == '-' || ch == '\u2212') && sb.Length == 0 && Min < 0) { sb.Append('-'); continue; }
+
+            if (Decimals > 0 && !seenSep)
+            {
+                // accept both the culture separator and a plain dot/comma
+                if (raw.AsSpan(i).StartsWith(sep, StringComparison.Ordinal))
+                {
+                    sb.Append(sep);
+                    seenSep = true;
+                    i += sep.Length - 1;
+                    continue;
+                }
+                if (ch == '.' || ch == ',')
+                {
+                    sb.Append(sep);
+                    seenSep = true;
+                    continue;
+                }
+            }
+        }
+
+        var s = sb.ToString();
+
+        // trim excess decimals
+        if (Decimals > 0 && seenSep)
+        {
+            var idx = s.IndexOf(sep, StringComparison.Ordinal);
+            var frac = s.Length - idx - sep.Length;
+            if (frac > Decimals) s = s[..(idx + sep.Length + Decimals)];
+        }
+
+        return s;
+    }
+
+    private async Task OnInputAsync(ChangeEventArgs e)
+    {
+        var raw = e.Value?.ToString() ?? "";
+        var clean = Sanitize(raw);
+
+        _text = clean;
+
+        if (string.IsNullOrEmpty(clean) || clean == "-")
+        {
+            await CommitAsync(null);
+            return;
+        }
+
+        if (!TryParse(clean, out var d)) return;
+
+        // don't clamp while typing — "1" on the way to "150" would become Max
+        if (!ClampOnBlur) d = Math.Clamp(d, Min, Max);
+
+        await CommitAsync(d);
+    }
+
+    private async Task OnBlurAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_text))
+        {
+            _text = "";
+            await CommitAsync(null);
+            return;
+        }
+
+        if (!TryParse(_text, out var d)) { _text = ""; await CommitAsync(null); return; }
+
+        if (ClampOnBlur) d = Math.Clamp(d, Min, Max);
+
+        _text = Format(d);
+        await CommitAsync(d);
+    }
+
+    private async Task OnKeyDownAsync(KeyboardEventArgs e)
+    {
+        switch (e.Key)
+        {
+            case "ArrowUp":   await StepAsync(e.ShiftKey ? 10 : 1); break;
+            case "ArrowDown": await StepAsync(e.ShiftKey ? -10 : -1); break;
+            case "PageUp":    await StepAsync(10); break;
+            case "PageDown":  await StepAsync(-10); break;
+            case "Home" when Min != decimal.MinValue: await SetAsync(Min); break;
+            case "End" when Max != decimal.MaxValue:  await SetAsync(Max); break;
+        }
+    }
+
+    private async Task StepAsync(int direction)
+    {
+        var start = Current ?? (Min == decimal.MinValue ? 0 : Min);
+        await SetAsync(start + Step * direction);
+    }
+
+    private async Task SetAsync(decimal d)
+    {
+        d = Math.Clamp(d, Min, Max);
+        _text = Format(d);
+        await CommitAsync(d);
+    }
+
+    private async Task CommitAsync(decimal? d)
+    {
+        var next = d is null ? default : FromDecimal(d.Value);
+        Value = next;
+        await ValueChanged.InvokeAsync(next);
+
+        if (_edit is not null && ValueExpression is not null)
+            _edit.NotifyFieldChanged(_field);
+
+        StateHasChanged();
+    }
+}

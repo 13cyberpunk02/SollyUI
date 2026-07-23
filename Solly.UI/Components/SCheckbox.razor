@@ -12,7 +12,7 @@
 
         <span class="s-cb-box s-glass @(Indeterminate ? "s-indet" : null)">
             <SIcon Name="@(Indeterminate ? SIcons.Minus : SIcons.Check)"
-                   Size="12" Class="s-cb-mark" />
+                   Size="12" Weight="3.2" Class="s-cb-mark" />
         </span>
 
         @if (ChildContent is not null || !string.IsNullOrEmpty(Label))

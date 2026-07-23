@@ -1,0 +1,81 @@
+@page "/number"
+
+<DemoPage Title="NumberInput" Subtitle="Только цифры, свои степперы на всю высоту, клавиатура.">
+
+    <DemoBlock Title="Basic" Code="@_basicCode">
+        <div class="demo-col">
+            <SNumberInput TValue="int" @bind-Value="_a" Label="Quantity" Min="0" Max="99" />
+            <span class="demo-note">Value: @_a</span>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Decimals & affixes" Code="@_decCode">
+        <div class="demo-col">
+            <SNumberInput TValue="decimal?" @bind-Value="_price" Label="Price"
+                          Min="0" Max="10000" Step="0.5m" Decimals="2" Prefix="€" />
+            <SNumberInput TValue="int" @bind-Value="_pct" Label="Discount"
+                          Min="0" Max="100" Suffix="%" />
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Keyboard"
+               Description="↑↓ шаг · Shift+↑↓ десять шагов · PageUp/PageDown · Home/End к границам."
+               Code="@_keyCode">
+        <SNumberInput TValue="int" @bind-Value="_kb" Label="Try the arrows" Min="0" Max="500" Step="5" />
+    </DemoBlock>
+
+    <DemoBlock Title="Negatives"
+               Description="Минус разрешён только если Min меньше нуля."
+               Code="@_negCode">
+        <div class="demo-col">
+            <SNumberInput TValue="int" @bind-Value="_temp" Label="Temperature"
+                          Min="-50" Max="50" Suffix="°C" />
+            <SNumberInput TValue="int" @bind-Value="_pos" Label="Positive only" Min="0" Max="100" />
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Without steppers" Code="@_noStepCode">
+        <SNumberInput TValue="int" @bind-Value="_bare" Label="Year"
+                      Min="1900" Max="2100" ShowSteppers="false" />
+    </DemoBlock>
+
+    <DemoBlock Title="Disabled" Code="@_disCode">
+        <SNumberInput TValue="int" Value="42" Label="Locked" Disabled />
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    int _a = 1, _pct = 15, _kb = 100, _temp = 20, _pos = 5, _bare = 2026;
+    decimal? _price = 19.99m;
+
+    const string _basicCode = """
+<SNumberInput TValue="int" @bind-Value="_qty" Label="Quantity" Min="0" Max="99" />
+""";
+
+    const string _decCode = """
+<SNumberInput TValue="decimal?" @bind-Value="_price" Label="Price"
+              Min="0" Max="10000" Step="0.5m" Decimals="2" Prefix="€" />
+
+<SNumberInput TValue="int" @bind-Value="_pct" Label="Discount"
+              Min="0" Max="100" Suffix="%" />
+""";
+
+    const string _keyCode = """
+@* ↑↓ · Shift+↑↓ · PageUp/PageDown · Home/End *@
+<SNumberInput TValue="int" @bind-Value="_x" Min="0" Max="500" Step="5" />
+""";
+
+    const string _negCode = """
+@* minus is only accepted when Min < 0 *@
+<SNumberInput TValue="int" @bind-Value="_t" Min="-50" Max="50" Suffix="°C" />
+""";
+
+    const string _noStepCode = """
+<SNumberInput TValue="int" @bind-Value="_year" ShowSteppers="false" />
+""";
+
+    const string _disCode = """
+<SNumberInput TValue="int" Value="42" Label="Locked" Disabled />
+""";
+}

@@ -3,7 +3,7 @@
 @inject SollyThemeService Theme
 
 <button type="button"
-        class="@Cls("s-theme-toggle", "s-glass")"
+        class="@Cls("s-theme-toggle")"
         style="@Style"
         aria-label="@(Theme.IsDark ? "Switch to light theme" : "Switch to dark theme")"
         @onclick="Theme.ToggleAsync"
@@ -20,10 +20,12 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender) await Theme.ApplyAsync();
+        if (firstRender) await Theme.InitAsync();
     }
 
     private void OnChanged() => InvokeAsync(StateHasChanged);
 
     public void Dispose() => Theme.Changed -= OnChanged;
+
+    private async Task OnClickAsync() => await Theme.ToggleAsync();
 }

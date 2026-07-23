@@ -3,7 +3,30 @@
 @inject SollyThemeService Theme
 
 <DemoPage Title="Theming" Subtitle="Design tokens, persistence, custom themes.">
+    <DemoBlock Title="Palette"
+               Description="Акцент выводится из одного hue-токена. Меняешь --g-h — меняется всё: градиенты, свечения, рамки."
+               Code="@_paletteCode">
+        <div class="demo-col" style="max-width:none;">
+            <div class="demo-palettes">
+                @foreach (var (p, hsl) in _palettes)
+                {
+                    <button class="demo-palette @(_current == p ? "active" : null)"
+                            style="@($"background:hsl({hsl.H} {hsl.S}% {hsl.L}%); color:hsl({hsl.H} {hsl.S}% {hsl.L}%);")"
+                            aria-label="@p.ToString()"
+                            @onclick="@(() => PickAsync(p))"></button>
+                }
+            </div>
 
+            <div class="demo-row">
+                <SButton Variant="SVariant.Primary" Icon="@SIcons.Check">Primary</SButton>
+                <SButton>Secondary</SButton>
+                <SButton Variant="SVariant.Ghost">Ghost</SButton>
+                <SSwitch Value="true" Label="Switch" />
+                <SBadge Pulse>Live</SBadge>
+            </div>
+        </div>
+    </DemoBlock>
+    
     <DemoBlock Title="Switching" Code="@_switchCode">
         <div class="demo-col">
             <div class="demo-row">
@@ -79,8 +102,20 @@
     string _accent = "#7c5cff";
     int _radius = 14;
     int _blur = 16;
-
     string? _sample = "Sample text";
+    
+    SPalette _current = SPalette.Teal;
+
+    static readonly (SPalette P, (int H, int S, int L) Hsl)[] _palettes =
+        new[] { SPalette.Teal, SPalette.Cyan, SPalette.Violet, SPalette.Magenta, SPalette.Amber, SPalette.Lime }
+            .Select(p => (p, p.ToHsl()))
+            .ToArray();
+
+    async Task PickAsync(SPalette p)
+    {
+        _current = p;
+        await Theme.SetPaletteAsync(p);
+    }
     void OnRadius(ChangeEventArgs e)
     {
         if (int.TryParse(e.Value?.ToString(), out var v)) _radius = v;
@@ -100,6 +135,21 @@
     private void OnChanged() => InvokeAsync(StateHasChanged);
     public void Dispose() => Theme.Changed -= OnChanged;
 
+    const string _paletteCode = """
+                                @inject SollyThemeService Theme
+
+                                await Theme.SetPaletteAsync(SPalette.Violet);
+
+                                // or a raw hue
+                                await Theme.SetPaletteAsync(hue: 265, saturation: 100, lightness: 65);
+
+                                // or in Program.cs
+                                builder.Services.AddSollyUI(o => o.Palette = SPalette.Violet);
+
+                                // or in CSS
+                                :root { --s-h: 265; }
+                                """;
+    
     const string _switchCode = """
 @inject SollyThemeService Theme
 

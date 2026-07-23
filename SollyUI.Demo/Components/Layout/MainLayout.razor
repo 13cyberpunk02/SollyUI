@@ -1,11 +1,13 @@
 ﻿@inherits LayoutComponentBase
+
+<SAmbient />
+
 <CascadingValue Value="this">
-    <div class="demo-shell" style="display:flex;min-height:100vh;">
-        <SToastHost Position="SToastPosition.BottomRight"/>
-        <aside class="demo-sidebar s-glass" style="width:15rem;flex-shrink:0;">
+    <div class="demo-shell">
+        <aside class="demo-sidebar">
             <div class="demo-brand">
                 <span class="demo-brand-dot"></span>
-                Solly UI
+                Glassy.UI
                 <span class="demo-env">@Env</span>
             </div>
 
@@ -16,6 +18,7 @@
                 <div class="demo-nav-group">Inputs</div>
                 <DemoLink Href="button" Icon="@SIcons.Cursor">Button</DemoLink>
                 <DemoLink Href="input" Icon="@SIcons.Type">Input</DemoLink>
+                <DemoLink Href="number" Icon="@SIcons.Sliders">NumberInput</DemoLink>
                 <DemoLink Href="textarea" Icon="@SIcons.Lines">TextArea</DemoLink>
                 <DemoLink Href="checkbox" Icon="@SIcons.Check">Checkbox</DemoLink>
                 <DemoLink Href="radio" Icon="@SIcons.Circle">Radio</DemoLink>
@@ -24,17 +27,16 @@
                 <DemoLink Href="select" Icon="@SIcons.List">Select</DemoLink>
                 <DemoLink Href="datepicker" Icon="@SIcons.Calendar">DatePicker</DemoLink>
 
-                <div class="demo-nav-group">Layout</div>
-                <DemoLink Href="tabs" Icon="@SIcons.Columns">Tabs</DemoLink>
-                
-                <div class="demo-nav-group">Primitives</div>
+                <div class="demo-nav-group">Display</div>
+                <DemoLink Href="badge" Icon="@SIcons.Star">Badge</DemoLink>
                 <DemoLink Href="icon" Icon="@SIcons.Star">Icon</DemoLink>
+                <DemoLink Href="tabs" Icon="@SIcons.Columns">Tabs</DemoLink>
 
                 <div class="demo-nav-group">Overlays</div>
                 <DemoLink Href="tooltip" Icon="@SIcons.Info">Tooltip</DemoLink>
                 <DemoLink Href="popover" Icon="@SIcons.Layers">Popover</DemoLink>
-                <DemoLink Href="modal" Icon="@SIcons.Layers">Modal</DemoLink>
-                <DemoLink Href="toast" Icon="@SIcons.Info">Toast</DemoLink>
+                <DemoLink Href="modal" Icon="@SIcons.Square">Modal</DemoLink>
+                <DemoLink Href="toast" Icon="@SIcons.Bell">Toast</DemoLink>
 
                 <div class="demo-nav-group">Other</div>
                 <DemoLink Href="theming" Icon="@SIcons.Palette">Theming</DemoLink>
@@ -44,19 +46,22 @@
 
         <div class="demo-content">
             <header class="demo-topbar">
-                <SThemeToggle/>
+                <SThemeToggle />
             </header>
             <main class="demo-main">
                 @Body
             </main>
         </div>
-        <SToastHost Position="@ToastPosition"/>
     </div>
+
+    <SToastHost Position="@ToastPosition" />
 </CascadingValue>
 
 @code {
     public SToastPosition ToastPosition { get; private set; } = SToastPosition.BottomRight;
-    string Env => OperatingSystem.IsBrowser() ? "WASM" : "Server";
+
+    private string Env => OperatingSystem.IsBrowser() ? "WASM" : "SERVER";
+
     public void SetToastPosition(SToastPosition p)
     {
         ToastPosition = p;

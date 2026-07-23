@@ -1,27 +1,36 @@
 ﻿<!DOCTYPE html>
 <html lang="ru" data-solly-theme="dark">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SollyUI Demo</title>
-    <base href="/" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SollyUI Demo</title>
+  <base href="/"/>
 
-    <script>
-        (function () {
-            try {
-                var t = localStorage.getItem('solly-theme') || 'dark';
-                if (t === 'auto') t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-                document.documentElement.setAttribute('data-solly-theme', t);
-            } catch (e) { }
-        })();
-    </script>
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('solly-theme') || 'dark';
+        if (t === 'auto') t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-solly-theme', t);
 
-    <link rel="stylesheet" href="_content/Solly.UI/solly.css" />
-    <link rel="stylesheet" href="_content/SollyUI.Demo.Shared/app.css" />
-    <HeadOutlet />
+        var p = localStorage.getItem('solly-palette');
+        if (p) {
+          var a = JSON.parse(p);
+          document.documentElement.style.setProperty('--s-h', String(a[0]));
+          document.documentElement.style.setProperty('--s-s', a[1] + '%');
+          document.documentElement.style.setProperty('--s-l', a[2] + '%');
+        }
+      } catch (e) {
+      }
+    })();
+  </script>
+
+  <link rel="stylesheet" href="_content/Solly.UI/solly.css"/>
+  <link rel="stylesheet" href="/app.css"/>
+  <HeadOutlet/>
 </head>
 <body>
-<Routes @rendermode="InteractiveServer" />
+<Routes @rendermode="InteractiveServer"/>
 <script src="_framework/blazor.web.js"></script>
 </body>
 </html>

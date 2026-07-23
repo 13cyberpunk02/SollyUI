@@ -1,0 +1,24 @@
+@inherits SComponentBase
+
+<span class="@Cls("s-badge", LevelClass, Mono ? "s-badge-mono" : null)"
+      style="@Style" @attributes="Attributes">
+    @if (Pulse) { <span class="s-badge-dot"></span> }
+    @ChildContent
+</span>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public SBadgeLevel Level { get; set; } = SBadgeLevel.Accent;
+    [Parameter] public bool Pulse { get; set; }
+    [Parameter] public bool Mono { get; set; }
+
+    private string? LevelClass => Level switch
+    {
+        SBadgeLevel.Success => "s-badge-success",
+        SBadgeLevel.Warning => "s-badge-warning",
+        SBadgeLevel.Error   => "s-badge-error",
+        SBadgeLevel.Info    => "s-badge-info",
+        SBadgeLevel.Neutral => "s-badge-neutral",
+        _                   => null
+    };
+}

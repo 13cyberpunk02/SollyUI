@@ -1,0 +1,66 @@
+@page "/badge"
+
+<DemoPage Title="Badge" Subtitle="Статусные метки с неоновой заливкой и опциональным пульсом.">
+
+    <DemoBlock Title="Levels" Code="@_levelCode">
+        <div class="demo-row">
+            <SBadge Pulse>Active</SBadge>
+            <SBadge Level="SBadgeLevel.Success">Success</SBadge>
+            <SBadge Level="SBadgeLevel.Warning">Warning</SBadge>
+            <SBadge Level="SBadgeLevel.Error">Error</SBadge>
+            <SBadge Level="SBadgeLevel.Info">Info</SBadge>
+            <SBadge Level="SBadgeLevel.Neutral">Neutral</SBadge>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Monospace"
+               Description="Для версий, хешей, идентификаторов."
+               Code="@_monoCode">
+        <div class="demo-row">
+            <SBadge Level="SBadgeLevel.Info" Mono>v2.4.1</SBadge>
+            <SBadge Level="SBadgeLevel.Neutral" Mono>#a3f9c1</SBadge>
+            <SBadge Mono>build 1284</SBadge>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Pulse"
+               Description="Пульсирующая точка для живых состояний."
+               Code="@_pulseCode">
+        <div class="demo-row">
+            <SBadge Pulse>Online</SBadge>
+            <SBadge Level="SBadgeLevel.Success" Pulse>Deploying</SBadge>
+            <SBadge Level="SBadgeLevel.Error" Pulse>Incident</SBadge>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="With icons" Code="@_iconCode">
+        <div class="demo-row">
+            <SBadge Level="SBadgeLevel.Success"><SIcon Name="@SIcons.Check" Size="12" /> Passed</SBadge>
+            <SBadge Level="SBadgeLevel.Error"><SIcon Name="@SIcons.X" Size="12" /> Failed</SBadge>
+            <SBadge Level="SBadgeLevel.Warning"><SIcon Name="@SIcons.Warning" Size="12" /> Degraded</SBadge>
+        </div>
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    const string _levelCode = """
+<SBadge Pulse>Active</SBadge>
+<SBadge Level="SBadgeLevel.Success">Success</SBadge>
+<SBadge Level="SBadgeLevel.Error">Error</SBadge>
+""";
+
+    const string _monoCode = """
+<SBadge Level="SBadgeLevel.Info" Mono>v2.4.1</SBadge>
+""";
+
+    const string _pulseCode = """
+<SBadge Pulse>Online</SBadge>
+""";
+
+    const string _iconCode = """
+<SBadge Level="SBadgeLevel.Success">
+    <SIcon Name="@SIcons.Check" Size="12" /> Passed
+</SBadge>
+""";
+}

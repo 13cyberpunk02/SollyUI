@@ -41,7 +41,4 @@ public abstract class SollyTestContext : BunitContext
     protected IRenderedComponent<T> RenderC<T>(
         Action<ComponentParameterCollectionBuilder<T>> configure) where T : IComponent
         => Render(configure);
-
-    protected IRenderedComponent<T> RenderC<T>() where T : IComponent
-        => Render<T>(_ => { });
 }

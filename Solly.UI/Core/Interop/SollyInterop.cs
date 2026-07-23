@@ -3,7 +3,7 @@ using Microsoft.JSInterop;
 
 namespace Solly.UI.Core.Interop;
 
-public sealed class SollyInterop(IJSRuntime js) : IAsyncDisposable
+public sealed class SollyInterop(IJSRuntime js) : IAsyncDisposable, IDisposable
 {
     private readonly Lazy<Task<IJSObjectReference>> _module = new(() => js.InvokeAsync<IJSObjectReference>(
         "import", "./_content/Solly.UI/solly.js").AsTask());
@@ -130,5 +130,40 @@ public sealed class SollyInterop(IJSRuntime js) : IAsyncDisposable
         }
         catch (JSDisconnectedException) { }
         catch (ObjectDisposedException) { }
+    }
+    
+    public async ValueTask SetPaletteAsync(int h, int s, int l)
+    {
+        try
+        {
+            var m = await Module;
+            await m.InvokeVoidAsync("setPalette", h, s, l);
+        }
+        catch (JSDisconnectedException) { }
+        catch (ObjectDisposedException) { }
+    }
+
+    public async ValueTask<int[]?> GetStoredPaletteAsync()
+    {
+        try
+        {
+            var m = await Module;
+            return await m.InvokeAsync<int[]?>("getStoredPalette");
+        }
+        catch (JSDisconnectedException) { return null; }
+        catch (ObjectDisposedException) { return null; }
+    }
+    
+    public void Dispose()
+    {
+        if (!_module.IsValueCreated) return;
+        try
+        {
+            var m = _module.Value;
+            m.Dispose();
+        }
+        catch (JSDisconnectedException) { }
+        catch (ObjectDisposedException) { }
+        catch (TaskCanceledException) { }
     }
 }
