@@ -1,0 +1,16 @@
+@inherits SComponentBase
+@implements IDisposable
+@inject NavigationManager Nav
+
+@if (!string.IsNullOrEmpty(Label))
+{
+    <div class="s-nav-group">@Label</div>
+}
+@ChildContent
+
+@code {
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    public void Dispose() { }
+}

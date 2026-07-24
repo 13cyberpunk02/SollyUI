@@ -1,0 +1,120 @@
+@inherits SComponentBase
+
+@if (!string.IsNullOrEmpty(Href))
+{
+    <a class="@RootClass" style="@Style" href="@Href" @attributes="Attributes">
+        @Inner
+    </a>
+}
+else if (Clickable || OnClick.HasDelegate)
+{
+    <div class="@RootClass" style="@Style"
+         role="button" tabindex="0"
+         @onclick="OnClickAsync"
+         @onkeydown="OnKeyDownAsync"
+         @attributes="Attributes">
+        @Inner
+    </div>
+}
+else
+{
+    <div class="@RootClass" style="@Style" @attributes="Attributes">
+        @Inner
+    </div>
+}
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public RenderFragment? HeaderContent { get; set; }
+    [Parameter] public RenderFragment? FooterContent { get; set; }
+    [Parameter] public RenderFragment? MediaContent { get; set; }
+    [Parameter] public RenderFragment? ActionsContent { get; set; }
+
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public string? Subtitle { get; set; }
+    [Parameter] public string? Eyebrow { get; set; }
+    [Parameter] public string? Icon { get; set; }
+
+    [Parameter] public SCardVariant Variant { get; set; } = SCardVariant.Default;
+    [Parameter] public SCardPadding Padding { get; set; } = SCardPadding.Normal;
+
+    /// <summary>Adds the lens highlight across the top edge.</summary>
+    [Parameter] public bool Lens { get; set; } = true;
+
+    /// <summary>Hover lift and glow, without needing Href or OnClick.</summary>
+    [Parameter] public bool Clickable { get; set; }
+
+    [Parameter] public string? Href { get; set; }
+    [Parameter] public EventCallback OnClick { get; set; }
+
+    private bool Interactive => Clickable || OnClick.HasDelegate || !string.IsNullOrEmpty(Href);
+
+    private string RootClass => Cls(
+        "s-card",
+        Variant.ToCssClass(),
+        Padding.ToCssClass(),
+        Lens ? "s-card-lens" : null,
+        Interactive ? "s-card-interactive" : null);
+
+    private RenderFragment Inner => __builder =>
+    {
+        <text>
+            @if (MediaContent is not null)
+            {
+                <div class="s-card-media">@MediaContent</div>
+            }
+
+            @if (HeaderContent is not null)
+            {
+                <div class="s-card-head">@HeaderContent</div>
+            }
+            else if (!string.IsNullOrEmpty(Title) || !string.IsNullOrEmpty(Eyebrow) || !string.IsNullOrEmpty(Icon))
+            {
+                <div class="s-card-head">
+                    @if (!string.IsNullOrEmpty(Icon))
+                    {
+                        <span class="s-card-icon"><GIcon Name="@Icon" Size="20" /></span>
+                    }
+                    <div class="s-card-titles">
+                        @if (!string.IsNullOrEmpty(Eyebrow))
+                        {
+                            <span class="s-eyebrow">@Eyebrow</span>
+                        }
+                        @if (!string.IsNullOrEmpty(Title))
+                        {
+                            <strong class="s-card-title">@Title</strong>
+                        }
+                        @if (!string.IsNullOrEmpty(Subtitle))
+                        {
+                            <span class="s-card-sub">@Subtitle</span>
+                        }
+                    </div>
+                    @if (ActionsContent is not null)
+                    {
+                        <div class="s-card-actions">@ActionsContent</div>
+                    }
+                </div>
+            }
+
+            @if (ChildContent is not null)
+            {
+                <div class="s-card-body">@ChildContent</div>
+            }
+
+            @if (FooterContent is not null)
+            {
+                <div class="s-card-foot">@FooterContent</div>
+            }
+        </text>
+    };
+
+    private async Task OnClickAsync()
+    {
+        if (OnClick.HasDelegate) await OnClick.InvokeAsync();
+    }
+
+    private async Task OnKeyDownAsync(KeyboardEventArgs e)
+    {
+        if (e.Key is "Enter" or " ") await OnClickAsync();
+    }
+}

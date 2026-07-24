@@ -1,0 +1,194 @@
+@page "/card"
+
+<DemoPage Title="Card" Subtitle="Стеклянный контейнер с заголовком, медиа и футером. Четыре варианта, три плотности.">
+
+    <DemoBlock Title="Basic" Code="@_basicCode">
+        <div class="s-card-grid" style="--s-card-min:15rem;">
+            <SCard Title="Simple">
+                Только заголовок и текст.
+            </SCard>
+            <SCard Title="With subtitle" Subtitle="Вторая строка">
+                Подзаголовок под основным.
+            </SCard>
+            <SCard Title="With icon" Icon="@SIcons.Star">
+                Иконка в неоновой плашке слева.
+            </SCard>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Variants" Code="@_variantCode">
+        <div class="s-card-grid" style="--s-card-min:14rem;">
+            <SCard Title="Default" Variant="SCardVariant.Default">Стекло с тенью.</SCard>
+            <SCard Title="Neon" Variant="SCardVariant.Neon">Акцентная рамка и свечение.</SCard>
+            <SCard Title="Flat" Variant="SCardVariant.Flat">Без блюра и тени.</SCard>
+            <SCard Title="Outline" Variant="SCardVariant.Outline">Только рамка.</SCard>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Eyebrow & actions"
+               Description="Eyebrow — моноширинная надстрочная метка. ActionsContent уезжает вправо."
+               Code="@_eyebrowCode">
+        <SCard Eyebrow="Deployment" Title="Production" Subtitle="europe-west-1"
+               Icon="@SIcons.Layers" Variant="SCardVariant.Neon">
+            <ActionsContent>
+                <SBadge Pulse>Live</SBadge>
+            </ActionsContent>
+            <ChildContent>
+                Сборка 1284 задеплоена 4 минуты назад.
+            </ChildContent>
+        </SCard>
+    </DemoBlock>
+
+    <DemoBlock Title="With footer" Code="@_footerCode">
+        <SCard Title="Delete workspace" Icon="@SIcons.Warning">
+            <ChildContent>
+                Все проекты, ключи и история будут удалены безвозвратно.
+            </ChildContent>
+            <FooterContent>
+                <SButton Variant="SVariant.Ghost">Отмена</SButton>
+                <div style="flex:1"></div>
+                <SButton Variant="SVariant.Danger" Icon="@SIcons.X">Удалить</SButton>
+            </FooterContent>
+        </SCard>
+    </DemoBlock>
+
+    <DemoBlock Title="Clickable"
+               Description="Href делает карточку ссылкой, OnClick — кнопкой с ролью и клавиатурой."
+               Code="@_clickCode">
+        <div class="s-card-grid" style="--s-card-min:15rem;">
+            <SCard Title="Link" Subtitle="Ведёт на /button" Href="button" Icon="@SIcons.Cursor">
+                Наведи — приподнимется.
+            </SCard>
+            <SCard Title="Button" Subtitle="Enter или Space" Icon="@SIcons.Check"
+                   OnClick="() => _clicks++">
+                Кликов: @_clicks
+            </SCard>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Padding" Code="@_padCode">
+        <div class="s-card-grid" style="--s-card-min:13rem;">
+            <SCard Title="Compact" Padding="SCardPadding.Compact">16px</SCard>
+            <SCard Title="Normal" Padding="SCardPadding.Normal">24px — по умолчанию</SCard>
+            <SCard Title="Roomy" Padding="SCardPadding.Roomy">32px</SCard>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Without lens"
+               Description="Lens=false убирает блик по верхнему краю."
+               Code="@_lensCode">
+        <div class="s-card-grid" style="--s-card-min:14rem;">
+            <SCard Title="With lens" Lens="true">Блик есть.</SCard>
+            <SCard Title="No lens" Lens="false">Блика нет.</SCard>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Composition"
+               Description="Внутрь можно класть любые компоненты."
+               Code="@_composeCode">
+        <div class="s-card-grid" style="--s-card-min:19rem;">
+            <SCard Eyebrow="Profile" Title="Edit details" Icon="@SIcons.Type">
+                <ChildContent>
+                    <div class="demo-col" style="gap:16px;max-width:none;">
+                        <SInput @bind-Value="_name" Label="Name" Clearable />
+                        <SSelect TValue="string" Items="_roles" @bind-Value="_role" Label="Role" />
+                    </div>
+                </ChildContent>
+                <FooterContent>
+                    <div style="flex:1"></div>
+                    <SButton Variant="SVariant.Primary" Icon="@SIcons.Check">Save</SButton>
+                </FooterContent>
+            </SCard>
+
+            <SCard Eyebrow="Stats" Title="This month" Icon="@SIcons.Sliders">
+                <div class="demo-col" style="gap:14px;max-width:none;">
+                    <SSlider @bind-Value="_usage" Label="Storage"
+                             Min="0" Max="100" Format="@(v => $"{v:0} GB")" />
+                    <div class="demo-row" style="gap:8px;">
+                        <SBadge Level="SBadgeLevel.Success">Healthy</SBadge>
+                        <SBadge Level="SBadgeLevel.Neutral" Mono>99.98%</SBadge>
+                    </div>
+                </div>
+            </SCard>
+        </div>
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    int _clicks;
+    double _usage = 42;
+    string? _name = "Jane Doe";
+    string? _role = "Developer";
+    string[] _roles = { "Developer", "Designer", "Manager", "QA" };
+
+    const string _basicCode = """
+<SCard Title="Simple">
+    Только заголовок и текст.
+</SCard>
+
+<SCard Title="With icon" Icon="@SIcons.Star">
+    Иконка в неоновой плашке слева.
+</SCard>
+""";
+
+    const string _variantCode = """
+<SCard Title="Default" Variant="SCardVariant.Default">…</SCard>
+<SCard Title="Neon"    Variant="SCardVariant.Neon">…</SCard>
+<SCard Title="Flat"    Variant="SCardVariant.Flat">…</SCard>
+<SCard Title="Outline" Variant="SCardVariant.Outline">…</SCard>
+""";
+
+    const string _eyebrowCode = """
+<SCard Eyebrow="Deployment" Title="Production" Subtitle="europe-west-1"
+       Icon="@SIcons.Layers" Variant="SCardVariant.Neon">
+    <ActionsContent>
+        <SBadge Pulse>Live</SBadge>
+    </ActionsContent>
+    <ChildContent>
+        Сборка 1284 задеплоена 4 минуты назад.
+    </ChildContent>
+</SCard>
+""";
+
+    const string _footerCode = """
+<SCard Title="Delete workspace" Icon="@SIcons.Warning">
+    <ChildContent>Всё будет удалено безвозвратно.</ChildContent>
+    <FooterContent>
+        <SButton Variant="SVariant.Ghost">Отмена</SButton>
+        <div style="flex:1"></div>
+        <SButton Variant="SVariant.Danger">Удалить</SButton>
+    </FooterContent>
+</SCard>
+""";
+
+    const string _clickCode = """
+@* as a link *@
+<SCard Title="Link" Href="button">…</SCard>
+
+@* as a button — gets role, tabindex and Enter/Space *@
+<SCard Title="Button" OnClick="() => _clicks++">…</SCard>
+""";
+
+    const string _padCode = """
+<SCard Padding="SCardPadding.Compact">16px</SCard>
+<SCard Padding="SCardPadding.Normal">24px — default</SCard>
+<SCard Padding="SCardPadding.Roomy">32px</SCard>
+""";
+
+    const string _lensCode = """
+<SCard Title="No lens" Lens="false">Без блика.</SCard>
+""";
+
+    const string _composeCode = """
+<SCard Eyebrow="Profile" Title="Edit details">
+    <ChildContent>
+        <SInput @bind-Value="_name" Label="Name" Clearable />
+        <SSelect TValue="string" Items="_roles" @bind-Value="_role" Label="Role" />
+    </ChildContent>
+    <FooterContent>
+        <SButton Variant="SVariant.Primary">Save</SButton>
+    </FooterContent>
+</SCard>
+""";
+}

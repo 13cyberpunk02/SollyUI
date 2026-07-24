@@ -1,0 +1,317 @@
+@page "/table"
+
+<DemoPage Title="Table" Subtitle="Обобщённые колонки, сортировка, пагинация, выделение, поиск и серверный провайдер.">
+
+    <DemoBlock Title="Basic" Code="@_basicCode">
+        <STable TItem="Employee" Items="_people.Take(5)">
+            <SColumn TItem="Employee" Title="Name" Value="@(e => e.Name)" />
+            <SColumn TItem="Employee" Title="Role" Value="@(e => e.Role)" />
+            <SColumn TItem="Employee" Title="Salary" Value="@(e => e.Salary)"
+                     Format="C0" Align="SAlign.End" />
+        </STable>
+    </DemoBlock>
+
+    <DemoBlock Title="Sorting"
+               Description="Клик по заголовку: по возрастанию → по убыванию → без сортировки."
+               Code="@_sortCode">
+        <STable TItem="Employee" Items="_people.Take(8)" Striped>
+            <SColumn TItem="Employee" Name="name" Title="Name" Value="@(e => e.Name)" Sortable />
+            <SColumn TItem="Employee" Name="role" Title="Role" Value="@(e => e.Role)" Sortable />
+            <SColumn TItem="Employee" Name="hired" Title="Hired" Value="@(e => e.Hired)"
+                     Format="dd.MM.yyyy" Sortable />
+            <SColumn TItem="Employee" Name="salary" Title="Salary" Value="@(e => e.Salary)"
+                     Format="C0" Align="SAlign.End" Sortable />
+        </STable>
+    </DemoBlock>
+
+    <DemoBlock Title="Search & pagination" Code="@_pageCode">
+        <STable TItem="Employee" Items="_people"
+                Searchable Paginated PageSize="6"
+                PageSizeOptions="@(new[] { 6, 12, 24 })">
+            <SColumn TItem="Employee" Name="name" Title="Name" Value="@(e => e.Name)" Sortable />
+            <SColumn TItem="Employee" Name="dept" Title="Department" Value="@(e => e.Department)" Sortable />
+            <SColumn TItem="Employee" Name="role" Title="Role" Value="@(e => e.Role)"
+                     Sortable HideBelow="40rem" />
+            <SColumn TItem="Employee" Name="salary" Title="Salary" Value="@(e => e.Salary)"
+                     Format="C0" Align="SAlign.End" Sortable />
+        </STable>
+    </DemoBlock>
+
+    <DemoBlock Title="Cell templates"
+               Description="ChildContent колонки получает строку через context."
+               Code="@_tmplCode">
+        <STable TItem="Employee" Items="_people.Take(6)">
+            <SColumn TItem="Employee" Title="Employee">
+                <div class="demo-cell-person">
+                    <span class="demo-avatar">@context.Name[..1]</span>
+                    <div>
+                        <strong>@context.Name</strong>
+                        <small>@context.Email</small>
+                    </div>
+                </div>
+            </SColumn>
+            <SColumn TItem="Employee" Title="Status" Align="SAlign.Center">
+                <SBadge Level="@(context.Active ? SBadgeLevel.Success : SBadgeLevel.Neutral)">
+                    @(context.Active ? "Active" : "On leave")
+                </SBadge>
+            </SColumn>
+            <SColumn TItem="Employee" Title="" Align="SAlign.End">
+                <SButton Variant="SVariant.Ghost" Icon="@SIcons.Type"
+                         OnClick="@(() => Toasts.Info($"Редактируем {context.Name}"))" />
+            </SColumn>
+        </STable>
+    </DemoBlock>
+
+    <DemoBlock Title="Selection"
+               Description="KeySelector обязателен для классов — по нему таблица отличает строки."
+               Code="@_selCode">
+        <div class="demo-col" style="max-width:none;">
+            <STable TItem="Employee" Items="_people.Take(8)"
+                    Selectable KeySelector="@(e => e.Id)"
+                    @bind-SelectedItems="_picked">
+                <ToolbarContent>
+                    @if (_picked.Any())
+                    {
+                        <SButton Variant="SVariant.Danger" Icon="@SIcons.X"
+                                 OnClick="@(() => Toasts.Warning($"Удалить {_picked.Count()}?"))">
+                            Удалить
+                        </SButton>
+                    }
+                </ToolbarContent>
+                <ChildContent>
+                    <SColumn TItem="Employee" Title="Name" Value="@(e => e.Name)" />
+                    <SColumn TItem="Employee" Title="Role" Value="@(e => e.Role)" />
+                </ChildContent>
+            </STable>
+
+            <span class="demo-note">
+                Выбрано: @(_picked.Any() ? string.Join(", ", _picked.Select(p => p.Name)) : "—")
+            </span>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Row click" Code="@_rowCode">
+        <STable TItem="Employee" Items="_people.Take(5)"
+                OnRowClick="@(e => Toasts.Info(e.Name, "Строка"))"
+                RowClass="@(e => e.Salary > 90000 ? "demo-row-hot" : null)">
+            <SColumn TItem="Employee" Title="Name" Value="@(e => e.Name)" />
+            <SColumn TItem="Employee" Title="Salary" Value="@(e => e.Salary)"
+                     Format="C0" Align="SAlign.End" />
+        </STable>
+    </DemoBlock>
+
+    <DemoBlock Title="Server-side"
+               Description="ItemsProvider сам делает сортировку, поиск и срез. Возвращает TotalCount по всем страницам."
+               Code="@_serverCode">
+        <STable TItem="Employee" ItemsProvider="LoadAsync"
+                Searchable Paginated PageSize="8"
+                SearchPlaceholder="Имитация 500ms задержки…">
+            <SColumn TItem="Employee" Name="Name" Title="Name" Value="@(e => e.Name)" Sortable />
+            <SColumn TItem="Employee" Name="Department" Title="Department" Value="@(e => e.Department)" Sortable />
+            <SColumn TItem="Employee" Name="Salary" Title="Salary" Value="@(e => e.Salary)"
+                     Format="C0" Align="SAlign.End" Sortable />
+        </STable>
+    </DemoBlock>
+
+    <DemoBlock Title="Empty & compact" Code="@_emptyCode">
+        <div class="demo-col" style="gap:20px;max-width:none;">
+            <STable TItem="Employee" Items="@(Array.Empty<Employee>())"
+                    EmptyText="Пока никого нет">
+                <SColumn TItem="Employee" Title="Name" Value="@(e => e.Name)" />
+                <SColumn TItem="Employee" Title="Role" Value="@(e => e.Role)" />
+            </STable>
+
+            <STable TItem="Employee" Items="_people.Take(4)" Compact Striped>
+                <SColumn TItem="Employee" Title="Name" Value="@(e => e.Name)" />
+                <SColumn TItem="Employee" Title="Role" Value="@(e => e.Role)" />
+            </STable>
+        </div>
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    [Inject] SToastService Toasts { get; set; } = default!;
+
+    public class Employee
+    {
+        public int Id { get; init; }
+        public string Name { get; init; } = "";
+        public string Email { get; init; } = "";
+        public string Role { get; init; } = "";
+        public string Department { get; init; } = "";
+        public decimal Salary { get; init; }
+        public DateTime Hired { get; init; }
+        public bool Active { get; init; } = true;
+    }
+
+    IEnumerable<Employee> _picked = [];
+
+    static readonly string[] _first =
+        { "Anna", "Boris", "Clara", "Dmitri", "Elena", "Felix", "Greta", "Hugo",
+          "Irina", "Jonas", "Katya", "Lukas", "Maria", "Niko", "Olga", "Pavel",
+          "Quinn", "Rosa", "Stefan", "Tanya", "Ulrich", "Vera", "Wolf", "Xenia" };
+
+    static readonly string[] _last =
+        { "Meyer", "Schmidt", "Weber", "Fischer", "Braun", "Wolf", "Klein", "Richter" };
+
+    static readonly string[] _roles =
+        { "Developer", "Designer", "Manager", "QA Engineer", "DevOps", "Analyst" };
+
+    static readonly string[] _depts =
+        { "Engineering", "Product", "Design", "Operations" };
+
+    static readonly List<Employee> _people = Enumerable.Range(0, 120)
+        .Select(i =>
+        {
+            var rnd = new Random(i * 7919);
+            var first = _first[i % _first.Length];
+            var last = _last[(i / _first.Length + i) % _last.Length];
+            return new Employee
+            {
+                Id = i + 1,
+                Name = $"{first} {last}",
+                Email = $"{first.ToLowerInvariant()}.{last.ToLowerInvariant()}@example.com",
+                Role = _roles[i % _roles.Length],
+                Department = _depts[i % _depts.Length],
+                Salary = 45000 + rnd.Next(0, 70) * 1000,
+                Hired = new DateTime(2018, 1, 1).AddDays(rnd.Next(0, 2900)),
+                Active = i % 9 != 0
+            };
+        })
+        .ToList();
+
+    async Task<STableResult<Employee>> LoadAsync(STableRequest r)
+    {
+        await Task.Delay(500, r.CancellationToken);
+
+        IEnumerable<Employee> q = _people;
+
+        if (!string.IsNullOrWhiteSpace(r.Search))
+        {
+            q = q.Where(e =>
+                e.Name.Contains(r.Search, StringComparison.OrdinalIgnoreCase) ||
+                e.Department.Contains(r.Search, StringComparison.OrdinalIgnoreCase));
+        }
+
+        q = (r.SortColumn, r.SortDirection) switch
+        {
+            ("Name", SSortDirection.Ascending)        => q.OrderBy(e => e.Name),
+            ("Name", SSortDirection.Descending)       => q.OrderByDescending(e => e.Name),
+            ("Department", SSortDirection.Ascending)  => q.OrderBy(e => e.Department),
+            ("Department", SSortDirection.Descending) => q.OrderByDescending(e => e.Department),
+            ("Salary", SSortDirection.Ascending)      => q.OrderBy(e => e.Salary),
+            ("Salary", SSortDirection.Descending)     => q.OrderByDescending(e => e.Salary),
+            _ => q
+        };
+
+        var list = q.ToList();
+
+        return new STableResult<Employee>
+        {
+            Items = list.Skip(r.Skip).Take(r.Take).ToList(),
+            TotalCount = list.Count
+        };
+    }
+
+    const string _basicCode = """
+<STable TItem="Employee" Items="_people">
+    <SColumn TItem="Employee" Title="Name" Value="@(e => e.Name)" />
+    <SColumn TItem="Employee" Title="Salary" Value="@(e => e.Salary)"
+             Format="C0" Align="SAlign.End" />
+</STable>
+""";
+
+    const string _sortCode = """
+@* Name is the sort key — required for the server-side provider *@
+<SColumn TItem="Employee" Name="salary" Title="Salary"
+         Value="@(e => e.Salary)" Format="C0" Align="SAlign.End" Sortable />
+
+@* sort by a different field than the one displayed *@
+<SColumn TItem="Employee" Title="Name" Value="@(e => e.Name)"
+         SortBy="@(e => e.Last)" Sortable />
+""";
+
+    const string _pageCode = """
+<STable TItem="Employee" Items="_people"
+        Searchable Paginated PageSize="6"
+        PageSizeOptions="@(new[] { 6, 12, 24 })">
+    …
+    @* hides below 40rem viewport width *@
+    <SColumn TItem="Employee" Title="Role" Value="@(e => e.Role)" HideBelow="40rem" />
+</STable>
+""";
+
+    const string _tmplCode = """
+<SColumn TItem="Employee" Title="Status" Align="SAlign.Center">
+    <SBadge Level="@(context.Active ? SBadgeLevel.Success : SBadgeLevel.Neutral)">
+        @(context.Active ? "Active" : "On leave")
+    </SBadge>
+</SColumn>
+
+@* rename the context if it clashes *@
+<SColumn TItem="Employee" Title="Name" Context="emp">
+    <strong>@emp.Name</strong>
+</SColumn>
+""";
+
+    const string _selCode = """
+<STable TItem="Employee" Items="_people"
+        Selectable KeySelector="@(e => e.Id)"
+        @bind-SelectedItems="_picked">
+    <ToolbarContent>
+        <SButton Variant="SVariant.Danger" OnClick="DeleteAsync">Удалить</SButton>
+    </ToolbarContent>
+    <ChildContent>
+        <SColumn TItem="Employee" Title="Name" Value="@(e => e.Name)" />
+    </ChildContent>
+</STable>
+
+@code {
+    IEnumerable<Employee> _picked = Array.Empty<Employee>();
+}
+""";
+
+    const string _rowCode = """
+<STable TItem="Employee" Items="_people"
+        OnRowClick="@(e => Nav.NavigateTo($"/employee/{e.Id}"))"
+        RowClass="@(e => e.Salary > 90000 ? "row-hot" : null)">
+    …
+</STable>
+""";
+
+    const string _serverCode = """
+<STable TItem="Employee" ItemsProvider="LoadAsync" Searchable Paginated PageSize="8">
+    <SColumn TItem="Employee" Name="Name" Title="Name" Value="@(e => e.Name)" Sortable />
+</STable>
+
+@code {
+    async Task<STableResult<Employee>> LoadAsync(STableRequest r)
+    {
+        var url = $"/api/employees?skip={r.Skip}&take={r.Take}" +
+                  $"&sort={r.SortColumn}&dir={r.SortDirection}&q={r.Search}";
+
+        var page = await Http.GetFromJsonAsync<PagedResponse>(url, r.CancellationToken);
+
+        return new STableResult<Employee>
+        {
+            Items = page!.Items,
+            TotalCount = page.Total    // across all pages, not just this one
+        };
+    }
+}
+""";
+
+    const string _emptyCode = """
+<STable TItem="Employee" Items="_empty" EmptyText="Пока никого нет">…</STable>
+
+@* or a custom empty state *@
+<STable TItem="Employee" Items="_empty">
+    <EmptyContent>
+        <SIcon Name="@SIcons.Search" Size="28" />
+        <p>Ничего не найдено</p>
+    </EmptyContent>
+    <ChildContent>…</ChildContent>
+</STable>
+""";
+}

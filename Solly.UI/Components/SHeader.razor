@@ -1,0 +1,36 @@
+@inherits SComponentBase
+
+<div class="@Cls("s-header")" style="@Style" @attributes="Attributes">
+    @if (Shell is not null)
+    {
+        <button type="button" class="s-header-burger" aria-label="Toggle menu"
+                @onclick="Shell.ToggleMobile">
+            <SIcon Name="@SIcons.Menu" Size="18" />
+        </button>
+    }
+
+    @if (StartContent is not null)
+    {
+        <div class="s-header-start">@StartContent</div>
+    }
+
+    @if (!string.IsNullOrEmpty(Title))
+    {
+        <span class="s-header-title">@Title</span>
+    }
+
+    <div class="s-header-spacer"></div>
+
+    @if (ChildContent is not null)
+    {
+        <div class="s-header-end">@ChildContent</div>
+    }
+</div>
+
+@code {
+    [CascadingParameter] private SShell? Shell { get; set; }
+
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public RenderFragment? StartContent { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

@@ -1,0 +1,52 @@
+@typeparam TItem
+@implements IDisposable
+
+@code {
+    [CascadingParameter] private STable<TItem>? Parent { get; set; }
+
+    /// <summary>Stable key. Used for sort state and as the server-side sort field.</summary>
+    [Parameter] public string? Name { get; set; }
+
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public RenderFragment? HeaderContent { get; set; }
+
+    /// <summary>Cell renderer. Falls back to Value(item).</summary>
+    [Parameter] public RenderFragment<TItem>? ChildContent { get; set; }
+
+    /// <summary>Plain text accessor. Used for display, client sort and search.</summary>
+    [Parameter] public Func<TItem, object?>? Value { get; set; }
+
+    /// <summary>Overrides Value for sorting only.</summary>
+    [Parameter] public Func<TItem, object?>? SortBy { get; set; }
+
+    [Parameter] public bool Sortable { get; set; }
+    [Parameter] public bool Searchable { get; set; } = true;
+    [Parameter] public SAlign Align { get; set; } = SAlign.Start;
+    [Parameter] public string? Width { get; set; }
+    [Parameter] public string? Format { get; set; }
+
+    /// <summary>Hide below this viewport width. e.g. "40rem".</summary>
+    [Parameter] public string? HideBelow { get; set; }
+
+    internal string Key => Name ?? Title ?? Guid.NewGuid().ToString("N")[..6];
+
+    internal Func<TItem, object?>? Sorter => SortBy ?? Value;
+
+    internal string TextOf(TItem item)
+    {
+        var v = Value?.Invoke(item);
+        if (v is null) return "";
+        return Format is not null && v is IFormattable f
+            ? f.ToString(Format, CultureInfo.CurrentCulture)
+            : v.ToString() ?? "";
+    }
+
+    protected override void OnInitialized()
+    {
+        if (Parent is null)
+            throw new InvalidOperationException($"{nameof(SColumn<TItem>)} must be nested inside {nameof(STable<TItem>)}.");
+        Parent.AddColumn(this);
+    }
+
+    public void Dispose() => Parent?.RemoveColumn(this);
+}

@@ -3,61 +3,89 @@
 <SAmbient />
 
 <CascadingValue Value="this">
-    <div class="demo-shell">
-        <aside class="demo-sidebar">
-            <div class="demo-brand">
-                <span class="demo-brand-dot"></span>
-                Glassy.UI
-                <span class="demo-env">@Env</span>
-            </div>
+    <SShell Floating @ref="_shell">
+        <SidebarContent>
+            <SSidebar>
+                <BrandContent>
+                    <span class="demo-brand-dot"></span>
+                    <span>Glassy.UI</span>
+                    <span class="demo-env">@Env</span>
+                </BrandContent>
 
-            <nav class="demo-nav">
-                <div class="demo-nav-group">Getting started</div>
-                <DemoLink Href="" Icon="@SIcons.Home" Match="NavLinkMatch.All">Overview</DemoLink>
+                <ChildContent>
+                    <SNavGroup Label="Getting started" />
+                    <SNavLink Href="" Icon="@SIcons.Home" Match="NavLinkMatch.All">Overview</SNavLink>
 
-                <div class="demo-nav-group">Inputs</div>
-                <DemoLink Href="button" Icon="@SIcons.Cursor">Button</DemoLink>
-                <DemoLink Href="input" Icon="@SIcons.Type">Input</DemoLink>
-                <DemoLink Href="number" Icon="@SIcons.Sliders">NumberInput</DemoLink>
-                <DemoLink Href="textarea" Icon="@SIcons.Lines">TextArea</DemoLink>
-                <DemoLink Href="checkbox" Icon="@SIcons.Check">Checkbox</DemoLink>
-                <DemoLink Href="radio" Icon="@SIcons.Circle">Radio</DemoLink>
-                <DemoLink Href="switch" Icon="@SIcons.Toggle">Switch</DemoLink>
-                <DemoLink Href="slider" Icon="@SIcons.Sliders">Slider</DemoLink>
-                <DemoLink Href="select" Icon="@SIcons.List">Select</DemoLink>
-                <DemoLink Href="datepicker" Icon="@SIcons.Calendar">DatePicker</DemoLink>
+                    <SNavGroup Label="Inputs" />
+                    <SNavLink Href="button" Icon="@SIcons.Cursor">Button</SNavLink>
+                    <SNavLink Href="input" Icon="@SIcons.Type">Input</SNavLink>
+                    <SNavLink Href="number" Icon="@SIcons.Sliders">NumberInput</SNavLink>
+                    <SNavLink Href="textarea" Icon="@SIcons.Lines">TextArea</SNavLink>
+                    <SNavLink Href="checkbox" Icon="@SIcons.Check">Checkbox</SNavLink>
+                    <SNavLink Href="radio" Icon="@SIcons.Circle">Radio</SNavLink>
+                    <SNavLink Href="switch" Icon="@SIcons.Toggle">Switch</SNavLink>
+                    <SNavLink Href="slider" Icon="@SIcons.Sliders">Slider</SNavLink>
+                    <SNavLink Href="select" Icon="@SIcons.List">Select</SNavLink>
+                    <SNavLink Href="datepicker" Icon="@SIcons.Calendar">DatePicker</SNavLink>
 
-                <div class="demo-nav-group">Display</div>
-                <DemoLink Href="badge" Icon="@SIcons.Star">Badge</DemoLink>
-                <DemoLink Href="icon" Icon="@SIcons.Star">Icon</DemoLink>
-                <DemoLink Href="tabs" Icon="@SIcons.Columns">Tabs</DemoLink>
+                    <SNavGroup Label="Data" />
+                    <SNavLink Href="table" Icon="@SIcons.Columns">Table</SNavLink>
+                    
+                    <SNavGroup Label="Layout" />
+                    <SNavLink Href="card" Icon="@SIcons.Square">Card</SNavLink>
+                    <SNavLink Href="shell" Icon="@SIcons.PanelLeft">Shell</SNavLink>
+                    <SNavLink Href="tabs" Icon="@SIcons.Columns">Tabs</SNavLink>
 
-                <div class="demo-nav-group">Overlays</div>
-                <DemoLink Href="tooltip" Icon="@SIcons.Info">Tooltip</DemoLink>
-                <DemoLink Href="popover" Icon="@SIcons.Layers">Popover</DemoLink>
-                <DemoLink Href="modal" Icon="@SIcons.Square">Modal</DemoLink>
-                <DemoLink Href="toast" Icon="@SIcons.Bell">Toast</DemoLink>
+                    <SNavGroup Label="Display" />
+                    <SNavLink Href="badge" Icon="@SIcons.Star">Badge</SNavLink>
+                    <SNavLink Href="icon" Icon="@SIcons.Star">Icon</SNavLink>
 
-                <div class="demo-nav-group">Other</div>
-                <DemoLink Href="theming" Icon="@SIcons.Palette">Theming</DemoLink>
-                <DemoLink Href="form" Icon="@SIcons.Clipboard">Full form</DemoLink>
-            </nav>
-        </aside>
+                    <SNavGroup Label="Overlays" />
+                    <SNavLink Href="tooltip" Icon="@SIcons.Info">Tooltip</SNavLink>
+                    <SNavLink Href="popover" Icon="@SIcons.Layers">Popover</SNavLink>
+                    <SNavLink Href="modal" Icon="@SIcons.Square">Modal</SNavLink>
+                    <SNavLink Href="toast" Icon="@SIcons.Bell">Toast</SNavLink>
 
-        <div class="demo-content">
-            <header class="demo-topbar">
-                <SThemeToggle />
-            </header>
-            <main class="demo-main">
+                    <SNavGroup Label="Other" />
+                    <SNavLink Href="theming" Icon="@SIcons.Palette">Theming</SNavLink>
+                    <SNavLink Href="form" Icon="@SIcons.Clipboard">Full form</SNavLink>
+                </ChildContent>
+
+                <FooterContent>
+                    <SButton Variant="SVariant.Ghost"
+                             Icon="@SIcons.PanelLeft"
+                             OnClick="() => _shell.ToggleCollapseAsync()"
+                             Style="width:100%;justify-content:flex-start;padding:9px 11px;font-size:13px;">
+                        @(_shell?.IsCollapsed == true ? "" : "Collapse")
+                    </SButton>
+                </FooterContent>
+            </SSidebar>
+        </SidebarContent>
+
+        <HeaderContent>
+            <SHeader>
+                <StartContent>
+                    <SBadge Level="SBadgeLevel.Neutral" Mono>v0.1.0</SBadge>
+                </StartContent>
+                <ChildContent>
+                    <SThemeToggle />
+                </ChildContent>
+            </SHeader>
+        </HeaderContent>
+
+        <ChildContent>
+            <div class="demo-main">
                 @Body
-            </main>
-        </div>
-    </div>
+            </div>
+        </ChildContent>
+    </SShell>
 
     <SToastHost Position="@ToastPosition" />
 </CascadingValue>
 
 @code {
+    private SShell? _shell;
+
     public SToastPosition ToastPosition { get; private set; } = SToastPosition.BottomRight;
 
     private string Env => OperatingSystem.IsBrowser() ? "WASM" : "SERVER";

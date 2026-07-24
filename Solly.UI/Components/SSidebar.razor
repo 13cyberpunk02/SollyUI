@@ -1,0 +1,27 @@
+@inherits SComponentBase
+
+<div class="@Cls("s-sidebar")" style="@Style" @attributes="Attributes">
+    @if (BrandContent is not null)
+    {
+        <div class="s-sidebar-brand">
+            @BrandContent
+        </div>
+    }
+
+    <nav class="s-sidebar-nav">
+        @ChildContent
+    </nav>
+
+    @if (FooterContent is not null)
+    {
+        <div class="s-sidebar-foot">
+            @FooterContent
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public RenderFragment? BrandContent { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public RenderFragment? FooterContent { get; set; }
+}

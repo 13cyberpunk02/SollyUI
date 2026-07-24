@@ -1,0 +1,76 @@
+@inherits SComponentBase
+
+<div class="@Cls("s-shell", Floating ? "s-floating" : null)" style="@Style" @attributes="Attributes">
+    @if (SidebarContent is not null)
+    {
+        <aside class="s-shell-aside @(_collapsed ? "s-collapsed" : null) @(_mobileOpen ? "s-mobile-open" : null)"
+               style="@($"--s-aside-w:{Width};--s-aside-w-min:{CollapsedWidth}")">
+            <CascadingValue Value="this" IsFixed="true">
+                @SidebarContent
+            </CascadingValue>
+        </aside>
+
+        @if (_mobileOpen)
+        {
+            <div class="s-shell-scrim" @onclick="() => _mobileOpen = false"></div>
+        }
+    }
+
+    <div class="s-shell-main">
+        @if (HeaderContent is not null)
+        {
+            <header class="s-shell-header">
+                <CascadingValue Value="this" IsFixed="true">
+                    @HeaderContent
+                </CascadingValue>
+            </header>
+        }
+
+        <main class="s-shell-body">
+            @ChildContent
+        </main>
+    </div>
+</div>
+
+@code {
+    [Parameter] public RenderFragment? SidebarContent { get; set; }
+    [Parameter] public RenderFragment? HeaderContent { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Detach the sidebar and header from the viewport edges.</summary>
+    [Parameter] public bool Floating { get; set; } = true;
+
+    [Parameter] public string Width { get; set; } = "15rem";
+    [Parameter] public string CollapsedWidth { get; set; } = "4.25rem";
+
+    [Parameter] public bool Collapsed { get; set; }
+    [Parameter] public EventCallback<bool> CollapsedChanged { get; set; }
+
+    private bool _collapsed;
+    private bool _mobileOpen;
+
+    public bool IsCollapsed => _collapsed;
+    public bool IsMobileOpen => _mobileOpen;
+
+    protected override void OnParametersSet() => _collapsed = Collapsed;
+
+    public async Task ToggleCollapseAsync()
+    {
+        _collapsed = !_collapsed;
+        await CollapsedChanged.InvokeAsync(_collapsed);
+        StateHasChanged();
+    }
+
+    public void ToggleMobile()
+    {
+        _mobileOpen = !_mobileOpen;
+        StateHasChanged();
+    }
+
+    public void CloseMobile()
+    {
+        if (!_mobileOpen) return;
+        _mobileOpen = false;
+        StateHasChanged();
+    }
+}

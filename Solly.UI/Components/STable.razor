@@ -1,0 +1,619 @@
+@typeparam TItem
+@inherits SComponentBase
+@implements IDisposable
+
+<CascadingValue Value="this" IsFixed="true">
+    @ChildContent
+</CascadingValue>
+
+<div class="@Cls("s-table-root")" style="@Style" @attributes="Attributes">
+
+    @if (Searchable || ToolbarContent is not null)
+    {
+        <div class="s-table-toolbar">
+            @if (Searchable)
+            {
+                <div class="s-table-search">
+                    <SIcon Name="@SIcons.Search" Size="15" Class="s-table-search-icon" />
+                    <input class="s-table-search-input"
+                           type="text"
+                           placeholder="@SearchPlaceholder"
+                           value="@_search"
+                           @oninput="OnSearchAsync" />
+                    @if (!string.IsNullOrEmpty(_search))
+                    {
+                        <button type="button" class="s-table-search-clear" aria-label="Clear"
+                                @onclick="ClearSearchAsync">
+                            <SIcon Name="@SIcons.X" Size="13" />
+                        </button>
+                    }
+                </div>
+            }
+
+            @if (Selectable && _selected.Count > 0)
+            {
+                <span class="s-table-selcount">@_selected.Count selected</span>
+            }
+
+            <div class="s-table-toolbar-spacer"></div>
+
+            @if (ToolbarContent is not null)
+            {
+                @ToolbarContent
+            }
+        </div>
+    }
+
+    <div class="s-table-scroll">
+        <table class="s-table @(Striped ? "s-striped" : null) @(Hoverable ? "s-hover" : null) @(Compact ? "s-compact" : null)">
+            <thead>
+                <tr>
+                    @if (Selectable)
+                    {
+                        <th class="s-table-selcol">
+                            <label class="s-cb s-table-cb">
+                                <input type="checkbox"
+                                       class="s-cb-native"
+                                       checked="@AllOnPageSelected"
+                                       indeterminate="@SomeOnPageSelected"
+                                       @onchange="OnSelectAllAsync" />
+                                <span class="s-cb-box @(SomeOnPageSelected ? "s-indet" : null)">
+                                    <SIcon Name="@(SomeOnPageSelected ? SIcons.Minus : SIcons.Check)"
+                                           Size="12" Weight="3.2" Class="s-cb-mark" />
+                                </span>
+                            </label>
+                        </th>
+                    }
+
+                    @foreach (var col in _columns)
+                    {
+                        <th class="@ColHeaderClass(col)"
+                            style="@(col.Width is null ? null : $"width:{col.Width}")"
+                            aria-sort="@AriaSort(col)">
+
+                            @if (col.Sortable)
+                            {
+                                <button type="button" class="s-table-sort" @onclick="() => SortAsync(col)">
+                                    @HeaderInner(col)
+                                    <span class="s-table-sort-icon @(SortStateOf(col) == SSortDirection.None ? "s-idle" : null)">
+                                        <SIcon Name="@(SortStateOf(col) == SSortDirection.Descending ? SIcons.ChevronDown : SIcons.ChevronUp)"
+                                               Size="13" Weight="2.4" />
+                                    </span>
+                                </button>
+                            }
+                            else
+                            {
+                                @HeaderInner(col)
+                            }
+                        </th>
+                    }
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (_loading && _view.Count == 0)
+                {
+                    @for (var i = 0; i < Math.Min(PageSize, 5); i++)
+                    {
+                        <tr class="s-table-skeleton">
+                            @if (Selectable) { <td><span class="s-skel"></span></td> }
+                            @foreach (var _ in _columns) { <td><span class="s-skel"></span></td> }
+                        </tr>
+                    }
+                }
+                else if (_view.Count == 0)
+                {
+                    <tr>
+                        <td class="s-table-empty" colspan="@ColSpan">
+                            @if (EmptyContent is not null) { @EmptyContent }
+                            else { <span>@EmptyText</span> }
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var item in _view)
+                    {
+                        var key = KeyOf(item);
+                        var selected = Selectable && _selected.Contains(key);
+
+                        <tr class="@(selected ? "s-selected" : null) @(RowClass?.Invoke(item))"
+                            @key="key"
+                            @onclick="() => OnRowClickAsync(item)">
+
+                            @if (Selectable)
+                            {
+                                <td class="s-table-selcol" @onclick:stopPropagation="true">
+                                    <label class="s-cb s-table-cb">
+                                        <input type="checkbox"
+                                               class="s-cb-native"
+                                               checked="@selected"
+                                               @onchange="e => OnSelectRowAsync(item, e)" />
+                                        <span class="s-cb-box">
+                                            <SIcon Name="@SIcons.Check" Size="12" Weight="3.2" Class="s-cb-mark" />
+                                        </span>
+                                    </label>
+                                </td>
+                            }
+
+                            @foreach (var col in _columns)
+                            {
+                                <td class="@ColCellClass(col)">
+                                    @if (col.ChildContent is not null) { @col.ChildContent(item) }
+                                    else { @col.TextOf(item) }
+                                </td>
+                            }
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+
+        @if (_loading && _view.Count > 0)
+        {
+            <div class="s-table-veil"><SIcon Name="@SIcons.Spinner" Size="20" Class="s-spin" /></div>
+        }
+    </div>
+
+    @if (Paginated && _total > 0)
+    {
+        <div class="s-table-pager">
+            <span class="s-table-range">
+                @(_skip + 1)–@Math.Min(_skip + PageSize, _total) of @_total
+            </span>
+
+            <div class="s-table-pager-spacer"></div>
+
+            @if (PageSizeOptions is not null && PageSizeOptions.Any())
+            {
+                <span class="s-table-rows-label">Rows</span>
+                <select class="s-table-rows" value="@PageSize" @onchange="OnPageSizeAsync">
+                    @foreach (var n in PageSizeOptions)
+                    {
+                        <option value="@n">@n</option>
+                    }
+                </select>
+            }
+
+            <div class="s-table-pages">
+                <button type="button" class="s-table-page" disabled="@(_page == 0)"
+                        aria-label="First page" @onclick="() => GoToAsync(0)">
+                    <SIcon Name="@SIcons.ChevronsLeft" Size="14" Weight="2.2" />
+                </button>
+                <button type="button" class="s-table-page" disabled="@(_page == 0)"
+                        aria-label="Previous page" @onclick="() => GoToAsync(_page - 1)">
+                    <SIcon Name="@SIcons.ChevronLeft" Size="14" Weight="2.2" />
+                </button>
+
+                @foreach (var p in PageWindow())
+                {
+                    @if (p < 0)
+                    {
+                        <span class="s-table-gap">…</span>
+                    }
+                    else
+                    {
+                        var pageIndex = p;
+                        <button type="button"
+                                class="s-table-page @(pageIndex == _page ? "s-active" : null)"
+                                @onclick="() => GoToAsync(pageIndex)">
+                            @(pageIndex + 1)
+                        </button>
+                    }
+                }
+
+                <button type="button" class="s-table-page" disabled="@(_page >= LastPage)"
+                        aria-label="Next page" @onclick="() => GoToAsync(_page + 1)">
+                    <SIcon Name="@SIcons.ChevronRight" Size="14" Weight="2.2" />
+                </button>
+                <button type="button" class="s-table-page" disabled="@(_page >= LastPage)"
+                        aria-label="Last page" @onclick="() => GoToAsync(LastPage)">
+                    <SIcon Name="@SIcons.ChevronsRight" Size="14" Weight="2.2" />
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    // ---------- data ----------
+
+    [Parameter] public IEnumerable<TItem>? Items { get; set; }
+
+    /// <summary>Server-side source. Overrides Items. Receives sort, paging and search.</summary>
+    [Parameter] public Func<STableRequest, Task<STableResult<TItem>>>? ItemsProvider { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public RenderFragment? ToolbarContent { get; set; }
+    [Parameter] public RenderFragment? EmptyContent { get; set; }
+
+    // ---------- behaviour ----------
+
+    [Parameter] public bool Searchable { get; set; }
+    [Parameter] public string SearchPlaceholder { get; set; } = "Search…";
+    [Parameter] public int DebounceMs { get; set; } = 300;
+
+    [Parameter] public bool Paginated { get; set; }
+    [Parameter] public int PageSize { get; set; } = 10;
+    [Parameter] public EventCallback<int> PageSizeChanged { get; set; }
+    [Parameter] public IEnumerable<int>? PageSizeOptions { get; set; }
+
+    [Parameter] public bool Selectable { get; set; }
+    [Parameter] public Func<TItem, object>? KeySelector { get; set; }
+    [Parameter] public IEnumerable<TItem>? SelectedItems { get; set; }
+    [Parameter] public EventCallback<IEnumerable<TItem>> SelectedItemsChanged { get; set; }
+
+    [Parameter] public EventCallback<TItem> OnRowClick { get; set; }
+    [Parameter] public Func<TItem, string?>? RowClass { get; set; }
+
+    // ---------- look ----------
+
+    [Parameter] public bool Striped { get; set; }
+    [Parameter] public bool Hoverable { get; set; } = true;
+    [Parameter] public bool Compact { get; set; }
+    [Parameter] public string EmptyText { get; set; } = "No data";
+
+    // ---------- state ----------
+
+    private readonly List<SColumn<TItem>> _columns = new();
+    private readonly HashSet<object> _selected = new();
+    private readonly Dictionary<object, TItem> _selectedItems = new();
+
+    private List<TItem> _view = new();
+    private List<TItem> _source = new();
+    private int _total;
+    private int _page;
+    private string _search = "";
+    private string? _sortKey;
+    private SSortDirection _sortDir = SSortDirection.None;
+    private bool _loading;
+    private CancellationTokenSource? _cts;
+
+    private int _skip => _page * PageSize;
+    private int LastPage => _total == 0 ? 0 : (int)Math.Ceiling(_total / (double)PageSize) - 1;
+    private int ColSpan => _columns.Count + (Selectable ? 1 : 0);
+
+    // ---------- columns ----------
+
+    internal void AddColumn(SColumn<TItem> col)
+    {
+        if (_columns.Contains(col)) return;
+        _columns.Add(col);
+        InvokeAsync(StateHasChanged);
+    }
+
+    internal void RemoveColumn(SColumn<TItem> col)
+    {
+        if (!_columns.Remove(col)) return;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private RenderFragment HeaderInner(SColumn<TItem> col) => __builder =>
+    {
+        @if (col.HeaderContent is not null) { @col.HeaderContent }
+        else { <span>@col.Title</span> }
+    };
+
+    private string ColHeaderClass(SColumn<TItem> col) =>
+        string.Join(' ', new[]
+        {
+            col.Align.ToCssClass(),
+            col.Sortable ? "s-sortable" : null,
+            SortStateOf(col) != SSortDirection.None ? "s-sorted" : null,
+            col.HideBelow is not null ? "s-hideable" : null
+        }.Where(x => x is not null));
+
+    private string ColCellClass(SColumn<TItem> col) =>
+        string.Join(' ', new[]
+        {
+            col.Align.ToCssClass(),
+            col.HideBelow is not null ? "s-hideable" : null
+        }.Where(x => x is not null));
+
+    private SSortDirection SortStateOf(SColumn<TItem> col) =>
+        _sortKey == col.Key ? _sortDir : SSortDirection.None;
+
+    private string AriaSort(SColumn<TItem> col) => SortStateOf(col) switch
+    {
+        SSortDirection.Ascending  => "ascending",
+        SSortDirection.Descending => "descending",
+        _                         => "none"
+    };
+
+    // ---------- lifecycle ----------
+
+    protected override void OnParametersSet()
+    {
+        if (ItemsProvider is null)
+        {
+            _source = Items?.ToList() ?? new();
+        }
+
+        if (SelectedItems is not null && _selected.Count == 0)
+        {
+            foreach (var item in SelectedItems)
+            {
+                var k = KeyOf(item);
+                _selected.Add(k);
+                _selectedItems[k] = item;
+            }
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (ItemsProvider is not null)
+        {
+            await LoadAsync();
+        }
+        else
+        {
+            Recompute();
+        }
+    }
+
+    // ---------- client-side pipeline ----------
+
+    private void Recompute()
+    {
+        IEnumerable<TItem> q = _source;
+
+        if (!string.IsNullOrWhiteSpace(_search))
+        {
+            var needle = _search.Trim();
+            var cols = _columns.Where(c => c.Searchable && c.Value is not null).ToList();
+            q = q.Where(item => cols.Any(c =>
+                c.TextOf(item).Contains(needle, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        if (_sortKey is not null && _sortDir != SSortDirection.None)
+        {
+            var col = _columns.FirstOrDefault(c => c.Key == _sortKey);
+            if (col?.Sorter is { } sorter)
+            {
+                q = _sortDir == SSortDirection.Ascending
+                    ? q.OrderBy(sorter, GComparer.Instance)
+                    : q.OrderByDescending(sorter, GComparer.Instance);
+            }
+        }
+
+        var list = q.ToList();
+        _total = list.Count;
+
+        if (_page > LastPage) _page = Math.Max(0, LastPage);
+
+        _view = Paginated
+            ? list.Skip(_skip).Take(PageSize).ToList()
+            : list;
+    }
+
+    /// <summary>Compares boxed values without forcing IComparable on TItem.</summary>
+    private sealed class GComparer : IComparer<object?>
+    {
+        public static readonly GComparer Instance = new();
+
+        public int Compare(object? x, object? y)
+        {
+            if (ReferenceEquals(x, y)) return 0;
+            if (x is null) return -1;
+            if (y is null) return 1;
+
+            if (x is string sx && y is string sy)
+                return string.Compare(sx, sy, StringComparison.CurrentCultureIgnoreCase);
+
+            if (x is IComparable c && x.GetType() == y.GetType())
+                return c.CompareTo(y);
+
+            return string.Compare(x.ToString(), y.ToString(), StringComparison.CurrentCultureIgnoreCase);
+        }
+    }
+
+    // ---------- server-side ----------
+
+    private async Task LoadAsync()
+    {
+        if (ItemsProvider is null) return;
+
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        _loading = true;
+        StateHasChanged();
+
+        try
+        {
+            var result = await ItemsProvider(new STableRequest
+            {
+                Skip = Paginated ? _skip : 0,
+                Take = Paginated ? PageSize : int.MaxValue,
+                SortColumn = _sortDir == SSortDirection.None ? null : _sortKey,
+                SortDirection = _sortDir,
+                Search = string.IsNullOrWhiteSpace(_search) ? null : _search.Trim(),
+                CancellationToken = token
+            });
+
+            if (token.IsCancellationRequested) return;
+
+            _view = result.Items.ToList();
+            _total = result.TotalCount;
+
+            if (_page > LastPage && LastPage >= 0)
+            {
+                _page = LastPage;
+                await LoadAsync();
+                return;
+            }
+        }
+        catch (OperationCanceledException) { }
+        finally
+        {
+            if (!token.IsCancellationRequested)
+            {
+                _loading = false;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task RefreshAsync()
+    {
+        if (ItemsProvider is not null) await LoadAsync();
+        else { Recompute(); StateHasChanged(); }
+    }
+
+    /// <summary>Re-fetches from the provider, or recomputes the client pipeline.</summary>
+    public Task ReloadAsync() => RefreshAsync();
+
+    // ---------- sorting ----------
+
+    private async Task SortAsync(SColumn<TItem> col)
+    {
+        if (_sortKey == col.Key)
+        {
+            _sortDir = _sortDir switch
+            {
+                SSortDirection.Ascending  => SSortDirection.Descending,
+                SSortDirection.Descending => SSortDirection.None,
+                _                         => SSortDirection.Ascending
+            };
+            if (_sortDir == SSortDirection.None) _sortKey = null;
+        }
+        else
+        {
+            _sortKey = col.Key;
+            _sortDir = SSortDirection.Ascending;
+        }
+
+        _page = 0;
+        await RefreshAsync();
+    }
+
+    // ---------- search ----------
+
+    private async Task OnSearchAsync(ChangeEventArgs e)
+    {
+        _search = e.Value?.ToString() ?? "";
+        _page = 0;
+
+        if (ItemsProvider is null)
+        {
+            Recompute();
+            StateHasChanged();
+            return;
+        }
+
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            await Task.Delay(DebounceMs, token);
+            if (!token.IsCancellationRequested) await LoadAsync();
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private async Task ClearSearchAsync()
+    {
+        _search = "";
+        _page = 0;
+        await RefreshAsync();
+    }
+
+    // ---------- paging ----------
+
+    private async Task GoToAsync(int page)
+    {
+        var target = Math.Clamp(page, 0, LastPage);
+        if (target == _page) return;
+        _page = target;
+        await RefreshAsync();
+    }
+
+    private async Task OnPageSizeAsync(ChangeEventArgs e)
+    {
+        if (!int.TryParse(e.Value?.ToString(), out var n)) return;
+        PageSize = n;
+        _page = 0;
+        await PageSizeChanged.InvokeAsync(n);
+        await RefreshAsync();
+    }
+
+    /// <summary>Page buttons with ellipsis gaps, encoded as -1.</summary>
+    private IEnumerable<int> PageWindow()
+    {
+        var last = LastPage;
+        if (last <= 6)
+        {
+            for (var i = 0; i <= last; i++) yield return i;
+            yield break;
+        }
+
+        yield return 0;
+
+        var from = Math.Max(1, _page - 1);
+        var to = Math.Min(last - 1, _page + 1);
+
+        if (from > 1) yield return -1;
+        for (var i = from; i <= to; i++) yield return i;
+        if (to < last - 1) yield return -1;
+
+        yield return last;
+    }
+
+    // ---------- selection ----------
+
+    private object KeyOf(TItem item) => KeySelector?.Invoke(item) ?? item!;
+
+    private bool AllOnPageSelected => _view.Count > 0 && _view.All(i => _selected.Contains(KeyOf(i)));
+    private bool SomeOnPageSelected => !AllOnPageSelected && _view.Any(i => _selected.Contains(KeyOf(i)));
+
+    private async Task OnSelectAllAsync(ChangeEventArgs e)
+    {
+        var check = e.Value is bool b && b;
+
+        foreach (var item in _view)
+        {
+            var k = KeyOf(item);
+            if (check) { _selected.Add(k); _selectedItems[k] = item; }
+            else { _selected.Remove(k); _selectedItems.Remove(k); }
+        }
+
+        await EmitSelectionAsync();
+    }
+
+    private async Task OnSelectRowAsync(TItem item, ChangeEventArgs e)
+    {
+        var k = KeyOf(item);
+        if (e.Value is bool b && b) { _selected.Add(k); _selectedItems[k] = item; }
+        else { _selected.Remove(k); _selectedItems.Remove(k); }
+
+        await EmitSelectionAsync();
+    }
+
+    private async Task EmitSelectionAsync()
+    {
+        await SelectedItemsChanged.InvokeAsync(_selectedItems.Values.ToList());
+        StateHasChanged();
+    }
+
+    public void ClearSelection()
+    {
+        _selected.Clear();
+        _selectedItems.Clear();
+        StateHasChanged();
+    }
+
+    private async Task OnRowClickAsync(TItem item)
+    {
+        if (OnRowClick.HasDelegate) await OnRowClick.InvokeAsync(item);
+    }
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _columns.Clear();
+    }
+}

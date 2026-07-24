@@ -36,4 +36,8 @@ public static class SIcons
     public const string Square   = "<rect x='4' y='5' width='16' height='14' rx='2'/><path d='M4 9h16'/>";
     public const string Bell     = "<path d='M18 9a6 6 0 1 0-12 0c0 5-2 6-2 6h16s-2-1-2-6'/><path d='M10.5 20a2 2 0 0 0 3 0'/>";
     public const string ChevronUp = "<path d='m6 15 6-6 6 6'/>";
+    public const string Menu       = "<path d='M4 6h16M4 12h16M4 18h16'/>";
+    public const string PanelLeft  = "<rect x='3' y='4' width='18' height='16' rx='2'/><path d='M9 4v16'/>";
+    public const string ChevronsLeft  = "<path d='m11 17-5-5 5-5M18 17l-5-5 5-5'/>";
+    public const string ChevronsRight = "<path d='m13 17 5-5-5-5M6 17l5-5-5-5'/>";
 }

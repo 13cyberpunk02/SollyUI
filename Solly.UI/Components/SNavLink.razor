@@ -1,0 +1,64 @@
+@inherits SComponentBase
+@implements IDisposable
+@inject NavigationManager Nav
+
+<a class="@Cls("s-nav-link", IsActive ? "s-active" : null)"
+   href="@Href"
+   style="@Style"
+   @onclick="OnClickAsync"
+   @onclick:preventDefault="@(OnClick.HasDelegate)"
+   @attributes="Attributes">
+
+    @if (!string.IsNullOrEmpty(Icon))
+    {
+        <span class="s-nav-icon"><SIcon Name="@Icon" Size="16" /></span>
+    }
+
+    <span class="s-nav-text">@ChildContent</span>
+
+    @if (Badge is not null)
+    {
+        <span class="s-nav-badge">@Badge</span>
+    }
+</a>
+
+@code {
+    [CascadingParameter] private SShell? Shell { get; set; }
+
+    [Parameter] public string Href { get; set; } = "";
+    [Parameter] public string? Icon { get; set; }
+    [Parameter] public object? Badge { get; set; }
+    [Parameter] public NavLinkMatch Match { get; set; } = NavLinkMatch.Prefix;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public EventCallback OnClick { get; set; }
+
+    private bool IsActive
+    {
+        get
+        {
+            var current = Nav.ToBaseRelativePath(Nav.Uri).Split('?', '#')[0].Trim('/');
+            var target = Href.Trim('/');
+
+            return Match == NavLinkMatch.All
+                ? string.Equals(current, target, StringComparison.OrdinalIgnoreCase)
+                : target.Length == 0
+                    ? current.Length == 0
+                    : current.StartsWith(target, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    protected override void OnInitialized() => Nav.LocationChanged += OnLocationChanged;
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        Shell?.CloseMobile();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnClickAsync()
+    {
+        if (OnClick.HasDelegate) await OnClick.InvokeAsync();
+    }
+
+    public void Dispose() => Nav.LocationChanged -= OnLocationChanged;
+}

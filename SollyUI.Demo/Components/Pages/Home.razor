@@ -9,46 +9,85 @@
         <SBadge Level="SBadgeLevel.Neutral">WASM · Server</SBadge>
     </div>
 
-    <div class="demo-cards">
-        <a class="demo-card" href="button">
-            <SIcon Name="@SIcons.Cursor" Size="20" />
-            <strong>Button</strong>
-            <span>Неоновые варианты, блик-линза, ripple за курсором, авто-спиннер.</span>
-        </a>
-        <a class="demo-card" href="input">
-            <SIcon Name="@SIcons.Type" Size="20" />
-            <strong>Input</strong>
-            <span>Многослойное стекло, свечение при фокусе, состояние ошибки.</span>
-        </a>
-        <a class="demo-card" href="select">
-            <SIcon Name="@SIcons.List" Size="20" />
-            <strong>Select</strong>
-            <span>Generic, поиск, множественный выбор, async-загрузка.</span>
-        </a>
-        <a class="demo-card" href="datepicker">
-            <SIcon Name="@SIcons.Calendar" Size="20" />
-            <strong>DatePicker</strong>
-            <span>Календарь с учётом культуры, клавиатура, min/max.</span>
-        </a>
-        <a class="demo-card" href="modal">
-            <SIcon Name="@SIcons.Square" Size="20" />
-            <strong>Modal</strong>
-            <span>Focus trap, блокировка скролла, confirm-диалоги.</span>
-        </a>
-        <a class="demo-card" href="toast">
-            <SIcon Name="@SIcons.Bell" Size="20" />
-            <strong>Toast</strong>
-            <span>Сервис уведомлений с undo и прогресс-баром.</span>
-        </a>
-        <a class="demo-card" href="theming">
-            <SIcon Name="@SIcons.Palette" Size="20" />
-            <strong>Theming</strong>
-            <span>Палитра из одного hue-токена. Тёмная и светлая тема.</span>
-        </a>
-        <a class="demo-card" href="form">
-            <SIcon Name="@SIcons.Clipboard" Size="20" />
-            <strong>Full form</strong>
-            <span>Все компоненты вместе с валидацией.</span>
-        </a>
+    <div class="g-card-grid" style="--g-card-min:17rem;">
+        @foreach (var c in _cards)
+        {
+            <SCard Href="@c.Href"
+                   Icon="@c.Icon"
+                   Eyebrow="@c.Group"
+                   Title="@c.Title"
+                   Variant="@(c.Highlight ? SCardVariant.Neon : SCardVariant.Default)">
+                @c.Blurb
+            </SCard>
+        }
+    </div>
+
+    <h2 class="demo-h2">Собрано из этих же компонентов</h2>
+
+    <div class="g-card-grid" style="--g-card-min:20rem;">
+
+        <SCard Eyebrow="Deploy" Title="Production" Subtitle="europe-west-1"
+               Icon="@SIcons.Layers" Variant="SCardVariant.Neon">
+            <ActionsContent>
+                <SBadge Pulse>Live</SBadge>
+            </ActionsContent>
+            <ChildContent>
+                Сборка <code class="demo-inline-code">1284</code> задеплоена 4 минуты назад.
+                Все проверки пройдены.
+            </ChildContent>
+            <FooterContent>
+                <SButton Variant="SVariant.Ghost">Логи</SButton>
+                <div style="flex:1"></div>
+                <SButton Variant="SVariant.Primary" Icon="@SIcons.Check">Promote</SButton>
+            </FooterContent>
+        </SCard>
+
+        <SCard Eyebrow="Usage" Title="API calls" Icon="@SIcons.Sliders">
+            <ChildContent>
+                <div class="demo-col" style="gap:14px;max-width:none;">
+                    <SSlider @bind-Value="_quota" Label="Monthly quota"
+                             Min="0" Max="100" Format="@(v => $"{v:0}%")" />
+                    <div class="demo-row" style="gap:8px;">
+                        <SBadge Level="SBadgeLevel.Success">42k ok</SBadge>
+                        <SBadge Level="SBadgeLevel.Warning">318 slow</SBadge>
+                        <SBadge Level="SBadgeLevel.Error">12 failed</SBadge>
+                    </div>
+                </div>
+            </ChildContent>
+        </SCard>
+
+        <SCard Eyebrow="Settings" Title="Notifications" Icon="@SIcons.Bell">
+            <ChildContent>
+                <div class="demo-col" style="gap:14px;max-width:none;">
+                    <SSwitch @bind-Value="_notifEmail" Label="Email" />
+                    <SSwitch @bind-Value="_notifPush" Label="Push" Disabled="@(!_notifEmail)" />
+                    <SCheckbox @bind-Value="_digest" Label="Weekly digest" />
+                </div>
+            </ChildContent>
+        </SCard>
+
     </div>
 </DemoPage>
+
+@code {
+    record Card(string Href, string Icon, string Group, string Title, string Blurb, bool Highlight = false);
+
+    double _quota = 68;
+    bool _notifEmail = true, _notifPush = true, _digest;
+
+    static readonly Card[] _cards =
+    {
+        new("button",     SIcons.Cursor,    "Inputs",   "Button",      "Неоновые варианты, блик-линза, ripple за курсором, авто-спиннер.", true),
+        new("input",      SIcons.Type,      "Inputs",   "Input",       "Многослойное стекло, свечение при фокусе, состояние ошибки."),
+        new("number",     SIcons.Sliders,   "Inputs",   "NumberInput", "Только цифры, степперы на всю высоту, клавиатура."),
+        new("select",     SIcons.List,      "Inputs",   "Select",      "Generic, поиск, множественный выбор, async-загрузка.", true),
+        new("datepicker", SIcons.Calendar,  "Inputs",   "DatePicker",  "Календарь с учётом культуры, полная клавиатура, min/max."),
+        new("table",      SIcons.Columns,   "Data",     "Table",       "Сортировка, пагинация, выделение, серверный провайдер.", true),
+        new("card",       SIcons.Square,    "Layout",   "Card",        "Заголовок, медиа, футер, четыре варианта."),
+        new("shell",      SIcons.PanelLeft, "Layout",   "Shell",       "Парящий sidebar и header, сворачивание, мобильный режим."),
+        new("modal",      SIcons.Square,    "Overlays", "Modal",       "Focus trap, блокировка скролла, confirm-диалоги."),
+        new("toast",      SIcons.Bell,      "Overlays", "Toast",       "Сервис уведомлений с undo и прогресс-баром."),
+        new("theming",    SIcons.Palette,   "Other",    "Theming",     "Палитра из одного hue-токена. Тёмная и светлая тема."),
+        new("form",       SIcons.Clipboard, "Other",    "Full form",   "Все компоненты вместе с валидацией."),
+    };
+}
