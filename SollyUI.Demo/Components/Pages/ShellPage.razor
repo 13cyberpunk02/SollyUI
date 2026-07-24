@@ -1,0 +1,201 @@
+@page "/shell"
+
+<DemoPage Title="Shell" Subtitle="Раскладка приложения: парящий или прижатый sidebar, header, сворачивание, мобильный режим.">
+
+    <DemoBlock Title="Живой пример"
+               Description="Всё демо построено на SShell. Sidebar слева, header сверху, кнопка Collapse внизу."
+               Code="@_liveCode">
+        <p class="demo-note">
+            Нажми <strong>Collapse</strong> внизу sidebar или сузь окно до 860px, чтобы увидеть мобильный режим с бургером.
+        </p>
+    </DemoBlock>
+
+    <DemoBlock Title="Floating vs flush"
+               Description="Floating отделяет панели от краёв и скругляет их. Flush — классический прижатый вариант."
+               Code="@_modeCode">
+        <div class="demo-shell-preview">
+            <div class="demo-mini @(_floating ? "g-floating" : null)">
+                <div class="demo-mini-aside"></div>
+                <div class="demo-mini-main">
+                    <div class="demo-mini-header"></div>
+                    <div class="demo-mini-body"></div>
+                </div>
+            </div>
+
+            <div class="demo-row" style="margin-top:16px;">
+                <SSwitch @bind-Value="_floating" Label="Floating" />
+            </div>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Sidebar"
+               Description="Три слота: BrandContent сверху, ChildContent для навигации, FooterContent снизу."
+               Code="@_sidebarCode">
+        <p class="demo-note">
+            Навигация скроллится независимо, brand и footer закреплены.
+        </p>
+    </DemoBlock>
+
+    <DemoBlock Title="NavLink"
+               Description="Свой вариант NavLink: класс g-active, поддержка иконки и бейджа, автозакрытие мобильного меню."
+               Code="@_navCode">
+        <div class="demo-nav-preview">
+            <SNavGroup Label="Пример" />
+            <SNavLink Href="shell" Icon="@SIcons.PanelLeft">Активный</SNavLink>
+            <SNavLink Href="button" Icon="@SIcons.Cursor">Обычный</SNavLink>
+            <SNavLink Href="toast" Icon="@SIcons.Bell" Badge="3">С бейджем</SNavLink>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Header"
+               Description="StartContent слева, ChildContent справа. Бургер появляется автоматически на узких экранах."
+               Code="@_headerCode">
+        <div class="demo-header-preview">
+            <SHeader Title="Dashboard">
+                <StartContent>
+                    <SBadge Level="SBadgeLevel.Neutral" Mono>prod</SBadge>
+                </StartContent>
+                <ChildContent>
+                    <SButton Variant="SVariant.Ghost" Icon="@SIcons.Search" />
+                    <SButton Variant="SVariant.Ghost" Icon="@SIcons.Bell" />
+                    <SThemeToggle />
+                </ChildContent>
+            </SHeader>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Collapse"
+               Description="SCollapseButton берёт SShell из каскада — не нужен"
+               Code="@_collapseCode">
+        <p class="demo-note">
+            В свёрнутом виде текст, бейджи и заголовки групп скрываются, остаются только иконки.
+            Ширину задают <code>Width</code> и <code>CollapsedWidth</code>.
+        </p>
+    </DemoBlock>
+
+    <DemoBlock Title="Мобильный режим"
+               Description="Ниже 860px sidebar уезжает за экран и открывается бургером. Клик по затемнению или переход по ссылке закрывают его."
+               Code="@_mobileCode">
+        <p class="demo-note">Сузь окно браузера, чтобы проверить.</p>
+    </DemoBlock>
+
+    <DemoBlock Title="Программное управление" Code="@_apiCode">
+        <p class="demo-note">
+            Через <code>@@ref</code> доступны <code>ToggleCollapseAsync()</code>, <code>ToggleMobile()</code>,
+            <code>CloseMobile()</code>, <code>IsCollapsed</code>, <code>IsMobileOpen</code>.
+        </p>
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    bool _floating = true;
+
+    const string _liveCode = """
+<SShell Floating>
+    <SidebarContent>
+        <GSidebar>
+            <BrandContent>
+                <span class="brand-dot"></span>
+                Glassy.UI
+            </BrandContent>
+            <ChildContent>
+                <SNavGroup Label="Inputs" />
+                <SNavLink Href="button" Icon="@SIcons.Cursor">Button</SNavLink>
+                <SNavLink Href="input" Icon="@SIcons.Type">Input</SNavLink>
+            </ChildContent>
+            <FooterContent>
+                <SCollapseButton />
+            </FooterContent>
+        </GSidebar>
+    </SidebarContent>
+
+    <HeaderContent>
+        <SHeader Title="Dashboard">
+            <ChildContent>
+                <SThemeToggle />
+            </ChildContent>
+        </SHeader>
+    </HeaderContent>
+
+    <ChildContent>
+        @Body
+    </ChildContent>
+</SShell>
+""";
+
+    const string _modeCode = """
+@* detached, rounded panels — the default *@
+<SShell Floating>…</SShell>
+
+@* classic full-bleed rail *@
+<SShell Floating="false">…</SShell>
+""";
+
+    const string _sidebarCode = """
+<GSidebar>
+    <BrandContent>
+        Логотип и название
+    </BrandContent>
+
+    <ChildContent>
+        @* эта часть скроллится *@
+        <SNavGroup Label="Раздел" />
+        <SNavLink Href="…">Пункт</SNavLink>
+    </ChildContent>
+
+    <FooterContent>
+        <SCollapseButton />
+    </FooterContent>
+</GSidebar>
+""";
+
+    const string _navCode = """
+<SNavGroup Label="Inputs" />
+
+<SNavLink Href="button" Icon="@SIcons.Cursor">Button</SNavLink>
+
+@* exact match — иначе "" совпадёт со всем *@
+<SNavLink Href="" Icon="@SIcons.Home" Match="NavLinkMatch.All">Overview</SNavLink>
+
+<SNavLink Href="toast" Icon="@SIcons.Bell" Badge="3">Toast</SNavLink>
+""";
+
+    const string _headerCode = """
+<SHeader Title="Dashboard">
+    <StartContent>
+        <SBadge Level="SBadgeLevel.Neutral" Mono>prod</SBadge>
+    </StartContent>
+    <ChildContent>
+        <SButton Variant="SVariant.Ghost" Icon="@SIcons.Search" />
+        <SThemeToggle />
+    </ChildContent>
+</SHeader>
+""";
+
+    const string _collapseCode = """
+@* внутри GSidebar FooterContent *@
+<SCollapseButton />
+
+@* ширины настраиваются на SShell *@
+<SShell Width="16rem" CollapsedWidth="5rem">…</SShell>
+""";
+
+    const string _mobileCode = """
+@* ничего настраивать не нужно — брейкпоинт 860px встроен *@
+<SShell Floating>…</SShell>
+""";
+
+    const string _apiCode = """
+<SShell @ref="_shell" Floating>…</SShell>
+
+<SButton OnClick="() => _shell!.ToggleCollapseAsync()">Свернуть</SButton>
+
+@code {
+    SShell? _shell;
+
+    // CollapsedChanged даёт знать о смене состояния
+    // <SShell CollapsedChanged="OnCollapsed">
+}
+""";
+}

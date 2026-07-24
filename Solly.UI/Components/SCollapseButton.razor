@@ -1,0 +1,23 @@
+@inherits SComponentBase
+
+@if (Shell is not null)
+{
+    <button type="button"
+            class="@Cls("s-collapse-btn")"
+            style="@Style"
+            aria-label="@(Shell.IsCollapsed ? "Expand sidebar" : "Collapse sidebar")"
+            @onclick="Shell.ToggleCollapseAsync"
+            @attributes="Attributes">
+        <span class="s-collapse-icon">
+            <SIcon Name="@SIcons.PanelLeft" Size="16" />
+        </span>
+        <span class="s-collapse-text">@(Shell.IsCollapsed ? ExpandText : CollapseText)</span>
+    </button>
+}
+
+@code {
+    [CascadingParameter] private SShell? Shell { get; set; }
+
+    [Parameter] public string CollapseText { get; set; } = "Collapse";
+    [Parameter] public string ExpandText { get; set; } = "Expand";
+}

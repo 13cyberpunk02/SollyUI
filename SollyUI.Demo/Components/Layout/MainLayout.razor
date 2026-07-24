@@ -3,12 +3,12 @@
 <SAmbient />
 
 <CascadingValue Value="this">
-    <SShell Floating @ref="_shell">
+    <SShell Floating @ref="_shell" CollapsedWidth="5rem">
         <SidebarContent>
             <SSidebar>
                 <BrandContent>
                     <span class="demo-brand-dot"></span>
-                    <span>Glassy.UI</span>
+                    <span>Solly UI</span>
                     <span class="demo-env">@Env</span>
                 </BrandContent>
 
@@ -52,12 +52,7 @@
                 </ChildContent>
 
                 <FooterContent>
-                    <SButton Variant="SVariant.Ghost"
-                             Icon="@SIcons.PanelLeft"
-                             OnClick="() => _shell.ToggleCollapseAsync()"
-                             Style="width:100%;justify-content:flex-start;padding:9px 11px;font-size:13px;">
-                        @(_shell?.IsCollapsed == true ? "" : "Collapse")
-                    </SButton>
+                    <SCollapseButton />
                 </FooterContent>
             </SSidebar>
         </SidebarContent>
