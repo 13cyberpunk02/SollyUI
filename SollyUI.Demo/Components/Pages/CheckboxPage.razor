@@ -16,9 +16,12 @@
     </DemoBlock>
 
     <DemoBlock Title="Indeterminate"
-               Description="Visual state only — does not affect Value."
+               Description="Visual state only"
                Code="@_indetCode">
-        <SCheckbox Value="false" Indeterminate Label="Partially selected" />
+        <SCheckbox Value="_partial"
+                   Indeterminate="_isIndet"
+                   Label="Partially selected"
+                   ValueChanged="OnPartialChanged" />
     </DemoBlock>
 
     <DemoBlock Title="Disabled" Code="@_disabledCode">
@@ -50,7 +53,15 @@
 
     Model _model = new();
     bool _ok, _a, _b;
+    bool _partial;
+    bool _isIndet = true;
 
+    void OnPartialChanged(bool v)
+    {
+        _partial = v;
+        _isIndet = false;
+    }
+    
     const string _basicCode = """
 <SCheckbox @bind-Value="_agree" Label="I agree to the terms" />
 """;

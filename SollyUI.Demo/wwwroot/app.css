@@ -431,19 +431,19 @@ a:hover { color: var(--s-accent-soft); }
 }
 
 /* floating variant */
-.demo-mini.g-floating { padding: 10px; gap: 10px; }
-.demo-mini.g-floating .demo-mini-aside {
+.demo-mini.s-floating { padding: 10px; gap: 10px; }
+.demo-mini.s-floating .demo-mini-aside {
     border: 1px solid var(--s-border);
     border-radius: 10px;
     background: var(--s-panel);
 }
-.demo-mini.g-floating .demo-mini-header {
+.demo-mini.s-floating .demo-mini-header {
     border: 1px solid var(--s-border);
     border-radius: 8px;
     background: var(--s-panel);
     margin-bottom: 10px;
 }
-.demo-mini.g-floating .demo-mini-body { margin: 0; }
+.demo-mini.s-floating .demo-mini-body { margin: 0; }
 
 /* nav preview */
 .demo-nav-preview {
