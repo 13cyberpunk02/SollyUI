@@ -1,0 +1,162 @@
+@page "/feedback"
+
+<DemoPage Title="Alert · Avatar · Progress" Subtitle="Три маленьких компонента: статичные сообщения, аватары и индикаторы.">
+
+    <DemoBlock Title="Alert levels" Code="@_alertCode">
+        <div class="demo-col" style="max-width:none;gap:12px;">
+            <SAlert Level="SAlertLevel.Info" Title="Обновление доступно">
+                Версия 0.2.0 вышла с новыми компонентами.
+            </SAlert>
+            <SAlert Level="SAlertLevel.Success" Title="Сохранено">
+                Изменения применены.
+            </SAlert>
+            <SAlert Level="SAlertLevel.Warning" Title="Заканчивается квота">
+                Использовано 92% лимита API.
+            </SAlert>
+            <SAlert Level="SAlertLevel.Error" Title="Ошибка деплоя">
+                Сборка 1285 упала на этапе тестов.
+            </SAlert>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Soft & dismissible" Code="@_softCode">
+        <div class="demo-col" style="max-width:none;gap:12px;">
+            <SAlert Level="SAlertLevel.Info" Soft>
+                Приглушённый фон с цветной полосой слева.
+            </SAlert>
+            <SAlert Level="SAlertLevel.Warning" Soft Dismissible Title="Закрывается">
+                Нажми крестик справа.
+            </SAlert>
+            <SAlert Level="SAlertLevel.Success">
+                <ActionContent>
+                    <SButton Variant="SVariant.Ghost">Отменить</SButton>
+                </ActionContent>
+                <ChildContent>
+                    Файл удалён. Действие можно отменить.
+                </ChildContent>
+            </SAlert>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Avatar" Code="@_avatarCode">
+        <div class="demo-row">
+            <SAvatar Name="Anna Meyer" />
+            <SAvatar Name="Boris Klein" />
+            <SAvatar Name="Clara Wolf" />
+            <SAvatar Icon="@SIcons.Cursor" />
+            <SAvatar Src="https://i.pravatar.cc/100?img=12" Name="Photo" />
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Sizes & shapes" Code="@_sizeCode">
+        <div class="demo-row">
+            <SAvatar Name="X S" Size="SAvatarSize.XSmall" />
+            <SAvatar Name="S M" Size="SAvatarSize.Small" />
+            <SAvatar Name="M D" Size="SAvatarSize.Medium" />
+            <SAvatar Name="L G" Size="SAvatarSize.Large" />
+            <SAvatar Name="X L" Size="SAvatarSize.XLarge" />
+            <SAvatar Name="Sq" Square Size="SAvatarSize.Large" />
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Status" Code="@_statusCode">
+        <div class="demo-row">
+            <SAvatar Name="On" Status="SAvatarStatus.Online" Size="SAvatarSize.Large" />
+            <SAvatar Name="Aw" Status="SAvatarStatus.Away" Size="SAvatarSize.Large" />
+            <SAvatar Name="Bu" Status="SAvatarStatus.Busy" Size="SAvatarSize.Large" />
+            <SAvatar Name="Of" Status="SAvatarStatus.Offline" Size="SAvatarSize.Large" />
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Group" Code="@_groupCode">
+        <SAvatarGroup Overflow="4">
+            <SAvatar Name="Anna Meyer" />
+            <SAvatar Name="Boris Klein" />
+            <SAvatar Name="Clara Wolf" />
+            <SAvatar Src="https://i.pravatar.cc/100?img=5" Name="D" />
+        </SAvatarGroup>
+    </DemoBlock>
+
+    <DemoBlock Title="Linear progress" Code="@_progressCode">
+        <div class="demo-col" style="max-width:none;gap:18px;">
+            <SProgress Value="_p" Max="100" Label="Загрузка" ShowValue />
+            <SProgress Value="72" Level="SAlertLevel.Success" Label="Storage" ShowValue />
+            <SProgress Value="92" Level="SAlertLevel.Warning" Label="API quota" ShowValue />
+            <SProgress Indeterminate Label="Обработка…" />
+
+            <div class="demo-row">
+                <SButton OnClick="@(() => _p = Math.Max(0, _p - 10))">−10</SButton>
+                <SButton Variant="SVariant.Primary" OnClick="@(() => _p = Math.Min(100, _p + 10))">+10</SButton>
+            </div>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Circular progress" Code="@_ringCode">
+        <div class="demo-row" style="gap:28px;">
+            <SProgress Circular Value="_p" ShowValue />
+            <SProgress Circular Value="66" Level="SAlertLevel.Success" ShowValue Diameter="72" />
+            <SProgress Circular Value="88" Level="SAlertLevel.Warning" ShowValue
+                       Format="@(v => $"{v:0}%")" />
+            <SProgress Circular Indeterminate Diameter="48" />
+        </div>
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    double _p = 40;
+
+    const string _alertCode = """
+<SAlert Level="SAlertLevel.Warning" Title="Заканчивается квота">
+    Использовано 92% лимита API.
+</SAlert>
+""";
+
+    const string _softCode = """
+<SAlert Level="SAlertLevel.Info" Soft>Приглушённый вариант.</SAlert>
+
+<SAlert Level="SAlertLevel.Warning" Soft Dismissible Title="Закрывается">
+    Нажми крестик.
+</SAlert>
+
+<SAlert Level="SAlertLevel.Success">
+    <ActionContent><SButton Variant="SVariant.Ghost">Отменить</SButton></ActionContent>
+    <ChildContent>Файл удалён.</ChildContent>
+</SAlert>
+""";
+
+    const string _avatarCode = """
+<SAvatar Name="Anna Meyer" />          @* инициалы, цвет из имени *@
+<SAvatar Icon="@SIcons.Cursor" />      @* иконка *@
+<SAvatar Src="https://…" Name="Photo" /> @* фото, fallback на инициалы *@
+""";
+
+    const string _sizeCode = """
+<SAvatar Name="M D" Size="SAvatarSize.Medium" />
+<SAvatar Name="Sq" Square Size="SAvatarSize.Large" />
+""";
+
+    const string _statusCode = """
+<SAvatar Name="On" Status="SAvatarStatus.Online" />
+<SAvatar Name="Bu" Status="SAvatarStatus.Busy" />
+""";
+
+    const string _groupCode = """
+<SAvatarGroup Overflow="4">
+    <SAvatar Name="Anna Meyer" />
+    <SAvatar Name="Boris Klein" />
+    <SAvatar Src="https://…" Name="D" />
+</SAvatarGroup>
+""";
+
+    const string _progressCode = """
+<SProgress Value="72" Max="100" Label="Storage" ShowValue />
+<SProgress Value="92" Level="SAlertLevel.Warning" ShowValue />
+<SProgress Indeterminate Label="Обработка…" />
+""";
+
+    const string _ringCode = """
+<SProgress Circular Value="66" ShowValue Diameter="72" />
+<SProgress Circular Indeterminate Diameter="48" />
+""";
+}

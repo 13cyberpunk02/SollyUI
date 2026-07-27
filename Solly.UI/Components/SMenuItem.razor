@@ -1,0 +1,97 @@
+@inherits SComponentBase
+
+@if (SubmenuContent is null)
+{
+    <button type="button"
+            class="@Cls("s-menu-item", Danger ? "s-menu-danger" : null)"
+            role="menuitem"
+            disabled="@Disabled"
+            @onclick="InvokeAsync">
+
+        @if (!string.IsNullOrEmpty(Icon))
+        {
+            <span class="s-menu-icon"><SIcon Name="@Icon" Size="16" /></span>
+        }
+        else if (Inset)
+        {
+            <span class="s-menu-icon"></span>
+        }
+
+        <span class="s-menu-label">@ChildContent</span>
+
+        @if (Checked)
+        {
+            <span class="s-menu-check"><SIcon Name="@SIcons.Check" Size="15" Weight="2.6" /></span>
+        }
+        @if (!string.IsNullOrEmpty(Shortcut))
+        {
+            <span class="s-menu-kbd">@Shortcut</span>
+        }
+    </button>
+}
+else
+{
+    <div class="s-menu-sub @(_open ? "s-open" : null)"
+         @onmouseenter="Open" @onmouseleave="Close">
+
+        <button type="button"
+                class="@Cls("s-menu-item")"
+                role="menuitem"
+                disabled="@Disabled"
+                @onclick="Toggle">
+
+            @if (!string.IsNullOrEmpty(Icon))
+            {
+                <span class="s-menu-icon"><SIcon Name="@Icon" Size="16" /></span>
+            }
+            else if (Inset)
+            {
+                <span class="s-menu-icon"></span>
+            }
+
+            <span class="s-menu-label">@ChildContent</span>
+            <span class="s-menu-arrow"><SIcon Name="@SIcons.ChevronRight" Size="15" Weight="2.2" /></span>
+        </button>
+
+        @if (_open)
+        {
+            <div class="s-dd-menu s-menu-flyout" role="menu">
+                @SubmenuContent
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [CascadingParameter] private SDropdownMenu? Menu { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public RenderFragment? SubmenuContent { get; set; }
+
+    [Parameter] public string? Icon { get; set; }
+    [Parameter] public string? Shortcut { get; set; }
+    [Parameter] public bool Checked { get; set; }
+    [Parameter] public bool Danger { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+
+    /// <summary>Reserve icon space even without an icon, to align with siblings that have one.</summary>
+    [Parameter] public bool Inset { get; set; }
+
+    [Parameter] public EventCallback OnClick { get; set; }
+
+    /// <summary>Keep the menu open after clicking (e.g. toggles).</summary>
+    [Parameter] public bool KeepOpen { get; set; }
+
+    private bool _open;
+
+    private void Open() => _open = true;
+    private void Close() => _open = false;
+    private void Toggle() => _open = !_open;
+
+    private async Task InvokeAsync()
+    {
+        if (Disabled) return;
+        if (OnClick.HasDelegate) await OnClick.InvokeAsync();
+        if (!KeepOpen && Menu is not null) await Menu.CloseAsync();
+    }
+}

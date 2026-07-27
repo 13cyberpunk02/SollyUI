@@ -1,51 +1,50 @@
 ﻿@page "/toast"
-@using SollyUI.Demo.Components.Shared
-@inject SToastService Toasts
+@inject SToastService Toast
 @inject NavigationManager Nav
 
 <DemoPage Title="Toast" Subtitle="Injected service, six positions, auto-dismiss with a progress bar.">
 
     <DemoBlock Title="Setup"
-               Description="Add GToastHost once in your layout, then inject GToastService anywhere."
+               Description="Add SToastHost once in your layout, then inject SToastService anywhere."
                Code="@_setupCode">
         <p class="demo-note">This demo has the host mounted in <code>MainLayout.razor</code>.</p>
     </DemoBlock>
 
     <DemoBlock Title="Levels" Code="@_levelCode">
         <div class="demo-row">
-            <SButton OnClick='() => Toasts.Info("{Deployment started")'>Info</SButton>
-            <SButton Variant="SVariant.Primary" OnClick='() => Toasts.Success("Changes saved")'>Success</SButton>
-            <SButton OnClick='() => Toasts.Warning("Your session expires in 5 minutes")'>Warning</SButton>
-            <SButton Variant="SVariant.Danger" OnClick='() => Toasts.Error("Could not reach the server")'>Error</SButton>
+            <SButton OnClick="@(() => Toast.Info("Deployment started"))">Info</SButton>
+            <SButton Variant="SVariant.Primary" OnClick="@(() => Toast.Success("Changes saved"))">Success</SButton>
+            <SButton OnClick="@(() => Toast.Warning("Your session expires in 5 minutes"))">Warning</SButton>
+            <SButton Variant="SVariant.Danger" OnClick="@(() => Toast.Error("Could not reach the server"))">Error</SButton>
         </div>
     </DemoBlock>
 
     <DemoBlock Title="With a title" Code="@_titleCode">
         <div class="demo-row">
-            <SButton OnClick="@(() => Toasts.Success("All 42 records were imported.", "Import complete"))">
+            <SButton OnClick="@(() => Toast.Success("All 42 records were imported.", "Import complete"))">
                 Success
             </SButton>
             <SButton Variant="SVariant.Danger"
-                     OnClick="@(() => Toasts.Error("The connection timed out after 30s.", "Request failed"))">
+                     OnClick="@(() => Toast.Error("The connection timed out after 30s.", "Request failed"))">
                 Error
             </SButton>
         </div>
     </DemoBlock>
 
     <DemoBlock Title="Position"
-               Description="Set on GToastHost. Changing it here updates the layout live."
+               Description="Set on SToastHost. Changing it here updates the layout live."
                Code="@_posCode">
         <div class="demo-col">
             <div class="demo-pos-grid">
                 @foreach (var p in _positions)
                 {
                     <SButton Variant="@(_layout?.ToastPosition == p ? SVariant.Primary : SVariant.Default)"
-                             OnClick="() => SetPos(p)">
+                             OnClick="@(() => SetPos(p))">
                         @Label(p)
                     </SButton>
                 }
             </div>
-            <SButton Icon="@SIcons.Info" OnClick="@(() => Toasts.Info($"Now at {Label(_layout!.ToastPosition)}"))">
+            <SButton Icon="@SIcons.Info" OnClick="@(() => Toast.Info($"Now at {Label(_layout!.ToastPosition)}"))">
                 Fire a toast
             </SButton>
         </div>
@@ -56,35 +55,35 @@
                Code="@_durCode">
         <div class="demo-row">
             <SButton OnClick="@(() => Show(1500, "Gone in 1.5s"))">1.5s</SButton>
-            <SButton OnClick="@(() => Show(4000, "Default — 4s"))">4s</SButton>
-            <SButton OnClick="@(() => Show(10000, "Plenty of time — 10s"))">10s</SButton>
+            <SButton OnClick="@(() => Show(4000, "Default - 4s"))">4s</SButton>
+            <SButton OnClick="@(() => Show(10000, "Plenty of time - 10s"))">10s</SButton>
             <SButton OnClick="@(() => Show(0, "I stay until you dismiss me"))">Sticky</SButton>
         </div>
     </DemoBlock>
 
     <DemoBlock Title="Action button" Code="@_actionCode">
         <div class="demo-col">
-            <SButton Icon="@SIcons.X" OnClick="DeleteAsync">Delete with undo</SButton>
+            <SButton Icon="@SIcons.X" OnClick="@(DeleteAsync)">Delete with undo</SButton>
             <span class="demo-note">Items: @string.Join(", ", _items)</span>
         </div>
     </DemoBlock>
 
     <DemoBlock Title="Not dismissible" Code="@_noDismissCode">
-        <SButton OnClick="ShowProgress">Simulate a background job</SButton>
+        <SButton OnClick="@(ShowProgress)">Simulate a background job</SButton>
     </DemoBlock>
 
     <DemoBlock Title="Stacking & clearing" Code="@_stackCode">
         <div class="demo-row">
-            <SButton OnClick="Spam">Fire 5 toasts</SButton>
-            <SButton Variant="SVariant.Ghost" OnClick="Toasts.Clear">Clear all</SButton>
-            <span class="demo-note">Active: @Toasts.Items.Count</span>
+            <SButton OnClick="@(Spam)">Fire 5 toasts</SButton>
+            <SButton Variant="SVariant.Ghost" OnClick="@(Toast.Clear)">Clear all</SButton>
+            <span class="demo-note">Active: @Toast.Items.Count</span>
         </div>
     </DemoBlock>
 
     <DemoBlock Title="Real-world: save flow" Code="@_realCode">
         <div class="demo-col">
             <SInput @bind-Value="_name" Label="Name" Placeholder="Type a name…" Clearable />
-            <SButton Variant="SVariant.Primary" Icon="@SIcons.Check" OnClick="SaveAsync">Save</SButton>
+            <SButton Variant="SVariant.Primary" Icon="@SIcons.Check" OnClick="@(SaveAsync)">Save</SButton>
         </div>
     </DemoBlock>
 
@@ -115,16 +114,16 @@
     void SetPos(SToastPosition p) => _layout?.SetToastPosition(p);
 
     void Show(int ms, string text) =>
-        Toasts.Show(new SToastMessage { Text = text, DurationMs = ms, Level = SToastLevel.Info });
+        Toast.Show(new SToastMessage { Text = text, DurationMs = ms, Level = SToastLevel.Info });
 
     async Task DeleteAsync()
     {
-        if (_items.Count == 0) { Toasts.Warning("Nothing left to delete"); return; }
+        if (_items.Count == 0) { Toast.Warning("Nothing left to delete"); return; }
 
         var removed = _items[^1];
         _items.RemoveAt(_items.Count - 1);
 
-        Toasts.Show(new SToastMessage
+        Toast.Show(new SToastMessage
         {
             Text = $"\"{removed}\" deleted",
             Level = SToastLevel.Info,
@@ -133,7 +132,7 @@
             OnAction = () =>
             {
                 _items.Add(removed);
-                Toasts.Success($"\"{removed}\" restored");
+                Toast.Success($"\"{removed}\" restored");
                 return InvokeAsync(StateHasChanged);
             }
         });
@@ -142,7 +141,7 @@
     }
 
     void ShowProgress() =>
-        Toasts.Show(new SToastMessage
+        Toast.Show(new SToastMessage
         {
             Title = "Exporting",
             Text = "Your report is being generated…",
@@ -154,26 +153,26 @@
     void Spam()
     {
         for (var i = 1; i <= 5; i++)
-            Toasts.Info($"Toast #{i}");
+            Toast.Info($"Toast #{i}");
     }
 
     async Task SaveAsync()
     {
         if (string.IsNullOrWhiteSpace(_name))
         {
-            Toasts.Warning("Name cannot be empty");
+            Toast.Warning("Name cannot be empty");
             return;
         }
 
         await Task.Delay(700);
-        Toasts.Success($"Saved \"{_name}\"", "Done");
+        Toast.Success($"Saved \"{_name}\"", "Done");
         _name = null;
     }
 
-    const string _setupCode = """// Program.cs — registered by AddSollyUI()builder.Services.AddSollyUI();@* MainLayout.razor — mount once *@<GToastHost Position="SToastPosition.BottomRight" />@* anywhere *@@inject SToastService Toasts """;
+    const string _setupCode = """// Program.cs — registered by AddSollyUI()builder.Services.AddSollyUI();@* MainLayout.razor — mount once *@<SToastHost Position="SToastPosition.BottomRight" />@* anywhere *@@inject SToastService Toasts """;
 
     const string _levelCode = """
-@inject GToastService Toasts
+@inject SToastService Toasts
 
 Toasts.Info("Deployment started");
 Toasts.Success("Changes saved");
@@ -186,7 +185,7 @@ Toasts.Success("All 42 records were imported.", "Import complete");
 Toasts.Error("The connection timed out after 30s.", "Request failed");
 """;
 
-    const string _posCode = """<GToastHost Position="SToastPosition.TopRight" />@* TopLeft · TopCenter · TopRightBottomLeft · BottomCenter · BottomRight *@ """;
+    const string _posCode = """<SToastHost Position="SToastPosition.TopRight" />@* TopLeft · TopCenter · TopRightBottomLeft · BottomCenter · BottomRight *@ """;
 
     const string _durCode = """
 Toasts.Show(new SToastMessage

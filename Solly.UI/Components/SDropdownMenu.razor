@@ -1,0 +1,30 @@
+@inherits SComponentBase
+
+<SPopover @ref="_pop" Placement="@Placement" OffsetMain="6">
+    <Anchor>
+        <div class="s-dd-trigger" @onclick="ToggleAsync">
+            @ChildContent
+        </div>
+    </Anchor>
+    <ChildContent>
+        <div class="s-dd-menu" style="@($"min-width:{MinWidth}")" role="menu">
+            <CascadingValue Value="this" IsFixed="true">
+                @MenuContent
+            </CascadingValue>
+        </div>
+    </ChildContent>
+</SPopover>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }   // trigger
+    [Parameter] public RenderFragment? MenuContent { get; set; }    // items
+    [Parameter] public string Placement { get; set; } = "bottom-start";
+    [Parameter] public string MinWidth { get; set; } = "12rem";
+
+    private SPopover? _pop;
+
+    private async Task ToggleAsync() { if (_pop is not null) await _pop.ToggleAsync(); }
+
+    /// <summary>Called by items to close the whole menu after an action.</summary>
+    internal async Task CloseAsync() { if (_pop is not null) await _pop.CloseAsync(); }
+}

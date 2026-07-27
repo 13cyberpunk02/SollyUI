@@ -1,0 +1,128 @@
+@page "/accordion"
+
+<DemoPage Title="Accordion" Subtitle="Сворачиваемые секции. Одиночный или множественный режим, flush-вариант.">
+
+    <DemoBlock Title="Basic"
+               Description="По умолчанию открыто несколько секций сразу."
+               Code="@_basicCode">
+        <SAccordion>
+            <SAccordionItem Title="Что такое Glassy.UI?" InitiallyOpen>
+                Библиотека Blazor-компонентов в неоновом стеклянном стиле с настраиваемой палитрой.
+            </SAccordionItem>
+            <SAccordionItem Title="Какие рендеры поддерживаются?">
+                Server и WebAssembly. Все компоненты работают в обоих режимах.
+            </SAccordionItem>
+            <SAccordionItem Title="Нужен ли Node.js?">
+                Нет. CSS и шрифты едут внутри пакета как статика.
+            </SAccordionItem>
+        </SAccordion>
+    </DemoBlock>
+
+    <DemoBlock Title="Single mode"
+               Description="Single — открытая секция закрывает предыдущую."
+               Code="@_singleCode">
+        <SAccordion Single>
+            <SAccordionItem Title="Шаг 1" Icon="@SIcons.Type" InitiallyOpen>
+                Только одна секция может быть раскрыта одновременно.
+            </SAccordionItem>
+            <SAccordionItem Title="Шаг 2" Icon="@SIcons.Sliders">
+                Открытие этой закроет предыдущую автоматически.
+            </SAccordionItem>
+            <SAccordionItem Title="Шаг 3" Icon="@SIcons.Check">
+                И так далее.
+            </SAccordionItem>
+        </SAccordion>
+    </DemoBlock>
+
+    <DemoBlock Title="Badges & disabled" Code="@_badgeCode">
+        <SAccordion>
+            <SAccordionItem Title="Inbox" Icon="@SIcons.Bell" Badge="12" InitiallyOpen>
+                Секция с бейджем-счётчиком.
+            </SAccordionItem>
+            <SAccordionItem Title="Archive" Icon="@SIcons.Layers" Badge="3">
+                Ещё одна.
+            </SAccordionItem>
+            <SAccordionItem Title="Заблокировано" Icon="@SIcons.X" Disabled>
+                Эту не открыть.
+            </SAccordionItem>
+        </SAccordion>
+    </DemoBlock>
+
+    <DemoBlock Title="Flush"
+               Description="Секции как отдельные карточки без общей рамки."
+               Code="@_flushCode">
+        <SAccordion Flush Single>
+            <SAccordionItem Title="Первая">Отдельная плашка.</SAccordionItem>
+            <SAccordionItem Title="Вторая">С промежутком между секциями.</SAccordionItem>
+            <SAccordionItem Title="Третья">Каждая самостоятельна.</SAccordionItem>
+        </SAccordion>
+    </DemoBlock>
+
+    <DemoBlock Title="Rich content" Code="@_richCode">
+        <SAccordion>
+            <SAccordionItem Icon="@SIcons.Palette" InitiallyOpen>
+                <TitleContent>
+                    <span style="display:flex;align-items:center;gap:8px;">
+                        Настройки темы <SBadge Level="SBadgeLevel.Info" Mono>beta</SBadge>
+                    </span>
+                </TitleContent>
+                <ChildContent>
+                    <div class="demo-col" style="max-width:none;gap:14px;">
+                        <SSwitch Value="true" Label="Тёмная тема" />
+                        <SSlider Value="60" Label="Прозрачность" Min="0" Max="100" />
+                    </div>
+                </ChildContent>
+            </SAccordionItem>
+            <SAccordionItem Title="Уведомления" Icon="@SIcons.Bell">
+                <div class="demo-col" style="max-width:none;gap:12px;">
+                    <SCheckbox Value="true" Label="Email" />
+                    <SCheckbox Label="Push" />
+                </div>
+            </SAccordionItem>
+        </SAccordion>
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    const string _basicCode = """
+<SAccordion>
+    <SAccordionItem Title="Вопрос" InitiallyOpen>
+        Ответ.
+    </SAccordionItem>
+    <SAccordionItem Title="Ещё вопрос">
+        Ещё ответ.
+    </SAccordionItem>
+</SAccordion>
+""";
+
+    const string _singleCode = """
+@* only one open at a time *@
+<SAccordion Single>
+    <SAccordionItem Title="Шаг 1" InitiallyOpen>…</SAccordionItem>
+    <SAccordionItem Title="Шаг 2">…</SAccordionItem>
+</SAccordion>
+""";
+
+    const string _badgeCode = """
+<SAccordionItem Title="Inbox" Icon="@SIcons.Bell" Badge="12">…</SAccordionItem>
+<SAccordionItem Title="Locked" Disabled>…</SAccordionItem>
+""";
+
+    const string _flushCode = """
+<SAccordion Flush Single>
+    <SAccordionItem Title="Первая">…</SAccordionItem>
+</SAccordion>
+""";
+
+    const string _richCode = """
+<SAccordionItem Icon="@SIcons.Palette">
+    <TitleContent>
+        Настройки <SBadge Mono>beta</SBadge>
+    </TitleContent>
+    <ChildContent>
+        <SSwitch Label="Тёмная тема" />
+    </ChildContent>
+</SAccordionItem>
+""";
+}

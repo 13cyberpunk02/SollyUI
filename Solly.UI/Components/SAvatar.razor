@@ -1,0 +1,101 @@
+@inherits SComponentBase
+
+<span class="@Cls("s-avatar", SizeClass, ShapeClass)"
+      style="@AvatarStyle @Style"
+      title="@Title"
+      @attributes="Attributes">
+
+    @if (!string.IsNullOrEmpty(Src) && !_imgError)
+    {
+        <img class="s-avatar-img" src="@Src" alt="@(Alt ?? Name)" @onerror="OnImgError" />
+    }
+    else if (!string.IsNullOrEmpty(Icon))
+    {
+        <SIcon Name="@Icon" Size="@IconSize" />
+    }
+    else if (!string.IsNullOrEmpty(Name))
+    {
+        <span class="s-avatar-initials">@Initials</span>
+    }
+    else
+    {
+        <SIcon Name="@SIcons.Cursor" Size="@IconSize" />
+    }
+
+    @if (Status != SAvatarStatus.None)
+    {
+        <span class="s-avatar-status @StatusClass"></span>
+    }
+</span>
+
+@code {
+    [Parameter] public string? Src { get; set; }
+    [Parameter] public string? Alt { get; set; }
+    [Parameter] public string? Name { get; set; }
+    [Parameter] public string? Icon { get; set; }
+    [Parameter] public string? Title { get; set; }
+
+    [Parameter] public SAvatarSize Size { get; set; } = SAvatarSize.Medium;
+    [Parameter] public bool Square { get; set; }
+    [Parameter] public SAvatarStatus Status { get; set; } = SAvatarStatus.None;
+
+    /// <summary>Fixed hue for the initials background. Null derives it from Name.</summary>
+    [Parameter] public int? Hue { get; set; }
+
+    private bool _imgError;
+
+    private void OnImgError() => _imgError = true;
+
+    private string Initials
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(Name)) return "";
+            var parts = Name.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            return parts.Length switch
+            {
+                0 => "",
+                1 => parts[0][..1].ToUpperInvariant(),
+                _ => (parts[0][..1] + parts[^1][..1]).ToUpperInvariant()
+            };
+        }
+    }
+
+    private int DerivedHue => Hue ?? (string.IsNullOrEmpty(Name)
+        ? 173
+        : Math.Abs(Name.Aggregate(17, (h, c) => h * 31 + c)) % 360);
+
+    private string AvatarStyle =>
+        string.IsNullOrEmpty(Src) && string.IsNullOrEmpty(Icon) && !string.IsNullOrEmpty(Name)
+            ? $"--g-av-h:{DerivedHue};"
+            : "";
+
+    private string SizeClass => Size switch
+    {
+        SAvatarSize.XSmall => "s-avatar-xs",
+        SAvatarSize.Small  => "s-avatar-sm",
+        SAvatarSize.Large  => "s-avatar-lg",
+        SAvatarSize.XLarge => "s-avatar-xl",
+        _                  => "s-avatar-md"
+    };
+
+    private int IconSize => Size switch
+    {
+        SAvatarSize.XSmall => 12,
+        SAvatarSize.Small  => 14,
+        SAvatarSize.Large  => 22,
+        SAvatarSize.XLarge => 28,
+        _                  => 18
+    };
+
+    private string ShapeClass => Square ? "s-avatar-square" : "s-avatar-round";
+
+    private string StatusClass => Status switch
+    {
+        SAvatarStatus.Online  => "s-status-online",
+        SAvatarStatus.Away    => "s-status-away",
+        SAvatarStatus.Busy    => "s-status-busy",
+        SAvatarStatus.Offline => "s-status-offline",
+        _                     => ""
+    };
+}

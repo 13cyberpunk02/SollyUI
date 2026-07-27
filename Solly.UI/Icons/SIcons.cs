@@ -40,4 +40,10 @@ public static class SIcons
     public const string PanelLeft  = "<rect x='3' y='4' width='18' height='16' rx='2'/><path d='M9 4v16'/>";
     public const string ChevronsLeft  = "<path d='m11 17-5-5 5-5M18 17l-5-5 5-5'/>";
     public const string ChevronsRight = "<path d='m13 17 5-5-5-5M6 17l5-5-5-5'/>";
+    public const string CircleCheck = "<circle cx='12' cy='12' r='10'/><path d='m9 12 2 2 4-4'/>";
+    public const string CircleAlert = "<circle cx='12' cy='12' r='10'/><path d='M12 8v4M12 16h.01'/>";
+    public const string TriangleAlert = "<path d='m10.29 3.86-8.4 14.55A2 2 0 0 0 3.6 21h16.8a2 2 0 0 0 1.71-2.59l-8.4-14.55a2 2 0 0 0-3.42 0z'/><path d='M12 9v4M12 17h.01'/>";
+    public const string CircleInfo = "<circle cx='12' cy='12' r='10'/><path d='M12 16v-4M12 8h.01'/>";
+    public const string Slash        = "<path d='M22 2 2 22'/>";
+    public const string Dots         = "<circle cx='12' cy='12' r='1'/><circle cx='19' cy='12' r='1'/><circle cx='5' cy='12' r='1'/>";
 }

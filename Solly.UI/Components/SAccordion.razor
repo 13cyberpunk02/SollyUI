@@ -1,0 +1,50 @@
+@inherits SComponentBase
+
+<CascadingValue Value="this" IsFixed="true">
+    <div class="@Cls("s-accordion", Flush ? "s-accordion-flush" : null)" style="@Style" @attributes="Attributes">
+        @ChildContent
+    </div>
+</CascadingValue>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Only one item open at a time.</summary>
+    [Parameter] public bool Single { get; set; }
+
+    /// <summary>No outer border/background — items sit flush on the page.</summary>
+    [Parameter] public bool Flush { get; set; }
+
+    private readonly HashSet<SAccordionItem> _items = [];
+    private readonly HashSet<SAccordionItem> _open = [];
+
+    internal void Register(SAccordionItem item)
+    {
+        _items.Add(item);
+        if (item.InitiallyOpen) _open.Add(item);
+    }
+
+    internal void Unregister(SAccordionItem item)
+    {
+        _items.Remove(item);
+        _open.Remove(item);
+    }
+
+    internal bool IsOpen(SAccordionItem item) => _open.Contains(item);
+
+    internal void Toggle(SAccordionItem item)
+    {
+        if (_open.Contains(item))
+        {
+            _open.Remove(item);
+        }
+        else
+        {
+            if (Single) _open.Clear();
+            _open.Add(item);
+        }
+
+        foreach (var i in _items) i.NotifyStateChanged();
+        StateHasChanged();
+    }
+}

@@ -1,0 +1,139 @@
+@inherits SComponentBase
+@implements IAsyncDisposable
+@inject SollyInterop Interop
+
+@if (_render)
+{
+    <div class="s-drawer-root @(_visible ? "s-in" : "s-out")" @ref="_root">
+        <div class="s-drawer-backdrop" @onclick="OnBackdropAsync"></div>
+
+        <div class="@Cls("s-drawer", SideClass)"
+             style="@($"--s-drawer-w:{Width}")"
+             role="dialog" aria-modal="true"
+             @onkeydown="OnKeyDownAsync"
+             @attributes="Attributes">
+
+            @if (!string.IsNullOrEmpty(Title) || Closable)
+            {
+                <div class="s-drawer-head">
+                    <span class="s-drawer-title">@Title</span>
+                    @if (HeaderContent is not null) { @HeaderContent }
+                    @if (Closable)
+                    {
+                        <button type="button" class="s-drawer-x" aria-label="Close" @onclick="CloseAsync">
+                            <SIcon Name="@SIcons.X" Size="17" />
+                        </button>
+                    }
+                </div>
+            }
+
+            <div class="s-drawer-body">@ChildContent</div>
+
+            @if (FooterContent is not null)
+            {
+                <div class="s-drawer-foot">@FooterContent</div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public RenderFragment? HeaderContent { get; set; }
+    [Parameter] public RenderFragment? FooterContent { get; set; }
+
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public SDrawerSide Side { get; set; } = SDrawerSide.Right;
+    [Parameter] public string Width { get; set; } = "22rem";
+    [Parameter] public bool Closable { get; set; } = true;
+
+    /// <summary>Backdrop click closes the drawer.</summary>
+    [Parameter] public bool DismissOnBackdrop { get; set; } = true;
+
+    [Parameter] public bool Open { get; set; }
+    [Parameter] public EventCallback<bool> OpenChanged { get; set; }
+
+    private bool _render;
+    private bool _visible;
+    private ElementReference _root;
+    private IJSObjectReference? _trap;
+    private IJSObjectReference? _lock;
+    private IJSObjectReference? _portal;
+    private DotNetObjectReference<SDrawer>? _self;
+
+    private string SideClass => Side == SDrawerSide.Left ? "s-drawer-left" : "s-drawer-right";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Open && !_render) await OpenAsync();
+        else if (!Open && _render) await CloseAsync();
+    }
+
+    public async Task OpenAsync()
+    {
+        _render = true;
+        StateHasChanged();
+        await Task.Yield();
+        _visible = true;
+        StateHasChanged();
+
+        _self ??= DotNetObjectReference.Create(this);
+
+        try
+        {
+            _portal = await Interop.PortalAsync(_root);
+            _lock = await Interop.LockScrollAsync();
+            _trap = await Interop.TrapFocusAsync(_root, _self);
+        }
+        catch { }
+
+        if (!Open) await OpenChanged.InvokeAsync(true);
+    }
+
+    public async Task CloseAsync()
+    {
+        _visible = false;
+        StateHasChanged();
+
+        await DisposeInteropAsync();
+        await Task.Delay(220);            // match the CSS transition
+
+        _render = false;
+        StateHasChanged();
+
+        if (Open) await OpenChanged.InvokeAsync(false);
+    }
+
+    private async Task OnBackdropAsync()
+    {
+        if (DismissOnBackdrop && Closable) await CloseAsync();
+    }
+
+    private async Task OnKeyDownAsync(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape" && Closable) await CloseAsync();
+    }
+    
+    /// <summary>Called by the focus trap when Escape is pressed inside it.</summary>
+    [JSInvokable]
+    public async Task OnTrapEscape()
+    {
+        if (Closable) await CloseAsync();
+    }
+
+    private async Task DisposeInteropAsync()
+    {
+        foreach (var h in new[] { _trap, _lock, _portal })
+        {
+            try { if (h is not null) { await h.InvokeVoidAsync("dispose"); await h.DisposeAsync(); } }
+            catch { }
+        }
+        _trap = _lock = _portal = null;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await DisposeInteropAsync();
+        _self?.Dispose();
+    }
+}

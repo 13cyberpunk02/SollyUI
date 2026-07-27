@@ -1,0 +1,84 @@
+@inherits SComponentBase
+
+@if (Circular)
+{
+    <div class="@Cls("s-progress-ring", LevelClass, Indeterminate ? "s-indet" : null)"
+         style="@($"--s-ring-size:{Diameter}px;--s-ring-w:{Thickness}px;") @Style"
+         role="progressbar"
+         aria-valuenow="@(Indeterminate ? null : ((int)Percent).ToString())"
+         aria-valuemin="0" aria-valuemax="100"
+         @attributes="Attributes">
+        <svg viewBox="0 0 100 100">
+            <circle class="s-ring-track" cx="50" cy="50" r="@R" />
+            <circle class="s-ring-fill" cx="50" cy="50" r="@R"
+                    style="@RingStyle" />
+        </svg>
+        @if (ShowValue && !Indeterminate)
+        {
+            <span class="s-ring-label">@Display</span>
+        }
+    </div>
+}
+else
+{
+    <div class="g-progress-wrap @Class" style="@Style">
+        @if (!string.IsNullOrEmpty(Label) || (ShowValue && !Indeterminate))
+        {
+            <div class="s-progress-head">
+                @if (!string.IsNullOrEmpty(Label)) { <span class="s-progress-label">@Label</span> }
+                @if (ShowValue && !Indeterminate) { <span class="s-progress-val">@Display</span> }
+            </div>
+        }
+        <div class="@Cls("s-progress", LevelClass, Indeterminate ? "s-indet" : null)"
+             role="progressbar"
+             aria-valuenow="@(Indeterminate ? null : ((int)Percent).ToString())"
+             aria-valuemin="0" aria-valuemax="100"
+             @attributes="Attributes">
+            <div class="s-progress-bar" style="@(Indeterminate ? null : $"width:{Percent.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}%")"></div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public double Value { get; set; }
+    [Parameter] public double Max { get; set; } = 100;
+
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public bool ShowValue { get; set; }
+
+    /// <summary>Renders a spinning ring / sliding bar with no fixed value.</summary>
+    [Parameter] public bool Indeterminate { get; set; }
+
+    [Parameter] public bool Circular { get; set; }
+    [Parameter] public int Diameter { get; set; } = 56;
+    [Parameter] public int Thickness { get; set; } = 6;
+
+    [Parameter] public SAlertLevel? Level { get; set; }
+    [Parameter] public Func<double, string>? Format { get; set; }
+
+    private double Percent => Max <= 0 ? 0 : Math.Clamp(Value / Max * 100, 0, 100);
+
+    private string Display => Format?.Invoke(Value) ?? $"{Percent:0}%";
+
+    private const double R = 42;
+    private double Circumference => 2 * Math.PI * R;
+
+    private string RingStyle
+    {
+        get
+        {
+            var c = Circumference;
+            var offset = c * (1 - Percent / 100);
+            var inv = CultureInfo.InvariantCulture;
+            return $"stroke-dasharray:{c.ToString("0.##", inv)};stroke-dashoffset:{offset.ToString("0.##", inv)}";
+        }
+    }
+
+    private string? LevelClass => Level switch
+    {
+        SAlertLevel.Success => "s-progress-success",
+        SAlertLevel.Warning => "s-progress-warning",
+        SAlertLevel.Error   => "s-progress-error",
+        _                   => null
+    };
+}

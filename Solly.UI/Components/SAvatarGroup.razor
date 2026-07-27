@@ -1,0 +1,28 @@
+@inherits SComponentBase
+
+<div class="@Cls("s-avatar-group")" style="@Style" @attributes="Attributes">
+    @ChildContent
+    @if (Overflow > 0)
+    {
+        <span class="s-avatar @OverflowSizeClass s-avatar-round s-avatar-more">
+            <span class="s-avatar-initials">+@Overflow</span>
+        </span>
+    }
+</div>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Count for the trailing "+N" bubble.</summary>
+    [Parameter] public int Overflow { get; set; }
+    [Parameter] public SAvatarSize Size { get; set; } = SAvatarSize.Medium;
+
+    private string OverflowSizeClass => Size switch
+    {
+        SAvatarSize.XSmall => "s-avatar-xs",
+        SAvatarSize.Small  => "s-avatar-sm",
+        SAvatarSize.Large  => "s-avatar-lg",
+        SAvatarSize.XLarge => "s-avatar-xl",
+        _                  => "s-avatar-md"
+    };
+}

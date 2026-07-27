@@ -1,0 +1,22 @@
+@inherits SComponentBase
+@implements IDisposable
+
+@code {
+    [CascadingParameter] private SBreadcrumbs? Parent { get; set; }
+
+    [Parameter] public string? Href { get; set; }
+    [Parameter] public string? Icon { get; set; }
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    internal string? RenderLabel => Label;
+
+    protected override void OnInitialized()
+    {
+        if (Parent is null)
+            throw new InvalidOperationException($"{nameof(SBreadcrumb)} must be inside {nameof(SBreadcrumbs)}.");
+        Parent.Register(this);
+    }
+
+    public void Dispose() => Parent?.Unregister(this);
+}

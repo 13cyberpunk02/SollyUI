@@ -1,0 +1,85 @@
+@page "/breadcrumbs"
+
+<DemoPage Title="Breadcrumbs" Subtitle="Навигационная цепочка. Иконки, разделители, сворачивание длинных путей.">
+
+    <DemoBlock Title="Basic" Code="@_basicCode">
+        <SBreadcrumbs>
+            <SBreadcrumb Href="/" Label="Home" />
+            <SBreadcrumb Href="/components" Label="Components" />
+            <SBreadcrumb Label="Breadcrumbs" />
+        </SBreadcrumbs>
+    </DemoBlock>
+
+    <DemoBlock Title="With icons" Code="@_iconCode">
+        <SBreadcrumbs>
+            <SBreadcrumb Href="/" Icon="@SIcons.Home" Label="Home" />
+            <SBreadcrumb Href="/settings" Icon="@SIcons.Sliders" Label="Settings" />
+            <SBreadcrumb Icon="@SIcons.Palette" Label="Appearance" />
+        </SBreadcrumbs>
+    </DemoBlock>
+
+    <DemoBlock Title="Separators"
+               Description="chevron по умолчанию, slash, или любая строка."
+               Code="@_sepCode">
+        <div class="demo-col" style="max-width:none;gap:14px;">
+            <SBreadcrumbs Separator="chevron">
+                <SBreadcrumb Href="/" Label="Home" />
+                <SBreadcrumb Href="/a" Label="Level" />
+                <SBreadcrumb Label="Current" />
+            </SBreadcrumbs>
+            <SBreadcrumbs Separator="slash">
+                <SBreadcrumb Href="/" Label="Home" />
+                <SBreadcrumb Href="/a" Label="Level" />
+                <SBreadcrumb Label="Current" />
+            </SBreadcrumbs>
+            <SBreadcrumbs Separator="•">
+                <SBreadcrumb Href="/" Label="Home" />
+                <SBreadcrumb Href="/a" Label="Level" />
+                <SBreadcrumb Label="Current" />
+            </SBreadcrumbs>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Collapsed"
+               Description="MaxVisible сворачивает середину в «…» для длинных путей."
+               Code="@_collapseCode">
+        <SBreadcrumbs MaxVisible="2">
+            <SBreadcrumb Href="/" Icon="@SIcons.Home" Label="Home" />
+            <SBreadcrumb Href="/a" Label="Projects" />
+            <SBreadcrumb Href="/b" Label="Glassy" />
+            <SBreadcrumb Href="/c" Label="Source" />
+            <SBreadcrumb Href="/d" Label="Components" />
+            <SBreadcrumb Label="Breadcrumbs.razor" />
+        </SBreadcrumbs>
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    const string _basicCode = """
+<SBreadcrumbs>
+    <SBreadcrumb Href="/" Label="Home" />
+    <SBreadcrumb Href="/components" Label="Components" />
+    <SBreadcrumb Label="Breadcrumbs" />   @* no Href = current *@
+</SBreadcrumbs>
+""";
+
+    const string _iconCode = """
+<SBreadcrumb Href="/" Icon="@SIcons.Home" Label="Home" />
+""";
+
+    const string _sepCode = """
+<SBreadcrumbs Separator="slash">…</SBreadcrumbs>
+<SBreadcrumbs Separator="•">…</SBreadcrumbs>
+""";
+
+    const string _collapseCode = """
+@* collapses the middle into "…" *@
+<SBreadcrumbs MaxVisible="2">
+    <SBreadcrumb Href="/" Label="Home" />
+    <SBreadcrumb Href="/a" Label="Projects" />
+    <SBreadcrumb Href="/b" Label="Glassy" />
+    <SBreadcrumb Label="File.razor" />
+</SBreadcrumbs>
+""";
+}

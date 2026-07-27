@@ -1,0 +1,99 @@
+@inherits SComponentBase
+
+<nav class="@Cls("s-breadcrumbs")" aria-label="Breadcrumb" style="@Style" @attributes="Attributes">
+    <ol class="s-bc-list">
+        @{
+            var items = _items.ToList();
+            var total = items.Count;
+            var collapse = MaxVisible > 0 && total > MaxVisible + 1;
+        }
+
+        @for (var i = 0; i < total; i++)
+        {
+            var item = items[i];
+            var isLast = i == total - 1;
+
+            if (collapse && i > 0 && i < total - MaxVisible)
+            {
+                if (i == 1)
+                {
+                    <li class="s-bc-item s-bc-ellipsis">
+                        <span class="s-bc-dots"><SIcon Name="@SIcons.Dots" Size="15" /></span>
+                        @if (!isLast) { <span class="s-bc-sep">@SepFragment</span> }
+                    </li>
+                }
+                continue;
+            }
+
+            <li class="s-bc-item">
+                @if (!isLast && !string.IsNullOrEmpty(item.Href))
+                {
+                    <a class="s-bc-link" href="@item.Href">
+                        @if (!string.IsNullOrEmpty(item.Icon)) { <SIcon Name="@item.Icon" Size="14" /> }
+                        <span>@item.RenderLabel</span>
+                    </a>
+                }
+                else
+                {
+                    <span class="s-bc-current" aria-current="@(isLast ? "page" : null)">
+                        @if (!string.IsNullOrEmpty(item.Icon)) { <SIcon Name="@item.Icon" Size="14" /> }
+                        <span>@item.RenderLabel</span>
+                    </span>
+                }
+
+                @if (!isLast)
+                {
+                    <span class="s-bc-sep">@SepFragment</span>
+                }
+            </li>
+        }
+    </ol>
+
+    <CascadingValue Value="this" IsFixed="true">
+        <div style="display:none">@ChildContent</div>
+    </CascadingValue>
+</nav>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Separator: "chevron" (default), "slash", or any literal string.</summary>
+    [Parameter] public string Separator { get; set; } = "chevron";
+
+    /// <summary>Collapse the middle into "…" when items exceed this + 1. 0 = never.</summary>
+    [Parameter] public int MaxVisible { get; set; }
+
+    private readonly List<SBreadcrumb> _items = [];
+
+    internal void Register(SBreadcrumb item)
+    {
+        if (!_items.Contains(item)) { _items.Add(item); StateHasChanged(); }
+    }
+    internal void Unregister(SBreadcrumb item)
+    {
+        if (_items.Remove(item)) StateHasChanged();
+    }
+
+    private RenderFragment SepFragment => builder =>
+    {
+        switch (Separator)
+        {
+            case "slash":
+                builder.OpenComponent<SIcon>(0);
+                builder.AddAttribute(1, "Name", SIcons.Slash);
+                builder.AddAttribute(2, "Size", 12);
+                builder.CloseComponent();
+                break;
+            case "chevron":
+                builder.OpenComponent<SIcon>(0);
+                builder.AddAttribute(1, "Name", SIcons.ChevronRight);
+                builder.AddAttribute(2, "Size", 14);
+                builder.AddAttribute(3, "Weight", 2.0);
+                builder.CloseComponent();
+                break;
+            default:
+                builder.AddContent(0, Separator);
+                break;
+        }
+    };
+}

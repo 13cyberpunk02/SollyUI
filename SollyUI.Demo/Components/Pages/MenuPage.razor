@@ -1,0 +1,137 @@
+@page "/menu"
+
+<DemoPage Title="Dropdown Menu" Subtitle="Меню с иконками, разделителями, горячими клавишами и вложенными подменю.">
+
+    <DemoBlock Title="Basic" Code="@_basicCode">
+        <SDropdownMenu>
+            <ChildContent>
+                <SButton Icon="@SIcons.Dots">Actions</SButton>
+            </ChildContent>
+            <MenuContent>
+                <SMenuItem Icon="@SIcons.Type" OnClick="@(() => Say("Rename"))">Rename</SMenuItem>
+                <SMenuItem Icon="@SIcons.Layers" OnClick="@(() => Say("Duplicate"))">Duplicate</SMenuItem>
+                <SMenuItem Icon="@SIcons.Clipboard" Shortcut="⌘C" OnClick="@(() => Say("Copy"))">Copy</SMenuItem>
+                <SMenuDivider />
+                <SMenuItem Icon="@SIcons.X" Danger OnClick="@(() => Say("Delete"))">Delete</SMenuItem>
+            </MenuContent>
+        </SDropdownMenu>
+    </DemoBlock>
+
+    <DemoBlock Title="Labels & checks" Code="@_checkCode">
+        <SDropdownMenu>
+            <ChildContent>
+                <SButton Variant="SVariant.Ghost" Icon="@SIcons.Sliders">View</SButton>
+            </ChildContent>
+            <MenuContent>
+                <SMenuLabel>Density</SMenuLabel>
+                <SMenuItem Checked="@(_density == "comfortable")" KeepOpen
+                           OnClick="@(() => _density = "comfortable")">Comfortable</SMenuItem>
+                <SMenuItem Checked="@(_density == "compact")" KeepOpen
+                           OnClick="@(() => _density = "compact")">Compact</SMenuItem>
+                <SMenuDivider />
+                <SMenuLabel>Options</SMenuLabel>
+                <SMenuItem Checked="_grid" KeepOpen OnClick="@(() => _grid = !_grid)">Show grid</SMenuItem>
+            </MenuContent>
+        </SDropdownMenu>
+        <span class="demo-note" style="margin-left:14px;">density: @_density, grid: @_grid</span>
+    </DemoBlock>
+
+    <DemoBlock Title="Submenu"
+               Description="SubmenuContent превращает пункт в раскрывающуюся ветку."
+               Code="@_subCode">
+        <SDropdownMenu>
+            <ChildContent>
+                <SButton Icon="@SIcons.Layers">File</SButton>
+            </ChildContent>
+            <MenuContent>
+                <SMenuItem Icon="@SIcons.Type" Inset OnClick="@(() => Say("New"))">New file</SMenuItem>
+                <SMenuItem Icon="@SIcons.Layers">
+                    <ChildContent>Export as</ChildContent>
+                    <SubmenuContent>
+                        <SMenuItem OnClick="@(() => Say("PDF"))">PDF</SMenuItem>
+                        <SMenuItem OnClick="@(() => Say("PNG"))">PNG</SMenuItem>
+                        <SMenuItem>
+                            <ChildContent>More</ChildContent>
+                            <SubmenuContent>
+                                <SMenuItem OnClick="@(() => Say("SVG"))">SVG</SMenuItem>
+                                <SMenuItem OnClick="@(() => Say("WebP"))">WebP</SMenuItem>
+                            </SubmenuContent>
+                        </SMenuItem>
+                    </SubmenuContent>
+                </SMenuItem>
+                <SMenuDivider />
+                <SMenuItem Icon="@SIcons.X" Danger Inset OnClick="@(() => Say("Close"))">Close</SMenuItem>
+            </MenuContent>
+        </SDropdownMenu>
+    </DemoBlock>
+
+    <DemoBlock Title="On avatar" Code="@_avatarCode">
+        <SDropdownMenu Placement="bottom-end">
+            <ChildContent>
+                <SAvatar Name="Anna Meyer" Status="SAvatarStatus.Online" />
+            </ChildContent>
+            <MenuContent>
+                <SMenuLabel>Anna Meyer</SMenuLabel>
+                <SMenuItem Icon="@SIcons.Type" OnClick="@(() => Say("Profile"))">Profile</SMenuItem>
+                <SMenuItem Icon="@SIcons.Sliders" OnClick="@(() => Say("Settings"))">Settings</SMenuItem>
+                <SMenuDivider />
+                <SMenuItem Icon="@SIcons.X" OnClick="@(() => Say("Sign out"))">Sign out</SMenuItem>
+            </MenuContent>
+        </SDropdownMenu>
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    [Inject] SToastService Toasts { get; set; } = default!;
+
+    string _density = "comfortable";
+    bool _grid = true;
+
+    void Say(string s) => Toasts.Info(s);
+
+    const string _basicCode = """
+<SDropdownMenu>
+    <ChildContent>
+        <SButton Icon="@SIcons.Dots">Actions</SButton>
+    </ChildContent>
+    <MenuContent>
+        <SMenuItem Icon="@SIcons.Type" OnClick="Rename">Rename</SMenuItem>
+        <SMenuItem Shortcut="⌘C" OnClick="Copy">Copy</SMenuItem>
+        <SMenuDivider />
+        <SMenuItem Danger OnClick="Delete">Delete</SMenuItem>
+    </MenuContent>
+</SDropdownMenu>
+""";
+
+    const string _checkCode = """
+@* KeepOpen — не закрывать после клика (для переключателей) *@
+<SMenuItem Checked="_grid" KeepOpen OnClick="() => _grid = !_grid">
+    Show grid
+</SMenuItem>
+""";
+
+    const string _subCode = """
+<SMenuItem Icon="@SIcons.Layers">
+    <ChildContent>Export as</ChildContent>
+    <SubmenuContent>
+        <SMenuItem OnClick="ExportPdf">PDF</SMenuItem>
+        <SMenuItem>
+            <ChildContent>More</ChildContent>
+            <SubmenuContent>
+                <SMenuItem OnClick="ExportSvg">SVG</SMenuItem>
+            </SubmenuContent>
+        </SMenuItem>
+    </SubmenuContent>
+</SMenuItem>
+""";
+
+    const string _avatarCode = """
+<SDropdownMenu Placement="bottom-end">
+    <ChildContent>
+        <SAvatar Name="Anna Meyer" Status="SAvatarStatus.Online" />
+    </ChildContent>
+    <MenuContent>…</MenuContent>
+</SDropdownMenu>
+""";
+}

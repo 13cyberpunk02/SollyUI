@@ -1,0 +1,66 @@
+@inherits SComponentBase
+
+@if (_visible)
+{
+    <div class="@Cls("s-alert", Level.ToCssClass(), Soft ? "s-alert-soft" : null)"
+         role="@(Level == SAlertLevel.Error ? "alert" : "status")"
+         style="@Style" @attributes="Attributes">
+
+        @if (ShowIcon)
+        {
+            <span class="g-alert-icon">
+                <SIcon Name="@(string.IsNullOrEmpty(Icon) ? Level.DefaultIcon() : Icon)" Size="18" />
+            </span>
+        }
+
+        <div class="s-alert-content">
+            @if (!string.IsNullOrEmpty(Title))
+            {
+                <div class="s-alert-title">@Title</div>
+            }
+            @if (ChildContent is not null)
+            {
+                <div class="s-alert-text">@ChildContent</div>
+            }
+        </div>
+
+        @if (ActionContent is not null)
+        {
+            <div class="s-alert-action">@ActionContent</div>
+        }
+
+        @if (Dismissible)
+        {
+            <button type="button" class="s-alert-x" aria-label="Dismiss" @onclick="DismissAsync">
+                <SIcon Name="@SIcons.X" Size="15" />
+            </button>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public RenderFragment? ActionContent { get; set; }
+
+    [Parameter] public SAlertLevel Level { get; set; } = SAlertLevel.Info;
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public string? Icon { get; set; }
+    [Parameter] public bool ShowIcon { get; set; } = true;
+
+    /// <summary>Muted background instead of the vivid gradient.</summary>
+    [Parameter] public bool Soft { get; set; }
+
+    [Parameter] public bool Dismissible { get; set; }
+    [Parameter] public EventCallback OnDismiss { get; set; }
+
+    private bool _visible = true;
+
+    private async Task DismissAsync()
+    {
+        _visible = false;
+        await OnDismiss.InvokeAsync();
+    }
+
+    /// <summary>Re-show after a programmatic dismiss.</summary>
+    public void Reset() { _visible = true; StateHasChanged(); }
+}
