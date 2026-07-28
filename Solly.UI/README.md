@@ -4,7 +4,7 @@ A glassmorphism + neon component library for Blazor. Frosted-glass surfaces, a s
 
 Works in **Blazor Server** and **Blazor WebAssembly**. No Node build step — CSS and fonts ship inside the package as static web assets.
 
-[![NuGet](https://img.shields.io/nuget/v/Solly.UI.svg)](https://www.nuget.org/packages/SollyUI)
+[![NuGet](https://img.shields.io/nuget/v/SollyUI.svg)](https://www.nuget.org/packages/SollyUI)
 [![License: MIT](https://img.shields.io/badge/License-MIT-informational.svg)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4.svg)](https://dotnet.microsoft.com)
 
