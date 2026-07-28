@@ -1,0 +1,49 @@
+@inherits SComponentBase
+
+<section class="@Cls("s-form-section", Bordered ? "s-form-section-bordered" : null)"
+         style="@Style" @attributes="Attributes">
+
+    @if (!string.IsNullOrEmpty(Title) || !string.IsNullOrEmpty(Description) || HeaderContent is not null)
+    {
+        <div class="s-form-section-head">
+            @if (HeaderContent is not null)
+            {
+                @HeaderContent
+            }
+            else
+            {
+                @if (!string.IsNullOrEmpty(Eyebrow))
+                {
+                    <span class="s-eyebrow">@Eyebrow</span>
+                }
+                @if (!string.IsNullOrEmpty(Title))
+                {
+                    <h3 class="s-form-section-title">@Title</h3>
+                }
+                @if (!string.IsNullOrEmpty(Description))
+                {
+                    <p class="s-form-section-desc">@Description</p>
+                }
+            }
+        </div>
+    }
+
+    <div class="s-form-fields @(Columns == 2 ? "s-form-2col" : null)">
+        @ChildContent
+    </div>
+</section>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public RenderFragment? HeaderContent { get; set; }
+
+    [Parameter] public string? Eyebrow { get; set; }
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public string? Description { get; set; }
+
+    /// <summary>1 or 2 column field grid.</summary>
+    [Parameter] public int Columns { get; set; } = 1;
+
+    /// <summary>Card-like border around the section.</summary>
+    [Parameter] public bool Bordered { get; set; }
+}

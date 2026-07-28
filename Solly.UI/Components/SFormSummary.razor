@@ -1,0 +1,44 @@
+@inherits SComponentBase
+@implements IDisposable
+
+@if (_messages.Count > 0)
+{
+    <div class="s-form-summary">
+        <SAlert Level="SAlertLevel.Error" Title="@Title">
+            <ul class="s-form-summary-list">
+                @foreach (var msg in _messages)
+                {
+                    <li>@msg</li>
+                }
+            </ul>
+        </SAlert>
+    </div>
+}
+
+@code {
+    [CascadingParameter] private EditContext? EditContext { get; set; }
+
+    [Parameter] public string Title { get; set; } = "Проверьте форму";
+
+    private readonly List<string> _messages = new();
+
+    protected override void OnInitialized()
+    {
+        if (EditContext is not null)
+            EditContext.OnValidationStateChanged += OnValidationChanged;
+    }
+
+    private void OnValidationChanged(object? sender, ValidationStateChangedEventArgs e)
+    {
+        _messages.Clear();
+        if (EditContext is not null)
+            _messages.AddRange(EditContext.GetValidationMessages());
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        if (EditContext is not null)
+            EditContext.OnValidationStateChanged -= OnValidationChanged;
+    }
+}

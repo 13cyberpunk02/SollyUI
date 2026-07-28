@@ -1,31 +1,31 @@
 ﻿/* ---------- fonts ---------- */
 @font-face {
-    font-family: 'solly Sans';
+    font-family: 'Solly Sans';
     src: url('./fonts/SpaceGrotesk-Regular.woff2') format('woff2');
     font-weight: 400; font-style: normal; font-display: swap;
 }
 @font-face {
-    font-family: 'solly Sans';
+    font-family: 'Solly Sans';
     src: url('./fonts/SpaceGrotesk-Medium.woff2') format('woff2');
     font-weight: 500; font-style: normal; font-display: swap;
 }
 @font-face {
-    font-family: 'solly Sans';
+    font-family: 'Solly Sans';
     src: url('./fonts/SpaceGrotesk-SemiBold.woff2') format('woff2');
     font-weight: 600; font-style: normal; font-display: swap;
 }
 @font-face {
-    font-family: 'solly Sans';
+    font-family: 'Solly Sans';
     src: url('./fonts/SpaceGrotesk-Bold.woff2') format('woff2');
     font-weight: 700; font-style: normal; font-display: swap;
 }
 @font-face {
-    font-family: 'solly Mono';
+    font-family: 'Solly Mono';
     src: url('./fonts/JetBrainsMono-Regular.woff2') format('woff2');
     font-weight: 400; font-style: normal; font-display: swap;
 }
 @font-face {
-    font-family: 'solly Mono';
+    font-family: 'Solly Mono';
     src: url('./fonts/JetBrainsMono-SemiBold.woff2') format('woff2');
     font-weight: 600; font-style: normal; font-display: swap;
 }
@@ -128,8 +128,8 @@
     --s-ease:     cubic-bezier(.2, .8, .2, 1);
 
     /* --- type --- */
-    --s-font: 'solly Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-    --s-font-mono: 'solly Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    --s-font: 'Solly Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --s-font-mono: 'Solly Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 }
 
 /* ---------- light ---------- */
@@ -756,20 +756,7 @@
 
 /* chips */
 .s-select-chips { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; min-width: 0; }
-.s-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    max-width: 10rem;
-    padding: 5px 8px 5px 12px;
-    border-radius: 999px;
-    border: 1px solid var(--s-accent-55);
-    background: linear-gradient(160deg, var(--s-accent-35) 0%, var(--s-accent-08) 50%, var(--s-accent-20) 100%);
-    box-shadow: var(--s-glow-sm), inset 0 1px 0 rgba(255,255,255,.45);
-    font: 600 12.5px var(--s-font);
-    color: var(--s-accent-soft);
-}
-.s-chip-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* chip overflow bubble for multiselect ("+N") — full chip styles live in the CHIP section */
 .s-chip-more {
     padding: 5px 12px;
     border-color: var(--s-border-hi);
@@ -777,15 +764,6 @@
     color: var(--s-text-dim);
     box-shadow: var(--s-rim);
 }
-.s-chip-x {
-    display: flex;
-    padding: 1px;
-    border-radius: 999px;
-    cursor: pointer;
-    opacity: .7;
-    transition: opacity var(--s-dur), background var(--s-dur);
-}
-.s-chip-x:hover { opacity: 1; background: rgba(255,255,255,.2); }
 
 /* search */
 .s-select-search {
@@ -3117,3 +3095,99 @@
 }
 /* compact buttons inside popconfirm */
 .s-pc-actions .s-btn { padding: 8px 16px; font-size: 13px; }
+
+/* ============================================================
+   FORM
+   ============================================================ */
+.s-form {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    font-family: var(--s-font);
+}
+
+.s-form-summary { margin-bottom: 4px; }
+.s-form-summary-list {
+    margin: 0;
+    padding-left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.s-form-summary-list li { font: 400 13px var(--s-font); }
+
+/* --- section --- */
+.s-form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+.s-form-section-bordered {
+    padding: 24px;
+    border-radius: var(--s-radius);
+    border: 1px solid var(--s-border);
+    background: var(--s-panel);
+    box-shadow: var(--s-shadow);
+}
+
+.s-form-section-head { display: flex; flex-direction: column; gap: 5px; }
+.s-form-section-title { margin: 0; font: 600 17px var(--s-font); color: var(--s-text-hi); }
+.s-form-section-desc { margin: 0; font: 400 13.5px var(--s-font); line-height: 1.55; color: var(--s-text-mute); max-width: 44rem; }
+.s-form-section-head .s-eyebrow { margin-bottom: 2px; }
+
+/* --- fields grid --- */
+.s-form-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+.s-form-2col {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+.s-form-field { display: flex; flex-direction: column; }
+.s-form-field-full { grid-column: 1 / -1; }
+.s-form-field-help {
+    margin-top: 6px;
+    font: 400 12px var(--s-font);
+    color: var(--s-text-mute);
+    line-height: 1.5;
+}
+
+/* make GInput/GSelect/etc fill the grid cell */
+.s-form-fields > .s-field,
+.s-form-fields > .s-form-field { width: 100%; }
+.s-form-fields .s-input-wrap,
+.s-form-fields .s-select-trigger,
+.s-form-fields .s-dp-trigger,
+.s-form-fields .s-num-wrap,
+.s-form-fields .s-ta-wrap { width: 100%; }
+
+/* --- actions --- */
+.s-form-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-top: 20px;
+    border-top: 1px solid var(--s-border);
+}
+.s-fa-start   { justify-content: flex-start; }
+.s-fa-center  { justify-content: center; }
+.s-fa-end     { justify-content: flex-end; }
+.s-fa-between { justify-content: space-between; }
+
+.s-form-actions-sticky {
+    position: sticky;
+    bottom: 0;
+    margin: 0 -24px -24px;
+    padding: 16px 24px;
+    background: linear-gradient(180deg, transparent, var(--s-bg) 40%);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-top: 1px solid var(--s-border);
+}
+
+@media (max-width: 640px) {
+    .s-form-2col { grid-template-columns: 1fr; }
+}

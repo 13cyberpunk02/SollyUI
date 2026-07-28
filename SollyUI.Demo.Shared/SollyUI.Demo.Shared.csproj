@@ -18,11 +18,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <AdditionalFiles Include="Components\App.razor" />
-      <AdditionalFiles Include="Components\Routes.razor" />
-    </ItemGroup>
-
-    <ItemGroup>
       <UpToDateCheckInput Remove="Pages\ButtonPage.razor" />
       <UpToDateCheckInput Remove="Pages\CheckboxPage.razor" />
       <UpToDateCheckInput Remove="Pages\DatePickerPage.razor" />
@@ -44,6 +39,72 @@
       <UpToDateCheckInput Remove="Layout\DemoLink.razor" />
       <UpToDateCheckInput Remove="Layout\MainLayout.razor" />
       <UpToDateCheckInput Remove="Layout\ReconnectModal.razor" />
+      <UpToDateCheckInput Remove="Shared\DemoBlock.razor" />
+      <UpToDateCheckInput Remove="Shared\DemoPage.razor" />
+      <UpToDateCheckInput Remove="Shared\Layout\DemoLink.razor" />
+      <UpToDateCheckInput Remove="Shared\Layout\MainLayout.razor" />
+      <UpToDateCheckInput Remove="Shared\Layout\ReconnectModal.razor" />
+      <UpToDateCheckInput Remove="Shared\Pages\ButtonPage.razor" />
+      <UpToDateCheckInput Remove="Shared\Pages\CheckboxPage.razor" />
+      <UpToDateCheckInput Remove="Shared\Pages\DatePickerPage.razor" />
+      <UpToDateCheckInput Remove="Shared\Pages\FormPage.razor" />
+      <UpToDateCheckInput Remove="Shared\Pages\Home.razor" />
+      <UpToDateCheckInput Remove="Shared\Pages\IconPage.razor" />
+      <UpToDateCheckInput Remove="Shared\Pages\InputPage.razor" />
+      <UpToDateCheckInput Remove="Shared\Pages\ModalPage.razor" />
+      <UpToDateCheckInput Remove="Shared\Pages\PopoverPage.razor" />
+      <UpToDateCheckInput Remove="Shared\Pages\RadioPage.razor" />
+      <UpToDateCheckInput Remove="Shared\Pages\SelectPage.razor" />
+      <UpToDateCheckInput Remove="Shared\Pages\SliderPage.razor" />
+      <UpToDateCheckInput Remove="Shared\Pages\SwitchPage.razor" />
+      <UpToDateCheckInput Remove="Shared\Pages\TabsPage.razor" />
+      <UpToDateCheckInput Remove="Shared\Pages\TextAreaPage.razor" />
+      <UpToDateCheckInput Remove="Shared\Pages\ThemingPage.razor" />
+      <UpToDateCheckInput Remove="Shared\Pages\ToastPage.razor" />
+      <UpToDateCheckInput Remove="Shared\Pages\TooltipPage.razor" />
+      <UpToDateCheckInput Remove="Shared\_Imports.razor" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <AdditionalFiles Include="Components\App.razor" />
+      <AdditionalFiles Include="Components\Layout\DemoLink.razor" />
+      <AdditionalFiles Include="Components\Layout\MainLayout.razor" />
+      <AdditionalFiles Include="Components\Layout\ReconnectModal.razor" />
+      <AdditionalFiles Include="Components\Pages\AccordionPage.razor" />
+      <AdditionalFiles Include="Components\Pages\BadgePage.razor" />
+      <AdditionalFiles Include="Components\Pages\BreadcrumbsPage.razor" />
+      <AdditionalFiles Include="Components\Pages\ButtonPage.razor" />
+      <AdditionalFiles Include="Components\Pages\CardPage.razor" />
+      <AdditionalFiles Include="Components\Pages\CheckboxPage.razor" />
+      <AdditionalFiles Include="Components\Pages\DatePickerPage.razor" />
+      <AdditionalFiles Include="Components\Pages\DrawerPage.razor" />
+      <AdditionalFiles Include="Components\Pages\FeedbackPage.razor" />
+      <AdditionalFiles Include="Components\Pages\FormLayoutPage.razor" />
+      <AdditionalFiles Include="Components\Pages\FormPage.razor" />
+      <AdditionalFiles Include="Components\Pages\Home.razor" />
+      <AdditionalFiles Include="Components\Pages\IconPage.razor" />
+      <AdditionalFiles Include="Components\Pages\InputNumberPage.razor" />
+      <AdditionalFiles Include="Components\Pages\InputPage.razor" />
+      <AdditionalFiles Include="Components\Pages\MenuPage.razor" />
+      <AdditionalFiles Include="Components\Pages\ModalPage.razor" />
+      <AdditionalFiles Include="Components\Pages\PopConfirmPage.razor" />
+      <AdditionalFiles Include="Components\Pages\PopoverPage.razor" />
+      <AdditionalFiles Include="Components\Pages\PrimitivesPage.razor" />
+      <AdditionalFiles Include="Components\Pages\RadioPage.razor" />
+      <AdditionalFiles Include="Components\Pages\SelectPage.razor" />
+      <AdditionalFiles Include="Components\Pages\ShellPage.razor" />
+      <AdditionalFiles Include="Components\Pages\SliderPage.razor" />
+      <AdditionalFiles Include="Components\Pages\SwitchPage.razor" />
+      <AdditionalFiles Include="Components\Pages\TablePage.razor" />
+      <AdditionalFiles Include="Components\Pages\TabsPage.razor" />
+      <AdditionalFiles Include="Components\Pages\TextAreaPage.razor" />
+      <AdditionalFiles Include="Components\Pages\ThemingPage.razor" />
+      <AdditionalFiles Include="Components\Pages\ToastPage.razor" />
+      <AdditionalFiles Include="Components\Pages\TooltipPage.razor" />
+      <AdditionalFiles Include="Components\Routes.razor" />
+      <AdditionalFiles Include="Components\Shared\DemoBlock.razor" />
+      <AdditionalFiles Include="Components\Shared\DemoPage.razor" />
+      <AdditionalFiles Include="Components\_Imports.razor" />
     </ItemGroup>
 
 </Project>

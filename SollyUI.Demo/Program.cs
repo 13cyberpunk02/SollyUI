@@ -22,6 +22,7 @@ app.UseAntiforgery();
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+    .AddInteractiveServerRenderMode()
+    .AddAdditionalAssemblies(typeof(SollyUI.Demo.Shared.Components.Layout.MainLayout).Assembly);
 
 app.Run();

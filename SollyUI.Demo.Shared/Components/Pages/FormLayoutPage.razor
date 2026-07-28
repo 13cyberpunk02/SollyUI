@@ -1,0 +1,77 @@
+@page "/form-layout"
+@using System.ComponentModel.DataAnnotations
+
+<DemoPage Title="Form" Subtitle="Обвязка для форм: секции, двухколоночная сетка, футер, сводка ошибок.">
+
+    <DemoBlock Title="Full example" Code="@_code">
+        <SForm Model="_model" ShowSummary OnValidSubmit="OnSubmit">
+            <SFormSection Eyebrow="Профиль" Title="Личные данные"
+                          Description="Эти данные видны другим участникам."
+                          Columns="2">
+                <SInput @bind-Value="_model.FirstName" Label="Имя" Required />
+                <SInput @bind-Value="_model.LastName" Label="Фамилия" Required />
+                <SFormField FullWidth Help="Мы не публикуем email.">
+                    <SInput @bind-Value="_model.Email" Label="Email" Type="email" Required />
+                </SFormField>
+                <SSelect TValue="string" Items="_roles" @bind-Value="_model.Role" Label="Роль" />
+                <SNumberInput TValue="int" @bind-Value="_model.Age" Label="Возраст" Min="0" Max="120" />
+            </SFormSection>
+
+            <SFormSection Eyebrow="Настройки" Title="Уведомления" Bordered>
+                <SSwitch @bind-Value="_model.EmailNotif" Label="Email-уведомления" />
+                <SSwitch @bind-Value="_model.PushNotif" Label="Push-уведомления" />
+                <SCheckbox @bind-Value="_model.Agree" Label="Принимаю условия" />
+            </SFormSection>
+
+            <SFormActions Align="between">
+                <SButton Variant="SVariant.Ghost" Type="button">Отмена</SButton>
+                <SButton Variant="SVariant.Primary" Type="submit" Icon="@SIcons.Check">Сохранить</SButton>
+            </SFormActions>
+        </SForm>
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    [Inject] SToastService Toasts { get; set; } = default!;
+
+    class Model
+    {
+        [Required(ErrorMessage = "Имя обязательно")] public string? FirstName { get; set; }
+        [Required(ErrorMessage = "Фамилия обязательна")] public string? LastName { get; set; }
+        [Required(ErrorMessage = "Email обязателен")]
+        [EmailAddress(ErrorMessage = "Неверный формат email")] public string? Email { get; set; }
+        public string? Role { get; set; } = "Developer";
+        public int Age { get; set; } = 25;
+        public bool EmailNotif { get; set; } = true;
+        public bool PushNotif { get; set; }
+        [Range(typeof(bool), "true", "true", ErrorMessage = "Нужно принять условия")]
+        public bool Agree { get; set; }
+    }
+
+    Model _model = new();
+    string[] _roles = { "Developer", "Designer", "Manager", "QA" };
+
+    void OnSubmit() => Toasts.Success("Форма сохранена");
+
+    const string _code = """
+<SForm Model="_model" ShowSummary OnValidSubmit="OnSubmit">
+    <SFormSection Title="Личные данные" Columns="2">
+        <SInput @bind-Value="_model.FirstName" Label="Имя" Required />
+        <SInput @bind-Value="_model.LastName" Label="Фамилия" Required />
+        <SFormField FullWidth Help="Мы не публикуем email.">
+            <SInput @bind-Value="_model.Email" Label="Email" Required />
+        </SFormField>
+    </SFormSection>
+
+    <SFormSection Title="Уведомления" Bordered>
+        <SSwitch @bind-Value="_model.EmailNotif" Label="Email" />
+    </SFormSection>
+
+    <SFormActions Align="between">
+        <SButton Type="button">Отмена</SButton>
+        <SButton Variant="SVariant.Primary" Type="submit">Сохранить</SButton>
+    </SFormActions>
+</SForm>
+""";
+}

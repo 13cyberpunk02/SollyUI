@@ -1,0 +1,193 @@
+@inherits SollyTestContext
+
+@code {
+    class Model
+    {
+        [Required(ErrorMessage = "Name required")] public string? Name { get; set; }
+    }
+
+    [Fact]
+    public void Renders_children()
+    {
+        var model = new Model();
+        var cut = Render(@<SForm Model="model">
+                             <div id="inner">content</div>
+                         </SForm>);
+        cut.FindAll("#inner").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void Wraps_in_edit_form()
+    {
+        var model = new Model();
+        var cut = Render(@<SForm Model="model">
+                             <SInput @bind-Value="model.Name" />
+                         </SForm>);
+        cut.FindAll("form").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void Valid_submit_fires()
+    {
+        var model = new Model { Name = "Jane" };
+        var submitted = false;
+        var cut = Render(@<SForm Model="model" OnValidSubmit="@(() => submitted = true)">
+                             <SInput @bind-Value="model.Name" />
+                             <button type="submit">Go</button>
+                         </SForm>);
+
+        cut.Find("form").Submit();
+        submitted.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Invalid_submit_does_not_fire_valid()
+    {
+        var model = new Model();
+        var submitted = false;
+        var cut = Render(@<SForm Model="model" OnValidSubmit="@(() => submitted = true)">
+                             <SInput @bind-Value="model.Name" />
+                             <button type="submit">Go</button>
+                         </SForm>);
+
+        cut.Find("form").Submit();
+        submitted.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Invalid_submit_fires_invalid_callback()
+    {
+        var model = new Model();
+        var invalid = false;
+        var cut = Render(@<SForm Model="model" OnInvalidSubmit="@(() => invalid = true)">
+                             <SInput @bind-Value="model.Name" />
+                             <button type="submit">Go</button>
+                         </SForm>);
+
+        cut.Find("form").Submit();
+        invalid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Summary_shows_errors_on_submit()
+    {
+        var model = new Model();
+        var cut = Render(@<SForm Model="model" ShowSummary>
+                             <SInput @bind-Value="model.Name" />
+                             <button type="submit">Go</button>
+                         </SForm>);
+
+        cut.Find("form").Submit();
+
+        cut.FindAll(".s-form-summary").Should().HaveCount(1);
+        cut.Markup.Should().Contain("Name required");
+    }
+
+    [Fact]
+    public void No_summary_when_valid()
+    {
+        var model = new Model { Name = "Jane" };
+        var cut = Render(@<SForm Model="model" ShowSummary>
+                             <SInput @bind-Value="model.Name" />
+                             <button type="submit">Go</button>
+                         </SForm>);
+
+        cut.Find("form").Submit();
+        cut.FindAll(".s-form-summary").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Section_renders_title_and_description()
+    {
+        var model = new Model();
+        var cut = Render(@<SForm Model="model">
+                             <SFormSection Title="Profile" Description="Your info">
+                                 <SInput @bind-Value="model.Name" />
+                             </SFormSection>
+                         </SForm>);
+
+        cut.Find(".s-form-section-title").TextContent.Should().Contain("Profile");
+        cut.Find(".s-form-section-desc").TextContent.Should().Contain("Your info");
+    }
+
+    [Fact]
+    public void Section_two_columns_applies_class()
+    {
+        var model = new Model();
+        var cut = Render(@<SForm Model="model">
+                             <SFormSection Columns="2">
+                                 <SInput @bind-Value="model.Name" />
+                             </SFormSection>
+                         </SForm>);
+
+        cut.FindAll(".s-form-2col").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void Section_bordered_applies_class()
+    {
+        var model = new Model();
+        var cut = Render(@<SForm Model="model">
+                             <SFormSection Bordered>
+                                 <SInput @bind-Value="model.Name" />
+                             </SFormSection>
+                         </SForm>);
+
+        cut.FindAll(".s-form-section-bordered").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void Field_full_width_applies_class()
+    {
+        var model = new Model();
+        var cut = Render(@<SForm Model="model">
+                             <SFormField FullWidth>
+                                 <SInput @bind-Value="model.Name" />
+                             </SFormField>
+                         </SForm>);
+
+        cut.FindAll(".s-form-field-full").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void Field_renders_help()
+    {
+        var model = new Model();
+        var cut = Render(@<SForm Model="model">
+                             <SFormField Help="Hint text">
+                                 <SInput @bind-Value="model.Name" />
+                             </SFormField>
+                         </SForm>);
+
+        cut.Find(".s-form-field-help").TextContent.Should().Contain("Hint text");
+    }
+
+    [Fact]
+    public void Actions_align_end_by_default()
+    {
+        var model = new Model();
+        var cut = Render(@<SForm Model="model">
+                             <SFormActions>
+                                 <button>Save</button>
+                             </SFormActions>
+                         </SForm>);
+
+        cut.Find(".s-form-actions").ClassList.Should().Contain("s-fa-end");
+    }
+
+    [Theory]
+    [InlineData("start", "s-fa-start")]
+    [InlineData("center", "s-fa-center")]
+    [InlineData("between", "s-fa-between")]
+    public void Actions_align_applies_class(string align, string expected)
+    {
+        var model = new Model();
+        var cut = Render(@<SForm Model="model">
+                             <SFormActions Align="@align">
+                                 <button>Save</button>
+                             </SFormActions>
+                         </SForm>);
+
+        cut.Find(".s-form-actions").ClassList.Should().Contain(expected);
+    }
+}

@@ -257,10 +257,17 @@ public class SelectTests : SollyTestContext
     {
         IEnumerable<string> selected = [];
 
-        var cut = RenderC<SSelect<string>>(p => p
-            .Add(x => x.Items, Options)
-            .Add(x => x.Multiple, true)
-            .Bind(x => x.Values, selected, v => selected = v, () => selected));
+        var cut = RenderC<SSelect<string>>(p =>
+        {
+            var initialValue = selected.ToList();
+            p
+                .Add(x => x.Items, Options)
+                .Add(x => x.Multiple, true)
+                .Bind(x => x.Values, initialValue, v =>
+                {
+                    if (v is not null) selected = v;
+                }, () => initialValue);
+        });
 
         cut.Find(".s-select-trigger").Click();
         cut.FindAll(".s-select-item")[0].Click();
@@ -273,10 +280,17 @@ public class SelectTests : SollyTestContext
     {
         IEnumerable<string> selected = [];
 
-        var cut = RenderC<SSelect<string>>(p => p
-            .Add(x => x.Items, Options)
-            .Add(x => x.Multiple, true)
-            .Bind(x => x.Values, selected, v => selected = v, () => selected));
+        var cut = RenderC<SSelect<string>>(p =>
+        {
+            var initialValue = selected.ToList();
+            p
+                .Add(x => x.Items, Options)
+                .Add(x => x.Multiple, true)
+                .Bind(x => x.Values, initialValue, v =>
+                {
+                    if (v is not null) selected = v;
+                }, () => initialValue);
+        });
 
         cut.Find(".s-select-trigger").Click();
         cut.FindAll(".s-select-item")[1].Click();

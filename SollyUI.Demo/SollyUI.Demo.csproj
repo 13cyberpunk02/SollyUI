@@ -9,6 +9,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Solly.UI\Solly.UI.csproj" />
+      <ProjectReference Include="..\SollyUI.Demo.Shared\SollyUI.Demo.Shared.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -56,6 +57,42 @@
       <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\js\bootstrap.js.map" />
       <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\js\bootstrap.min.js" />
       <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\js\bootstrap.min.js.map" />
+      <_ContentIncludedByDefault Remove="Components\Layout\DemoLink.razor" />
+      <_ContentIncludedByDefault Remove="Components\Layout\MainLayout.razor" />
+      <_ContentIncludedByDefault Remove="Components\Layout\ReconnectModal.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\AccordionPage.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\BadgePage.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\BreadcrumbsPage.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\ButtonPage.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\CardPage.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\CheckboxPage.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\DatePickerPage.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\DrawerPage.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\FeedbackPage.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\FormLayoutPage.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\FormPage.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Home.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\IconPage.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\InputNumberPage.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\InputPage.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\MenuPage.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\ModalPage.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\PopConfirmPage.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\PopoverPage.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\PrimitivesPage.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\RadioPage.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\SelectPage.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\ShellPage.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\SliderPage.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\SwitchPage.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\TablePage.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\TabsPage.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\TextAreaPage.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\ThemingPage.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\ToastPage.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\TooltipPage.razor" />
+      <_ContentIncludedByDefault Remove="Components\Shared\DemoBlock.razor" />
+      <_ContentIncludedByDefault Remove="Components\Shared\DemoPage.razor" />
     </ItemGroup>
 
 </Project>

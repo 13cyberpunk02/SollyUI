@@ -1,0 +1,45 @@
+@inherits SComponentBase
+
+<EditForm EditContext="_editContext" OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="HandleInvalidSubmit">
+    @if (Validator)
+    {
+        <DataAnnotationsValidator />
+    }
+
+    <div class="@Cls("s-form")" style="@Style" @attributes="Attributes">
+        @if (ShowSummary)
+        {
+            <SFormSummary />
+        }
+        @ChildContent
+    </div>
+</EditForm>
+
+@code {
+    [Parameter, EditorRequired] public object Model { get; set; } = default!;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    [Parameter] public EventCallback OnValidSubmit { get; set; }
+    [Parameter] public EventCallback OnInvalidSubmit { get; set; }
+
+    /// <summary>Attach DataAnnotationsValidator automatically.</summary>
+    [Parameter] public bool Validator { get; set; } = true;
+
+    /// <summary>Show a summary of validation errors at the top on submit.</summary>
+    [Parameter] public bool ShowSummary { get; set; }
+
+    private EditContext _editContext = default!;
+    private object? _lastModel;
+
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(Model, _lastModel))
+        {
+            _editContext = new EditContext(Model);
+            _lastModel = Model;
+        }
+    }
+
+    private async Task HandleValidSubmit() => await OnValidSubmit.InvokeAsync();
+    private async Task HandleInvalidSubmit() => await OnInvalidSubmit.InvokeAsync();
+}
