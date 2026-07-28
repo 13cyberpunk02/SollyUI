@@ -18,7 +18,7 @@ A glassmorphism + neon component library for Blazor — frosted-glass surfaces, 
 dotnet add package SollyUI
 ```
 
-See the [library README](src/Solly.UI/README.md) for setup, usage, and the full component list.
+See the [library README](Solly.UI/README.md) for setup, usage, and the full component list.
 
 ## Repository layout
 
