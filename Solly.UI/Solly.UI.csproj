@@ -10,7 +10,7 @@
 
     <!-- NuGet package metadata -->
     <PackageId>SollyUI</PackageId>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <Authors>13cyberpunk02</Authors>
     <Description>Glassmorphism + neon component library for Blazor Server and WebAssembly.</Description>
     <PackageTags>blazor;components;ui;glassmorphism;neon;razor;blazor-server;blazor-wasm;component-library</PackageTags>
@@ -19,7 +19,7 @@
     <RepositoryUrl>https://github.com/13cyberpunk02/SollyUI</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageIcon>icon.png</PackageIcon>
+    <PackageIcon>CommonFiles\icon.png</PackageIcon>
     <PackageReleaseNotes>Initial preview release.</PackageReleaseNotes>
     <Copyright>Copyright (c) 2026 13cyberpunk02</Copyright>
 
