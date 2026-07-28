@@ -13,7 +13,7 @@ Works in **Blazor Server** and **Blazor WebAssembly**. No Node build step — CS
 ## Install
 
 ```bash
-dotnet add package Solly.UI
+dotnet add package SollyUI
 ```
 
 ## Setup
