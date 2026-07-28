@@ -1,10 +1,16 @@
 # SollyUI
 
 A glassmorphism + neon component library for Blazor — frosted-glass surfaces, a single-hue neon accent system, and a full component set for Blazor Server and WebAssembly.
-
 [![NuGet](https://img.shields.io/nuget/v/SollyUI.svg)](https://www.nuget.org/packages/SollyUI)
 [![License: MIT](https://img.shields.io/badge/License-MIT-informational.svg)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4.svg)](https://dotnet.microsoft.com)
+
+# SollyUI with dark theme
+![SollyUI with dark theme](https://raw.githubusercontent.com/13cyberpunk02/SollyUI/refs/heads/main/Solly.UI/CommonFiles/1.jpg)
+# SollyUI with light theme
+![SollyUI with light theme](https://raw.githubusercontent.com/13cyberpunk02/SollyUI/refs/heads/main/Solly.UI/CommonFiles/2.jpg)
+# Simple page from exmpale project
+![Simple page from exmpale project](https://raw.githubusercontent.com/13cyberpunk02/SollyUI/refs/heads/main/Solly.UI/CommonFiles/3.jpg)
 
 ## Install
 
