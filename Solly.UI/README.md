@@ -1,10 +1,10 @@
-# Solly.UI
+﻿# Solly.UI
 
 A glassmorphism + neon component library for Blazor. Frosted-glass surfaces, a single-hue neon accent system, and a full set of form, overlay, layout, and data components — all driven by one design-token palette you can recolor at runtime.
 
 Works in **Blazor Server** and **Blazor WebAssembly**. No Node build step — CSS and fonts ship inside the package as static web assets.
 
-[![NuGet](https://img.shields.io/nuget/v/Solly.UI.svg)](https://www.nuget.org/packages/Solly.UI)
+[![NuGet](https://img.shields.io/nuget/v/Solly.UI.svg)](https://www.nuget.org/packages/SollyUI)
 [![License: MIT](https://img.shields.io/badge/License-MIT-informational.svg)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4.svg)](https://dotnet.microsoft.com)
 

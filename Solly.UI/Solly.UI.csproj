@@ -4,15 +4,51 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- static assets served at _content/SollyUI/... -->
+    <StaticWebAssetBasePath>SollyUI</StaticWebAssetBasePath>
+
+    <!-- NuGet package metadata -->
+    <PackageId>SollyUI</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>13cyberpunk02</Authors>
+    <Description>Glassmorphism + neon component library for Blazor Server and WebAssembly.</Description>
+    <PackageTags>blazor;components;ui;glassmorphism;neon;razor;blazor-server;blazor-wasm;component-library</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/13cyberpunk02/SollyUI</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/13cyberpunk02/SollyUI</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReleaseNotes>Initial preview release.</PackageReleaseNotes>
+    <Copyright>Copyright (c) 2026 13cyberpunk02</Copyright>
+
+    <!-- clean package build -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+
+    <!-- suppress the "missing XML doc" noise from generated doc file -->
+    <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
 
-
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="icon.png" Pack="true" PackagePath="\" />
+  </ItemGroup>  
+  
   <ItemGroup>
     <SupportedPlatform Include="browser" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.9" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.301">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
