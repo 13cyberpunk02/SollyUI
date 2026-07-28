@@ -1,0 +1,182 @@
+@inherits SollyTestContext
+
+@code {
+    [Fact]
+    public void Registers_all_items()
+    {
+        var cut = Render(@<SAccordion>
+                             <SAccordionItem Title="One"><span>c1</span></SAccordionItem>
+                             <SAccordionItem Title="Two"><span>c2</span></SAccordionItem>
+                             <SAccordionItem Title="Three"><span>c3</span></SAccordionItem>
+                         </SAccordion>);
+
+        cut.FindAll(".s-acc-item").Should().HaveCount(3);
+    }
+
+    [Fact]
+    public void Renders_item_titles()
+    {
+        var cut = Render(@<SAccordion>
+                             <SAccordionItem Title="First"><span>c1</span></SAccordionItem>
+                             <SAccordionItem Title="Second"><span>c2</span></SAccordionItem>
+                         </SAccordion>);
+
+        cut.FindAll(".s-acc-title")[0].TextContent.Should().Contain("First");
+        cut.FindAll(".s-acc-title")[1].TextContent.Should().Contain("Second");
+    }
+
+    [Fact]
+    public void All_closed_by_default()
+    {
+        var cut = Render(@<SAccordion>
+                             <SAccordionItem Title="One"><span>c1</span></SAccordionItem>
+                             <SAccordionItem Title="Two"><span>c2</span></SAccordionItem>
+                         </SAccordion>);
+
+        cut.FindAll(".s-acc-item.s-open").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void InitiallyOpen_opens_item()
+    {
+        var cut = Render(@<SAccordion>
+                             <SAccordionItem Title="One" InitiallyOpen><span>c1</span></SAccordionItem>
+                             <SAccordionItem Title="Two"><span>c2</span></SAccordionItem>
+                         </SAccordion>);
+
+        cut.FindAll(".s-acc-item.s-open").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void Clicking_header_opens_item()
+    {
+        var cut = Render(@<SAccordion>
+                             <SAccordionItem Title="One"><span>c1</span></SAccordionItem>
+                             <SAccordionItem Title="Two"><span>c2</span></SAccordionItem>
+                         </SAccordion>);
+
+        cut.FindAll(".s-acc-header")[0].Click();
+
+        cut.FindAll(".s-acc-item")[0].ClassList.Should().Contain("s-open");
+    }
+
+    [Fact]
+    public void Clicking_open_item_closes_it()
+    {
+        var cut = Render(@<SAccordion>
+                             <SAccordionItem Title="One" InitiallyOpen><span>c1</span></SAccordionItem>
+                         </SAccordion>);
+
+        cut.Find(".s-acc-header").Click();
+
+        cut.FindAll(".s-acc-item.s-open").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Multiple_can_be_open_by_default()
+    {
+        var cut = Render(@<SAccordion>
+                             <SAccordionItem Title="One"><span>c1</span></SAccordionItem>
+                             <SAccordionItem Title="Two"><span>c2</span></SAccordionItem>
+                         </SAccordion>);
+
+        cut.FindAll(".s-acc-header")[0].Click();
+        cut.FindAll(".s-acc-header")[1].Click();
+
+        cut.FindAll(".s-acc-item.s-open").Should().HaveCount(2);
+    }
+
+    [Fact]
+    public void Single_mode_closes_others()
+    {
+        var cut = Render(@<SAccordion Single>
+                             <SAccordionItem Title="One"><span>c1</span></SAccordionItem>
+                             <SAccordionItem Title="Two"><span>c2</span></SAccordionItem>
+                         </SAccordion>);
+
+        cut.FindAll(".s-acc-header")[0].Click();
+        cut.FindAll(".s-acc-header")[1].Click();
+
+        cut.FindAll(".s-acc-item.s-open").Should().HaveCount(1);
+        cut.FindAll(".s-acc-item")[1].ClassList.Should().Contain("s-open");
+    }
+
+    [Fact]
+    public void Disabled_item_does_not_open()
+    {
+        var cut = Render(@<SAccordion>
+                             <SAccordionItem Title="Locked" Disabled><span>c1</span></SAccordionItem>
+                         </SAccordion>);
+
+        cut.Find(".s-acc-header").Click();
+
+        cut.FindAll(".s-acc-item.s-open").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Disabled_header_has_attribute()
+    {
+        var cut = Render(@<SAccordion>
+                             <SAccordionItem Title="Locked" Disabled><span>c1</span></SAccordionItem>
+                         </SAccordion>);
+
+        cut.Find(".s-acc-header").HasAttribute("disabled").Should().BeTrue();
+    }
+
+    [Fact]
+    public void Renders_badge()
+    {
+        var cut = Render(@<SAccordion>
+                             <SAccordionItem Title="Inbox" Badge="12"><span>c1</span></SAccordionItem>
+                         </SAccordion>);
+
+        cut.Find(".s-acc-badge").TextContent.Should().Contain("12");
+    }
+
+    [Fact]
+    public void Renders_lead_icon()
+    {
+        var cut = Render(@<SAccordion>
+                             <SAccordionItem Title="One" Icon="@SIcons.Bell"><span>c1</span></SAccordionItem>
+                         </SAccordion>);
+
+        cut.FindAll(".s-acc-lead").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void Flush_applies_class()
+    {
+        var cut = Render(@<SAccordion Flush>
+                             <SAccordionItem Title="One"><span>c1</span></SAccordionItem>
+                         </SAccordion>);
+
+        cut.Find(".s-accordion").ClassList.Should().Contain("s-accordion-flush");
+    }
+
+    [Fact]
+    public void Header_has_aria_expanded()
+    {
+        var cut = Render(@<SAccordion>
+                             <SAccordionItem Title="One"><span>c1</span></SAccordionItem>
+                         </SAccordion>);
+
+        cut.Find(".s-acc-header").GetAttribute("aria-expanded").Should().Be("false");
+
+        cut.Find(".s-acc-header").Click();
+
+        cut.Find(".s-acc-header").GetAttribute("aria-expanded").Should().Be("true");
+    }
+
+    [Fact]
+    public void TitleContent_overrides_title()
+    {
+        var cut = Render(@<SAccordion>
+                             <SAccordionItem>
+                                 <TitleContent><span id="rich">Rich title</span></TitleContent>
+                                 <ChildContent><span>body</span></ChildContent>
+                             </SAccordionItem>
+                         </SAccordion>);
+
+        cut.FindAll("#rich").Should().HaveCount(1);
+    }
+}

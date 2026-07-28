@@ -1,0 +1,247 @@
+@inherits SollyTestContext
+
+@code {
+    [Fact]
+    public void Trigger_renders()
+    {
+        var cut = Render(@<SDropdownMenu>
+                             <ChildContent><button>Open</button></ChildContent>
+                             <MenuContent><SMenuItem>Item</SMenuItem></MenuContent>
+                         </SDropdownMenu>);
+
+        cut.FindAll(".s-dd-trigger").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void Menu_closed_by_default()
+    {
+        var cut = Render(@<SDropdownMenu>
+                             <ChildContent><button>Open</button></ChildContent>
+                             <MenuContent><SMenuItem>Item</SMenuItem></MenuContent>
+                         </SDropdownMenu>);
+
+        cut.FindAll(".s-menu-item").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Clicking_trigger_opens_menu()
+    {
+        var cut = Render(@<SDropdownMenu>
+                             <ChildContent><button>Open</button></ChildContent>
+                             <MenuContent>
+                                 <SMenuItem>One</SMenuItem>
+                                 <SMenuItem>Two</SMenuItem>
+                             </MenuContent>
+                         </SDropdownMenu>);
+
+        cut.Find(".s-dd-trigger").Click();
+
+        cut.FindAll(".s-menu-item").Should().HaveCount(2);
+    }
+
+    [Fact]
+    public void Renders_item_labels()
+    {
+        var cut = Render(@<SDropdownMenu>
+                             <ChildContent><button>Open</button></ChildContent>
+                             <MenuContent>
+                                 <SMenuItem>Rename</SMenuItem>
+                                 <SMenuItem>Delete</SMenuItem>
+                             </MenuContent>
+                         </SDropdownMenu>);
+
+        cut.Find(".s-dd-trigger").Click();
+
+        cut.Markup.Should().Contain("Rename");
+        cut.Markup.Should().Contain("Delete");
+    }
+
+    [Fact]
+    public void Item_click_fires_callback()
+    {
+        var clicked = false;
+
+        var cut = Render(@<SDropdownMenu>
+                             <ChildContent><button>Open</button></ChildContent>
+                             <MenuContent>
+                                 <SMenuItem OnClick="@(() => clicked = true)">Go</SMenuItem>
+                             </MenuContent>
+                         </SDropdownMenu>);
+
+        cut.Find(".s-dd-trigger").Click();
+        cut.Find(".s-menu-item").Click();
+
+        clicked.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Renders_item_icon()
+    {
+        var cut = Render(@<SDropdownMenu>
+                             <ChildContent><button>Open</button></ChildContent>
+                             <MenuContent>
+                                 <SMenuItem Icon="@SIcons.Check">With icon</SMenuItem>
+                             </MenuContent>
+                         </SDropdownMenu>);
+
+        cut.Find(".s-dd-trigger").Click();
+
+        cut.FindAll(".s-menu-icon svg").Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public void Renders_shortcut()
+    {
+        var cut = Render(@<SDropdownMenu>
+                             <ChildContent><button>Open</button></ChildContent>
+                             <MenuContent>
+                                 <SMenuItem Shortcut="⌘C">Copy</SMenuItem>
+                             </MenuContent>
+                         </SDropdownMenu>);
+
+        cut.Find(".s-dd-trigger").Click();
+
+        cut.Find(".s-menu-kbd").TextContent.Should().Contain("⌘C");
+    }
+
+    [Fact]
+    public void Checked_item_renders_check()
+    {
+        var cut = Render(@<SDropdownMenu>
+                             <ChildContent><button>Open</button></ChildContent>
+                             <MenuContent>
+                                 <SMenuItem Checked="true">On</SMenuItem>
+                             </MenuContent>
+                         </SDropdownMenu>);
+
+        cut.Find(".s-dd-trigger").Click();
+
+        cut.FindAll(".s-menu-check").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void Danger_item_has_class()
+    {
+        var cut = Render(@<SDropdownMenu>
+                             <ChildContent><button>Open</button></ChildContent>
+                             <MenuContent>
+                                 <SMenuItem Danger="true">Delete</SMenuItem>
+                             </MenuContent>
+                         </SDropdownMenu>);
+
+        cut.Find(".s-dd-trigger").Click();
+
+        cut.Find(".s-menu-item").ClassList.Should().Contain("s-menu-danger");
+    }
+
+    [Fact]
+    public void Disabled_item_has_attribute()
+    {
+        var cut = Render(@<SDropdownMenu>
+                             <ChildContent><button>Open</button></ChildContent>
+                             <MenuContent>
+                                 <SMenuItem Disabled="true">Locked</SMenuItem>
+                             </MenuContent>
+                         </SDropdownMenu>);
+
+        cut.Find(".s-dd-trigger").Click();
+
+        cut.Find(".s-menu-item").HasAttribute("disabled").Should().BeTrue();
+    }
+
+    [Fact]
+    public void Renders_divider()
+    {
+        var cut = Render(@<SDropdownMenu>
+                             <ChildContent><button>Open</button></ChildContent>
+                             <MenuContent>
+                                 <SMenuItem>One</SMenuItem>
+                                 <SMenuDivider />
+                                 <SMenuItem>Two</SMenuItem>
+                             </MenuContent>
+                         </SDropdownMenu>);
+
+        cut.Find(".s-dd-trigger").Click();
+
+        cut.FindAll(".s-menu-divider").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void Renders_group_label()
+    {
+        var cut = Render(@<SDropdownMenu>
+                             <ChildContent><button>Open</button></ChildContent>
+                             <MenuContent>
+                                 <SMenuLabel>Section</SMenuLabel>
+                                 <SMenuItem>Item</SMenuItem>
+                             </MenuContent>
+                         </SDropdownMenu>);
+
+        cut.Find(".s-dd-trigger").Click();
+
+        cut.Find(".s-menu-grouplabel").TextContent.Should().Contain("Section");
+    }
+
+    // ---- submenu ----
+
+    [Fact]
+    public void Submenu_item_renders_arrow()
+    {
+        var cut = Render(@<SDropdownMenu>
+                             <ChildContent><button>Open</button></ChildContent>
+                             <MenuContent>
+                                 <SMenuItem>
+                                     <ChildContent>Export</ChildContent>
+                                     <SubmenuContent>
+                                         <SMenuItem>PDF</SMenuItem>
+                                     </SubmenuContent>
+                                 </SMenuItem>
+                             </MenuContent>
+                         </SDropdownMenu>);
+
+        cut.Find(".s-dd-trigger").Click();
+
+        cut.FindAll(".s-menu-arrow").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void Submenu_closed_by_default()
+    {
+        var cut = Render(@<SDropdownMenu>
+                             <ChildContent><button>Open</button></ChildContent>
+                             <MenuContent>
+                                 <SMenuItem>
+                                     <ChildContent>Export</ChildContent>
+                                     <SubmenuContent>
+                                         <SMenuItem>PDF</SMenuItem>
+                                     </SubmenuContent>
+                                 </SMenuItem>
+                             </MenuContent>
+                         </SDropdownMenu>);
+
+        cut.Find(".s-dd-trigger").Click();
+
+        cut.Markup.Should().NotContain("PDF");
+    }
+
+    [Fact]
+    public void Clicking_submenu_parent_opens_flyout()
+    {
+        var cut = Render(@<SDropdownMenu>
+                             <ChildContent><button>Open</button></ChildContent>
+                             <MenuContent>
+                                 <SMenuItem>
+                                     <ChildContent>Export</ChildContent>
+                                     <SubmenuContent>
+                                         <SMenuItem>PDF</SMenuItem>
+                                     </SubmenuContent>
+                                 </SMenuItem>
+                             </MenuContent>
+                         </SDropdownMenu>);
+
+        cut.Find(".s-dd-trigger").Click();
+        cut.Find(".s-menu-sub .s-menu-item").Click();
+
+        cut.Markup.Should().Contain("PDF");
+    }
+}

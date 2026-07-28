@@ -36,11 +36,11 @@
         <SDrawer @bind-Open="_filters" Side="SDrawerSide.Right" Title="Фильтры" Width="24rem">
             <ChildContent>
                 <div class="demo-col" style="max-width:none;gap:20px;">
-                    <SSelect TValue="string" Items="@(["Все","Активные","Архив"])"
-                             Value="@_status" ValueChanged="@(v => _status = v)" Label="Статус" />
-                    <SSlider Value="_price" ValueChanged="@((v) => _price = v)"
-                             Label="Цена до" Min="0" Max="1000" Format="@(v => $"{v:0} €")" />
-                    <SCheckbox @bind-Value="_inStock" Label="Только в наличии" />
+                    <SSelect TValue="string" Items="@(new[] { "Все", "Активные", "Архив" })"
+                             Value="@_status" ValueChanged="@((string? v) => _status = v)" Label="Статус" />
+                    <SSlider Value="_price" ValueChanged="@((double v) => _price = v)"
+                             Label="Цена до" Min="0" Max="1000" Format="@(v => $"{v:0} €")"/>
+                    <SCheckbox @bind-Value="_inStock" Label="Только в наличии"/>
                 </div>
             </ChildContent>
             <FooterContent>
@@ -54,7 +54,7 @@
         <div class="demo-row">
             <SButton OnClick="@(() => _drawer!.OpenAsync())">Open via ref</SButton>
         </div>
-        <SDrawer @ref="_drawer" Side="SDrawerSide.Right" Title="Через ref">
+        <SDrawer @ref="_drawer" @bind-Open="_refOpen" Side="SDrawerSide.Right" Title="Через ref">
             Открыто вызовом OpenAsync().
         </SDrawer>
     </DemoBlock>
@@ -64,12 +64,18 @@
 @code {
     bool _left, _right, _filters;
     SDrawer? _drawer;
+    bool _refOpen;
 
     string? _status = "Все";
     double _price = 500;
     bool _inStock = true;
 
-    void ResetFilters() { _status = "Все"; _price = 500; _inStock = true; }
+    void ResetFilters()
+    {
+        _status = "Все";
+        _price = 500;
+        _inStock = true;
+    }
 
     const string _basicCode = """
 <SButton OnClick="() => _open = true">Открыть</SButton>
@@ -101,4 +107,5 @@
 
 @code { SDrawer? _drawer; }
 """;
+
 }

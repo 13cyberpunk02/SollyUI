@@ -57,4 +57,28 @@ public class ThemeServiceTests : SollyTestContext
         Svc.Theme.Should().Be("ocean");
         Svc.IsDark.Should().BeFalse();
     }
+    
+    [Fact]
+    public async Task SetPaletteAsync_enum_updates_palette()
+    {
+        await Svc.SetPaletteAsync(SPalette.Violet);
+        var (h, _, _) = SPalette.Violet.ToHsl();
+        Svc.Palette.H.Should().Be(h);
+    }
+
+    [Fact]
+    public async Task SetPaletteAsync_raw_updates_palette()
+    {
+        await Svc.SetPaletteAsync(200, 90, 50);
+        Svc.Palette.Should().Be((200, 90, 50));
+    }
+
+    [Fact]
+    public async Task SetPaletteAsync_raises_changed()
+    {
+        var raised = 0;
+        Svc.Changed += () => raised++;
+        await Svc.SetPaletteAsync(SPalette.Cyan);
+        raised.Should().Be(1);
+    }
 }

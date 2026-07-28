@@ -112,8 +112,14 @@ export function portal(el) {
     return {
         dispose: () => {
             try {
-                home?.insertBefore(el, next);
+                if (!home) return;
+                if (next && next.parentElement === home) {
+                    home.insertBefore(el, next);
+                } else {
+                    home.appendChild(el);
+                }
             } catch {
+                el.remove();
             }
         }
     };

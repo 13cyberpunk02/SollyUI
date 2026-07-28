@@ -96,6 +96,7 @@ public sealed class SollyInterop(IJSRuntime js) : IAsyncDisposable, IDisposable
         }
         catch (JSDisconnectedException) { return null; }
         catch (ObjectDisposedException) { return null; }
+        catch (JSException) { return null; }
     }
     
     public async ValueTask<IJSObjectReference?> TrapFocusAsync<T>(
@@ -156,14 +157,5 @@ public sealed class SollyInterop(IJSRuntime js) : IAsyncDisposable, IDisposable
     
     public void Dispose()
     {
-        if (!_module.IsValueCreated) return;
-        try
-        {
-            var m = _module.Value;
-            m.Dispose();
-        }
-        catch (JSDisconnectedException) { }
-        catch (ObjectDisposedException) { }
-        catch (TaskCanceledException) { }
     }
 }

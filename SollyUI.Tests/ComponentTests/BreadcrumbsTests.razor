@@ -1,0 +1,144 @@
+@inherits SollyTestContext
+
+@code {
+    [Fact]
+    public void Renders_all_crumbs()
+    {
+        var cut = Render(@<SBreadcrumbs>
+                             <SBreadcrumb Href="/" Label="Home" />
+                             <SBreadcrumb Href="/a" Label="Level" />
+                             <SBreadcrumb Label="Current" />
+                         </SBreadcrumbs>);
+
+        cut.FindAll(".s-bc-item").Should().HaveCount(3);
+    }
+
+    [Fact]
+    public void Renders_labels()
+    {
+        var cut = Render(@<SBreadcrumbs>
+                             <SBreadcrumb Href="/" Label="Home" />
+                             <SBreadcrumb Label="Current" />
+                         </SBreadcrumbs>);
+
+        cut.Markup.Should().Contain("Home");
+        cut.Markup.Should().Contain("Current");
+    }
+
+    [Fact]
+    public void Crumb_with_href_is_a_link()
+    {
+        var cut = Render(@<SBreadcrumbs>
+                             <SBreadcrumb Href="/home" Label="Home" />
+                             <SBreadcrumb Label="Current" />
+                         </SBreadcrumbs>);
+
+        var link = cut.Find(".s-bc-link");
+        link.GetAttribute("href").Should().Be("/home");
+    }
+
+    [Fact]
+    public void Last_crumb_is_current_not_link()
+    {
+        var cut = Render(@<SBreadcrumbs>
+                             <SBreadcrumb Href="/" Label="Home" />
+                             <SBreadcrumb Label="Current" />
+                         </SBreadcrumbs>);
+
+        cut.FindAll(".s-bc-current").Should().HaveCount(1);
+        cut.Find(".s-bc-current").TextContent.Should().Contain("Current");
+    }
+
+    [Fact]
+    public void Crumb_without_href_is_current()
+    {
+        var cut = Render(@<SBreadcrumbs>
+                             <SBreadcrumb Label="Only" />
+                         </SBreadcrumbs>);
+
+        cut.FindAll(".s-bc-current").Should().HaveCount(1);
+        cut.FindAll(".s-bc-link").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Separator_between_crumbs()
+    {
+        var cut = Render(@<SBreadcrumbs>
+                             <SBreadcrumb Href="/" Label="A" />
+                             <SBreadcrumb Href="/b" Label="B" />
+                             <SBreadcrumb Label="C" />
+                         </SBreadcrumbs>);
+
+        // 3 crumbs → 2 separators
+        cut.FindAll(".s-bc-sep").Should().HaveCount(2);
+    }
+
+    [Fact]
+    public void Last_crumb_has_no_trailing_separator()
+    {
+        var cut = Render(@<SBreadcrumbs>
+                             <SBreadcrumb Href="/" Label="A" />
+                             <SBreadcrumb Label="B" />
+                         </SBreadcrumbs>);
+
+        cut.FindAll(".s-bc-sep").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void Renders_crumb_icon()
+    {
+        var cut = Render(@<SBreadcrumbs>
+                             <SBreadcrumb Href="/" Icon="@SIcons.Home" Label="Home" />
+                             <SBreadcrumb Label="X" />
+                         </SBreadcrumbs>);
+
+        cut.FindAll("svg").Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public void Collapses_middle_when_over_max()
+    {
+        var cut = Render(@<SBreadcrumbs MaxVisible="2">
+                             <SBreadcrumb Href="/" Label="Home" />
+                             <SBreadcrumb Href="/a" Label="A" />
+                             <SBreadcrumb Href="/b" Label="B" />
+                             <SBreadcrumb Href="/c" Label="C" />
+                             <SBreadcrumb Label="Last" />
+                         </SBreadcrumbs>);
+
+        cut.FindAll(".s-bc-ellipsis").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void No_collapse_when_under_max()
+    {
+        var cut = Render(@<SBreadcrumbs MaxVisible="5">
+                             <SBreadcrumb Href="/" Label="Home" />
+                             <SBreadcrumb Href="/a" Label="A" />
+                             <SBreadcrumb Label="Last" />
+                         </SBreadcrumbs>);
+
+        cut.FindAll(".s-bc-ellipsis").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Has_breadcrumb_aria_label()
+    {
+        var cut = Render(@<SBreadcrumbs>
+                             <SBreadcrumb Label="Only" />
+                         </SBreadcrumbs>);
+
+        cut.Find("nav").GetAttribute("aria-label").Should().Be("Breadcrumb");
+    }
+
+    [Fact]
+    public void Last_crumb_has_aria_current()
+    {
+        var cut = Render(@<SBreadcrumbs>
+                             <SBreadcrumb Href="/" Label="Home" />
+                             <SBreadcrumb Label="Current" />
+                         </SBreadcrumbs>);
+
+        cut.Find(".s-bc-current").GetAttribute("aria-current").Should().Be("page");
+    }
+}

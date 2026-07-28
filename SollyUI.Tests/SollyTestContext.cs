@@ -15,24 +15,19 @@ public abstract class SollyTestContext : BunitContext
     protected SollyTestContext()
     {
         Services.AddSollyUI();
+        JSInterop.Mode = JSRuntimeMode.Loose;   // ← незастабленное возвращает default, не кидает
 
-        var module = JSInterop.SetupModule("./_content/Solly.UI/solly.js");
-
-        module.SetupVoid("anchor", _ => true);
-        module.SetupVoid("anchorTip", _ => true);
-        module.SetupVoid("focusEl", _ => true);
-        module.SetupVoid("scrollItemIntoView", _ => true);
-        module.SetupVoid("setTheme", _ => true);
-
-        foreach (var fn in new[] { "registerDismiss", "portal", "trapFocus", "lockScroll", "autoGrow" })
-        {
-            var handle = module.SetupModule(fn);
-            handle.SetupVoid("dispose", _ => true);
-        }
-
-        // calls returning values
-        module.Setup<string?>("getStoredTheme", _ => true).SetResult(null);
-        module.Setup<string>("getSystemTheme", _ => true).SetResult("dark");
+        // остальное можно оставить или убрать — в Loose оно не обязательно,
+        // но пусть будет для явности:
+        var m = JSInterop.SetupModule("./_content/Solly.UI/solly.js");
+        m.SetupVoid("anchor", _ => true);
+        m.SetupVoid("anchorTip", _ => true);
+        m.SetupVoid("focusEl", _ => true);
+        m.SetupVoid("scrollItemIntoView", _ => true);
+        m.SetupVoid("setTheme", _ => true).SetVoidResult();
+        m.SetupVoid("setPalette", _ => true).SetVoidResult();
+        m.Setup<string?>("getStoredTheme", _ => true).SetResult(null);
+        m.Setup<int[]?>("getStoredPalette", _ => true).SetResult(null);
     }
 
     /// <summary>

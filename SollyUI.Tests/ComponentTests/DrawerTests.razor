@@ -1,0 +1,136 @@
+@inherits SollyTestContext
+
+@code {
+    [Fact]
+    public void Closed_by_default_renders_nothing()
+    {
+        var cut = Render(@<SDrawer Title="Panel">
+                             <p id="body">content</p>
+                         </SDrawer>);
+
+        cut.FindAll("#body").Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task OpenAsync_renders_panel()
+    {
+        var cut = Render(@<SDrawer Title="Panel">
+                             <p id="body">content</p>
+                         </SDrawer>);
+
+        var drawer = cut.FindComponent<SDrawer>();
+        await cut.InvokeAsync(() => drawer.Instance.OpenAsync());
+
+        cut.FindAll("#body").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task Renders_title()
+    {
+        var cut = Render(@<SDrawer Title="Filters">
+                             <p>content</p>
+                         </SDrawer>);
+
+        var drawer = cut.FindComponent<SDrawer>();
+        await cut.InvokeAsync(() => drawer.Instance.OpenAsync());
+
+        cut.Find(".s-drawer-title").TextContent.Should().Contain("Filters");
+    }
+
+    [Fact]
+    public async Task Left_side_applies_class()
+    {
+        var cut = Render(@<SDrawer Title="P" Side="SDrawerSide.Left">
+                             <p>content</p>
+                         </SDrawer>);
+
+        var drawer = cut.FindComponent<SDrawer>();
+        await cut.InvokeAsync(() => drawer.Instance.OpenAsync());
+
+        cut.Find(".s-drawer").ClassList.Should().Contain("s-drawer-left");
+    }
+
+    [Fact]
+    public async Task Right_side_applies_class()
+    {
+        var cut = Render(@<SDrawer Title="P" Side="SDrawerSide.Right">
+                             <p>content</p>
+                         </SDrawer>);
+
+        var drawer = cut.FindComponent<SDrawer>();
+        await cut.InvokeAsync(() => drawer.Instance.OpenAsync());
+
+        cut.Find(".s-drawer").ClassList.Should().Contain("s-drawer-right");
+    }
+
+    [Fact]
+    public async Task Closable_renders_x_button()
+    {
+        var cut = Render(@<SDrawer Title="P" Closable="true">
+                             <p>content</p>
+                         </SDrawer>);
+
+        var drawer = cut.FindComponent<SDrawer>();
+        await cut.InvokeAsync(() => drawer.Instance.OpenAsync());
+
+        cut.FindAll(".s-drawer-x").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task Non_closable_hides_x_button()
+    {
+        var cut = Render(@<SDrawer Title="P" Closable="false">
+                             <p>content</p>
+                         </SDrawer>);
+
+        var drawer = cut.FindComponent<SDrawer>();
+        await cut.InvokeAsync(() => drawer.Instance.OpenAsync());
+
+        cut.FindAll(".s-drawer-x").Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Renders_footer()
+    {
+        var cut = Render(@<SDrawer Title="P">
+                             <ChildContent><p>body</p></ChildContent>
+                             <FooterContent><button id="save">Save</button></FooterContent>
+                         </SDrawer>);
+
+        var drawer = cut.FindComponent<SDrawer>();
+        await cut.InvokeAsync(() => drawer.Instance.OpenAsync());
+
+        cut.FindAll("#save").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task Has_dialog_role()
+    {
+        var cut = Render(@<SDrawer Title="P">
+                             <p>content</p>
+                         </SDrawer>);
+
+        var drawer = cut.FindComponent<SDrawer>();
+        await cut.InvokeAsync(() => drawer.Instance.OpenAsync());
+
+        var el = cut.Find(".s-drawer");
+        el.GetAttribute("role").Should().Be("dialog");
+        el.GetAttribute("aria-modal").Should().Be("true");
+    }
+
+    [Fact]
+    public async Task Escape_closes_when_closable()
+    {
+        var cut = Render(@<SDrawer Title="P" Closable="true">
+                             <p id="body">content</p>
+                         </SDrawer>);
+
+        var drawer = cut.FindComponent<SDrawer>();
+        await cut.InvokeAsync(() => drawer.Instance.OpenAsync());
+        await cut.InvokeAsync(() => drawer.Instance.OnEscapeAsync());
+
+        // after close animation the panel is removed; body gone
+        await cut.WaitForAssertionAsync(() => cut.FindAll("#body").Should().BeEmpty(),
+            timeout: TimeSpan.FromSeconds(1));
+    }
+}

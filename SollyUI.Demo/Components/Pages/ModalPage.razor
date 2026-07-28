@@ -1,12 +1,11 @@
 ﻿@page "/modal"
-@using SollyUI.Demo.Components.Shared
 @inject SToastService Toasts
 
 <DemoPage Title="Modal" Subtitle="Focus-trapped dialog with scroll lock, backdrop dismiss and Escape.">
 
     <DemoBlock Title="Basic" Code="@_basicCode">
         <div class="demo-col">
-            <SButton OnClick="() => _basic.OpenAsync()">Open modal</SButton>
+            <SButton OnClick="@(() => _basic.OpenAsync())">Open modal</SButton>
 
             <SModal @ref="_basic" Title="Hello">
                 <ChildContent>
@@ -30,10 +29,10 @@
                     <p>This action cannot be undone. The item will be permanently removed.</p>
                 </ChildContent>
                 <FooterContent>
-                    <SButton Variant="SVariant.Ghost" OnClick="() => _confirm.CloseAsync(false)">
+                    <SButton Variant="SVariant.Ghost" OnClick="@(() => _confirm.CloseAsync(false))">
                         Cancel
                     </SButton>
-                    <SButton Variant="SVariant.Danger" OnClick="() => _confirm.CloseAsync(true)">
+                    <SButton Variant="SVariant.Danger" OnClick="@(() => _confirm.CloseAsync(true))">
                         Delete
                     </SButton>
                 </FooterContent>

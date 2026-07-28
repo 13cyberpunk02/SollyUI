@@ -1,0 +1,333 @@
+@inherits SollyTestContext
+
+@code {
+    public record Person(int Id, string Name, string Role, int Age);
+
+    private static List<Person> Sample =>
+    [
+        new(1, "Anna", "Dev", 30),
+        new(2, "Boris", "Design", 25),
+        new(3, "Clara", "Dev", 35),
+        new(4, "Dmitri", "QA", 28),
+        new(5, "Elena", "Dev", 40)
+    ];
+
+    [Fact]
+    public void Renders_column_headers()
+    {
+        var cut = Render(@<STable TItem="Person" Items="Sample">
+                             <SColumn TItem="Person" Title="Name" Value="@(p => p.Name)" />
+                             <SColumn TItem="Person" Title="Role" Value="@(p => p.Role)" />
+                         </STable>);
+
+        cut.Markup.Should().Contain("Name");
+        cut.Markup.Should().Contain("Role");
+    }
+
+    [Fact]
+    public void Renders_all_rows()
+    {
+        var cut = Render(@<STable TItem="Person" Items="Sample">
+                             <SColumn TItem="Person" Title="Name" Value="@(p => p.Name)" />
+                         </STable>);
+
+        cut.FindAll("tbody tr").Should().HaveCount(5);
+    }
+
+    [Fact]
+    public void Renders_cell_values()
+    {
+        var cut = Render(@<STable TItem="Person" Items="Sample">
+                             <SColumn TItem="Person" Title="Name" Value="@(p => p.Name)" />
+                         </STable>);
+
+        cut.Markup.Should().Contain("Anna");
+        cut.Markup.Should().Contain("Elena");
+    }
+
+    [Fact]
+    public void Empty_items_shows_empty_state()
+    {
+        var cut = Render(@<STable TItem="Person" Items="@(new List<Person>())" EmptyText="Nothing">
+                             <SColumn TItem="Person" Title="Name" Value="@(p => p.Name)" />
+                         </STable>);
+
+        cut.Find(".s-table-empty").TextContent.Should().Contain("Nothing");
+    }
+
+    [Fact]
+    public void Format_is_applied()
+    {
+        var cut = Render(@<STable TItem="Person" Items="Sample">
+                             <SColumn TItem="Person" Title="Age" Value="@(p => p.Age)" Format="000" />
+                         </STable>);
+
+        cut.Markup.Should().Contain("030");
+    }
+
+    [Fact]
+    public void Cell_template_is_used()
+    {
+        var cut = Render(@<STable TItem="Person" Items="Sample">
+                             <SColumn TItem="Person" Title="Name">
+                                 <strong class="tmpl">@context.Name</strong>
+                             </SColumn>
+                         </STable>);
+
+        cut.FindAll("strong.tmpl").Should().HaveCount(5);
+    }
+
+    // ---- sorting ----
+
+    [Fact]
+    public void Sortable_column_renders_sort_button()
+    {
+        var cut = Render(@<STable TItem="Person" Items="Sample">
+                             <SColumn TItem="Person" Name="name" Title="Name" Value="@(p => p.Name)" Sortable />
+                         </STable>);
+
+        cut.FindAll(".s-table-sort").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void Non_sortable_has_no_sort_button()
+    {
+        var cut = Render(@<STable TItem="Person" Items="Sample">
+                             <SColumn TItem="Person" Title="Name" Value="@(p => p.Name)" />
+                         </STable>);
+
+        cut.FindAll(".s-table-sort").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Click_sorts_ascending()
+    {
+        var cut = Render(@<STable TItem="Person" Items="Sample">
+                             <SColumn TItem="Person" Name="name" Title="Name" Value="@(p => p.Name)" Sortable />
+                         </STable>);
+
+        cut.Find(".s-table-sort").Click();
+
+        var first = cut.FindAll("tbody tr td")[0].TextContent;
+        first.Should().Contain("Anna");
+    }
+
+    [Fact]
+    public void Second_click_sorts_descending()
+    {
+        var cut = Render(@<STable TItem="Person" Items="Sample">
+                             <SColumn TItem="Person" Name="name" Title="Name" Value="@(p => p.Name)" Sortable />
+                         </STable>);
+
+        cut.Find(".s-table-sort").Click();
+        cut.Find(".s-table-sort").Click();
+
+        var first = cut.FindAll("tbody tr td")[0].TextContent;
+        first.Should().Contain("Elena");
+    }
+
+    [Fact]
+    public void Third_click_clears_sort()
+    {
+        var cut = Render(@<STable TItem="Person" Items="Sample">
+                             <SColumn TItem="Person" Name="name" Title="Name" Value="@(p => p.Name)" Sortable />
+                         </STable>);
+
+        cut.Find(".s-table-sort").Click();
+        cut.Find(".s-table-sort").Click();
+        cut.Find(".s-table-sort").Click();
+
+        // back to original order
+        var first = cut.FindAll("tbody tr td")[0].TextContent;
+        first.Should().Contain("Anna");
+    }
+
+    [Fact]
+    public void Sort_by_numeric_column()
+    {
+        var cut = Render(@<STable TItem="Person" Items="Sample">
+                             <SColumn TItem="Person" Name="age" Title="Age" Value="@(p => p.Age)" Sortable />
+                         </STable>);
+
+        cut.Find(".s-table-sort").Click();
+
+        cut.FindAll("tbody tr td")[0].TextContent.Trim().Should().Be("25");
+    }
+
+    // ---- pagination ----
+
+    [Fact]
+    public void Paginated_limits_visible_rows()
+    {
+        var cut = Render(@<STable TItem="Person" Items="Sample" Paginated PageSize="2">
+                             <SColumn TItem="Person" Title="Name" Value="@(p => p.Name)" />
+                         </STable>);
+
+        cut.FindAll("tbody tr").Should().HaveCount(2);
+    }
+
+    [Fact]
+    public void Pager_renders_when_paginated()
+    {
+        var cut = Render(@<STable TItem="Person" Items="Sample" Paginated PageSize="2">
+                             <SColumn TItem="Person" Title="Name" Value="@(p => p.Name)" />
+                         </STable>);
+
+        cut.FindAll(".s-table-pager").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void Next_page_shows_next_rows()
+    {
+        var cut = Render(@<STable TItem="Person" Items="Sample" Paginated PageSize="2">
+                             <SColumn TItem="Person" Title="Name" Value="@(p => p.Name)" />
+                         </STable>);
+
+        var pageButtons = cut.FindAll(".s-table-page");
+        pageButtons.First(b => b.TextContent.Trim() == "2").Click();
+
+        cut.Markup.Should().Contain("Clara");
+        cut.Markup.Should().NotContain("Anna");
+    }
+
+    [Fact]
+    public void Range_text_reflects_page()
+    {
+        var cut = Render(@<STable TItem="Person" Items="Sample" Paginated PageSize="2">
+                             <SColumn TItem="Person" Title="Name" Value="@(p => p.Name)" />
+                         </STable>);
+
+        cut.Find(".s-table-range").TextContent.Should().Contain("5");
+    }
+
+    // ---- search ----
+
+    [Fact]
+    public void Searchable_renders_input()
+    {
+        var cut = Render(@<STable TItem="Person" Items="Sample" Searchable>
+                             <SColumn TItem="Person" Title="Name" Value="@(p => p.Name)" />
+                         </STable>);
+
+        cut.FindAll(".s-table-search-input").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void Search_filters_rows()
+    {
+        var cut = Render(@<STable TItem="Person" Items="Sample" Searchable>
+                             <SColumn TItem="Person" Title="Name" Value="@(p => p.Name)" />
+                         </STable>);
+
+        cut.Find(".s-table-search-input").Input("anna");
+
+        cut.FindAll("tbody tr").Should().HaveCount(1);
+        cut.Markup.Should().Contain("Anna");
+    }
+
+    [Fact]
+    public void Search_is_case_insensitive()
+    {
+        var cut = Render(@<STable TItem="Person" Items="Sample" Searchable>
+                             <SColumn TItem="Person" Title="Name" Value="@(p => p.Name)" />
+                         </STable>);
+
+        cut.Find(".s-table-search-input").Input("BORIS");
+
+        cut.FindAll("tbody tr").Should().HaveCount(1);
+    }
+
+    // ---- selection ----
+
+    [Fact]
+    public void Selectable_renders_checkboxes()
+    {
+        var cut = Render(@<STable TItem="Person" Items="Sample" Selectable KeySelector="@(p => p.Id)">
+                             <SColumn TItem="Person" Title="Name" Value="@(p => p.Name)" />
+                         </STable>);
+
+        // header checkbox + 5 rows
+        cut.FindAll("input[type=checkbox]").Should().HaveCount(6);
+    }
+
+    [Fact]
+    public void Selecting_row_updates_binding()
+    {
+        IEnumerable<Person> selected = [];
+
+        var cut = Render(@<STable TItem="Person" Items="Sample" Selectable KeySelector="@(p => p.Id)"
+                                  SelectedItems="selected"
+                                  SelectedItemsChanged="@(v => selected = v)">
+                             <SColumn TItem="Person" Title="Name" Value="@(p => p.Name)" />
+                         </STable>);
+
+        // first checkbox in tbody (skip header)
+        cut.FindAll("tbody input[type=checkbox]")[0].Change(true);
+
+        selected.Should().ContainSingle();
+    }
+
+    [Fact]
+    public void Select_all_selects_every_row()
+    {
+        IEnumerable<Person> selected = [];
+
+        var cut = Render(@<STable TItem="Person" Items="Sample" Selectable KeySelector="@(p => p.Id)"
+                                  SelectedItems="selected"
+                                  SelectedItemsChanged="@(v => selected = v)">
+                             <SColumn TItem="Person" Title="Name" Value="@(p => p.Name)" />
+                         </STable>);
+
+        cut.FindAll("thead input[type=checkbox]")[0].Change(true);
+
+        selected.Should().HaveCount(5);
+    }
+
+    // ---- looks ----
+
+    [Fact]
+    public void Striped_applies_class()
+    {
+        var cut = Render(@<STable TItem="Person" Items="Sample" Striped>
+                             <SColumn TItem="Person" Title="Name" Value="@(p => p.Name)" />
+                         </STable>);
+
+        cut.Find(".s-table").ClassList.Should().Contain("s-striped");
+    }
+
+    [Fact]
+    public void Compact_applies_class()
+    {
+        var cut = Render(@<STable TItem="Person" Items="Sample" Compact>
+                             <SColumn TItem="Person" Title="Name" Value="@(p => p.Name)" />
+                         </STable>);
+
+        cut.Find(".s-table").ClassList.Should().Contain("s-compact");
+    }
+
+    [Fact]
+    public void Row_click_fires_callback()
+    {
+        Person? clicked = null;
+
+        var cut = Render(@<STable TItem="Person" Items="Sample"
+                                  OnRowClick="@(p => clicked = p)">
+                             <SColumn TItem="Person" Title="Name" Value="@(p => p.Name)" />
+                         </STable>);
+
+        cut.FindAll("tbody tr")[0].Click();
+
+        clicked.Should().NotBeNull();
+        clicked!.Name.Should().Be("Anna");
+    }
+
+    [Fact]
+    public void Align_end_applies_class()
+    {
+        var cut = Render(@<STable TItem="Person" Items="Sample">
+                             <SColumn TItem="Person" Title="Age" Value="@(p => p.Age)" Align="SAlign.End" />
+                         </STable>);
+
+        cut.FindAll("td.s-ta-end").Should().NotBeEmpty();
+    }
+}

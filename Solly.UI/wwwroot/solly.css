@@ -1,35 +1,31 @@
-﻿/* ============================================================
-   Solly.UI
-   ============================================================ */
-
-/* ---------- fonts ---------- */
+﻿/* ---------- fonts ---------- */
 @font-face {
-    font-family: 'Solly Sans';
+    font-family: 'solly Sans';
     src: url('./fonts/SpaceGrotesk-Regular.woff2') format('woff2');
     font-weight: 400; font-style: normal; font-display: swap;
 }
 @font-face {
-    font-family: 'Solly Sans';
+    font-family: 'solly Sans';
     src: url('./fonts/SpaceGrotesk-Medium.woff2') format('woff2');
     font-weight: 500; font-style: normal; font-display: swap;
 }
 @font-face {
-    font-family: 'Solly Sans';
+    font-family: 'solly Sans';
     src: url('./fonts/SpaceGrotesk-SemiBold.woff2') format('woff2');
     font-weight: 600; font-style: normal; font-display: swap;
 }
 @font-face {
-    font-family: 'Solly Sans';
+    font-family: 'solly Sans';
     src: url('./fonts/SpaceGrotesk-Bold.woff2') format('woff2');
     font-weight: 700; font-style: normal; font-display: swap;
 }
 @font-face {
-    font-family: 'Solly Mono';
+    font-family: 'solly Mono';
     src: url('./fonts/JetBrainsMono-Regular.woff2') format('woff2');
     font-weight: 400; font-style: normal; font-display: swap;
 }
 @font-face {
-    font-family: 'Solly Mono';
+    font-family: 'solly Mono';
     src: url('./fonts/JetBrainsMono-SemiBold.woff2') format('woff2');
     font-weight: 600; font-style: normal; font-display: swap;
 }
@@ -46,7 +42,7 @@
    ============================================================ */
 
 :root,
-[data-Solly-theme="dark"] {
+[data-solly-theme="dark"] {
     /* --- the palette knob --- */
     --s-h: 173;              /* hue        */
     --s-s: 100%;             /* saturation */
@@ -132,12 +128,12 @@
     --s-ease:     cubic-bezier(.2, .8, .2, 1);
 
     /* --- type --- */
-    --s-font: 'Solly Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-    --s-font-mono: 'Solly Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    --s-font: 'solly Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --s-font-mono: 'solly Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 }
 
 /* ---------- light ---------- */
-[data-Solly-theme="light"] {
+[data-solly-theme="light"] {
     --s-l: 38%;
 
     --s-bg:      #eef6f6;
@@ -284,10 +280,6 @@
 @keyframes s-toast-out {
     from { opacity: 1; transform: none; max-height: 8rem; }
     to   { opacity: 0; transform: translateX(24px); max-height: 0; margin-bottom: -.6rem; }
-}
-@keyframes s-dialos-in {
-    from { opacity: 0; transform: scale(.94); }
-    to   { opacity: 1; transform: scale(1); }
 }
 @keyframes s-tip-in {
     from { opacity: 0; transform: scale(.94); }
@@ -498,8 +490,7 @@
     font: 400 15px var(--s-font);
     color: var(--s-text);
 }
-.s-ta { line-height: 1.55; resize: vertical; min-height: 2.5rem; }
-.s-ta { padding: 0; width: 100%; resize: vertical; }
+.s-ta { line-height: 1.55; min-height: 2.5rem; padding: 0; width: 100%; resize: vertical; }
 .s-input::placeholder, .s-ta::placeholder { color: var(--s-text-mute); }
 
 /* monospace variant, for keys and codes */
@@ -802,11 +793,15 @@
     align-items: center;
     gap: 10px;
     padding: 10px 12px;
-    margin-bottom: 4px;
+    margin: 0 0 4px;
     border-bottom: 1px solid var(--s-border);
+    background: linear-gradient(165deg, rgba(20, 34, 38, .98) 0%, rgba(8, 16, 20, .99) 100%);
     position: sticky;
     top: 0;
-    z-index: 1;
+    z-index: 2;
+}
+[data-solly-theme="light"] .s-select-search {
+    background: linear-gradient(165deg, rgba(255, 255, 255, .98), rgba(240, 250, 250, .99));
 }
 .s-select-search-icon { color: var(--s-accent-90); flex-shrink: 0; }
 .s-select-search-input {
@@ -822,7 +817,7 @@
 .s-select-search-input::placeholder { color: var(--s-text-mute); }
 
 /* list */
-.s-select-list { display: flex; flex-direction: column; gap: 3px; max-height: 16rem; min-width: 14rem; }
+.s-select-list { display: flex; flex-direction: column; gap: 3px; max-height: 16rem; min-width: 12rem; padding: 6px; }
 .s-select-empty {
     padding: 14px 12px;
     font: 400 13.5px var(--s-font);
@@ -969,8 +964,9 @@
 
 .s-pop-panel {
     position: fixed;
-    z-index: 9999;
-    overflow: auto;
+    z-index: 10010;
+    overflow-y: auto;
+    overflow-x: hidden;
     padding: 0;
     border-radius: 18px;
     border: 1px solid var(--s-border-hi);
@@ -980,7 +976,7 @@
     box-shadow: var(--s-shadow-lg), 0 0 24px var(--s-accent-12);
     animation: s-pop var(--s-dur-fast) var(--s-ease);
 }
-[data-Solly-theme="light"] .s-pop-panel {
+[data-solly-theme="light"] .s-pop-panel {
     background: linear-gradient(165deg, rgba(255,255,255,.97), rgba(240,250,250,.98));
 }
 
@@ -995,9 +991,7 @@
 }
 .s-pop-panel::-webkit-scrollbar-thumb:hover { background: var(--s-accent-45); background-clip: content-box; }
 
-.s-pop-panel { padding: 0; }
-.s-select-list { padding: 6px; min-width: 14rem; }
-.s-select-search { margin: 0; }
+
 
 /* ============================================================
    THEME TOGGLE
@@ -1273,7 +1267,7 @@
     opacity: 0;
     transition: opacity var(--s-dur) var(--s-ease);
 }
-[data-Solly-theme="light"] .s-modal-backdrop { background: rgba(8, 45, 42, .35); }
+[data-solly-theme="light"] .s-modal-backdrop { background: rgba(8, 45, 42, .35); }
 
 .s-modal {
     position: relative;
@@ -1390,7 +1384,7 @@
     color: var(--s-text);
     animation: s-toast-in var(--s-dur) var(--s-ease);
 }
-[data-Solly-theme="light"] .s-toast {
+[data-solly-theme="light"] .s-toast {
     background: linear-gradient(160deg, rgba(255,255,255,.96), rgba(238,248,248,.98));
 }
 .s-toast.s-out { animation: s-toast-out 200ms var(--s-ease) forwards; }
@@ -1499,7 +1493,7 @@
     visibility: hidden;
     animation: s-tip-in var(--s-dur-fast) var(--s-ease);
 }
-[data-Solly-theme="light"] .s-tip {
+[data-solly-theme="light"] .s-tip {
     background: linear-gradient(160deg, rgba(255,255,255,.97), rgba(240,250,250,.98));
 }
 
@@ -1695,93 +1689,6 @@
 @property --s-aside-w-min { syntax: '<length>'; inherits: false; initial-value: 5rem; }
 
 /* ============================================================
-   LATE FIXES (override earlier rules)
-   ============================================================ */
-
-/* popup: never force width from anchor; scroll only vertically */
-.s-pop-panel { overflow-y: auto; overflow-x: hidden; padding: 0; }
-
-/* select list carries its own padding + min width now that the panel has none */
-.s-select-list { padding: 6px; min-width: 12rem; }
-
-/* sticky search must be opaque and above scrolling options */
-.s-select-search {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    margin: 0 0 4px;
-    background: linear-gradient(165deg, rgba(20, 34, 38, .98) 0%, rgba(8, 16, 20, .99) 100%);
-    border-bottom: 1px solid var(--s-border);
-}
-[data-solly-theme="light"] .s-select-search {
-    background: linear-gradient(165deg, rgba(255, 255, 255, .98), rgba(240, 250, 250, .99));
-}
-
-/* calendar: fixed width, no chrome of its own (panel provides it) */
-.s-cal {
-    width: 300px;
-    padding: 18px;
-    border: none;
-    background: none;
-    box-shadow: none;
-    font-family: var(--s-font);
-    outline: none;
-}
-.s-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-
-/* slider thumb: no white inset bleed on hover */
-.s-slider-thumb {
-    background: var(--s-accent-soft);
-    box-shadow: 0 0 12px var(--s-accent-45);
-}
-.s-slider-native:focus-visible + .s-slider-thumb {
-    box-shadow: 0 0 0 3px var(--s-accent-25), 0 0 16px var(--s-accent-55);
-}
-
-/* ============================================================
-   THEME TOGGLE  (in case the track/thumb were missing)
-   ============================================================ */
-.s-theme-toggle {
-    display: inline-flex;
-    padding: 3px;
-    border-radius: 999px;
-    border: 1px solid var(--s-border-hi);
-    background: var(--s-sunken);
-    box-shadow: var(--s-rim), inset 0 2px 6px rgba(0, 0, 0, .2);
-    cursor: pointer;
-    line-height: 0;
-    transition: border-color var(--s-dur) var(--s-ease), box-shadow var(--s-dur) var(--s-ease);
-}
-.s-theme-toggle:hover { border-color: var(--s-accent-45); box-shadow: var(--s-glow-sm), var(--s-rim); }
-.s-theme-toggle:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--s-accent-25), var(--s-glow); }
-
-.s-tt-track { position: relative; display: block; width: 46px; height: 24px; border-radius: 999px; }
-
-.s-tt-thumb {
-    position: absolute;
-    top: 1px;
-    left: 1px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 22px;
-    height: 22px;
-    border-radius: 999px;
-    background: var(--s-neon-solid);
-    color: var(--s-on-accent);
-    box-shadow: var(--s-glow-sm), inset 0 1px 0 rgba(255, 255, 255, .6);
-    transition: transform var(--s-dur) var(--s-ease),
-    background var(--s-dur) var(--s-ease),
-    box-shadow var(--s-dur) var(--s-ease);
-}
-.s-tt-thumb.s-tt-light {
-    transform: translateX(22px);
-    background: linear-gradient(160deg, #ffe9a8, var(--s-warning));
-    color: #4a3200;
-    box-shadow: 0 0 14px rgba(255, 209, 102, .5), inset 0 1px 0 rgba(255, 255, 255, .7);
-}
-
-/* ============================================================
    SHELL
    ============================================================ */
 .s-shell {
@@ -1853,7 +1760,7 @@
     background: rgba(2, 6, 10, .6);
     backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);
-    animation: g-pop var(--s-dur-fast) var(--s-ease);
+    animation: s-pop var(--s-dur-fast) var(--s-ease);
 }
 
 /* ============================================================
@@ -2319,9 +2226,9 @@
     border-radius: 6px;
     background: linear-gradient(90deg, var(--s-surface) 25%, var(--s-surface-hi) 50%, var(--s-surface) 75%);
     background-size: 200% 100%;
-    animation: g-shimmer 1.4s linear infinite;
+    animation: s-shimmer 1.4s linear infinite;
 }
-@keyframes g-shimmer {
+@keyframes s-shimmer {
     from { background-position: 200% 0; }
     to   { background-position: -200% 0; }
 }
@@ -2882,7 +2789,7 @@
     backdrop-filter: blur(20px) saturate(150%);
     -webkit-backdrop-filter: blur(20px) saturate(150%);
     box-shadow: var(--s-shadow-lg), 0 0 20px var(--s-accent-12);
-    animation: g-pop var(--s-dur-fast) var(--s-ease);
+    animation: s-pop var(--s-dur-fast) var(--s-ease);
 }
 [data-solly-theme="light"] .s-menu-flyout {
     background: linear-gradient(165deg, rgba(255, 255, 255, .97), rgba(240, 250, 250, .98));
@@ -2910,7 +2817,7 @@
     opacity: 0;
     transition: opacity var(--s-dur) var(--s-ease);
 }
-[data-glassy-theme="light"] .s-drawer-backdrop { background: rgba(8, 45, 42, .35); }
+[data-solly-theme="light"] .s-drawer-backdrop { background: rgba(8, 45, 42, .35); }
 
 .s-drawer {
     position: absolute;

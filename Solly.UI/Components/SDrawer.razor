@@ -46,8 +46,6 @@
     [Parameter] public SDrawerSide Side { get; set; } = SDrawerSide.Right;
     [Parameter] public string Width { get; set; } = "22rem";
     [Parameter] public bool Closable { get; set; } = true;
-
-    /// <summary>Backdrop click closes the drawer.</summary>
     [Parameter] public bool DismissOnBackdrop { get; set; } = true;
 
     [Parameter] public bool Open { get; set; }
@@ -55,21 +53,41 @@
 
     private bool _render;
     private bool _visible;
+    private bool _lastOpen;
     private ElementReference _root;
+    private DotNetObjectReference<SDrawer>? _self;
     private IJSObjectReference? _trap;
     private IJSObjectReference? _lock;
     private IJSObjectReference? _portal;
-    private DotNetObjectReference<SDrawer>? _self;
 
     private string SideClass => Side == SDrawerSide.Left ? "s-drawer-left" : "s-drawer-right";
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Open && !_render) await OpenAsync();
-        else if (!Open && _render) await CloseAsync();
+        if (Open == _lastOpen) return;
+        _lastOpen = Open;
+
+        if (Open) await ShowAsync();
+        else await HideAsync();
     }
 
     public async Task OpenAsync()
+    {
+        if (_render) return;
+        _lastOpen = true;
+        await ShowAsync();
+        await OpenChanged.InvokeAsync(true);
+    }
+
+    public async Task CloseAsync()
+    {
+        if (!_render) return;
+        _lastOpen = false;
+        await HideAsync();
+        await OpenChanged.InvokeAsync(false);
+    }
+    
+    private async Task ShowAsync()
     {
         _render = true;
         StateHasChanged();
@@ -78,30 +96,41 @@
         StateHasChanged();
 
         _self ??= DotNetObjectReference.Create(this);
-
         try
         {
             _portal = await Interop.PortalAsync(_root);
             _lock = await Interop.LockScrollAsync();
             _trap = await Interop.TrapFocusAsync(_root, _self);
         }
-        catch { }
-
-        if (!Open) await OpenChanged.InvokeAsync(true);
+        catch
+        {
+            // ignored
+        }
     }
 
-    public async Task CloseAsync()
+    private async Task HideAsync()
     {
-        _visible = false;
+        _visible = false; 
         StateHasChanged();
 
-        await DisposeInteropAsync();
-        await Task.Delay(220);            // match the CSS transition
+        await DisposeRefAsync(_trap); _trap = null;
+        await DisposeRefAsync(_lock); _lock = null;
+
+        await Task.Delay(260);
+        
+        await DisposeRefAsync(_portal); _portal = null;
+        await Task.Yield();
 
         _render = false;
         StateHasChanged();
+    }
 
-        if (Open) await OpenChanged.InvokeAsync(false);
+    /// <summary>Called by the focus trap when Escape is pressed.</summary>
+    [JSInvokable]
+    public async Task OnEscapeAsync()
+    {
+        if (!Closable) return;
+        await CloseAsync();
     }
 
     private async Task OnBackdropAsync()
@@ -113,27 +142,29 @@
     {
         if (e.Key == "Escape" && Closable) await CloseAsync();
     }
-    
-    /// <summary>Called by the focus trap when Escape is pressed inside it.</summary>
-    [JSInvokable]
-    public async Task OnTrapEscape()
+
+    private async ValueTask TeardownAsync()
     {
-        if (Closable) await CloseAsync();
+        await DisposeRefAsync(_trap);
+        _trap = null;
+        await DisposeRefAsync(_lock);
+        _lock = null;
+        await DisposeRefAsync(_portal);
+        _portal = null;
     }
 
-    private async Task DisposeInteropAsync()
+    private static async ValueTask DisposeRefAsync(IJSObjectReference? r)
     {
-        foreach (var h in new[] { _trap, _lock, _portal })
+        try { if (r is not null) { await r.InvokeVoidAsync("dispose"); await r.DisposeAsync(); } }
+        catch
         {
-            try { if (h is not null) { await h.InvokeVoidAsync("dispose"); await h.DisposeAsync(); } }
-            catch { }
+            // ignored
         }
-        _trap = _lock = _portal = null;
     }
 
     public async ValueTask DisposeAsync()
     {
-        await DisposeInteropAsync();
+        await TeardownAsync();
         _self?.Dispose();
     }
 }

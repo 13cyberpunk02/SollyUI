@@ -1,7 +1,6 @@
 ﻿@typeparam TValue
 @inherits SComponentBase
 @using System.Linq.Expressions
-@using Solly.UI.Core.Interop
 @implements IDisposable
 @inject SollyInterop Interop
 
@@ -109,7 +108,7 @@
                              role="option"
                              aria-selected="@selected"
                              @onclick="() => ChooseAsync(item)"
-                             @onpointerenter="() => SetActive(idx)">
+                             @onpointerenter="@(() => SetActive(idx))">
 
                             @if (Multiple)
                             {
@@ -236,10 +235,10 @@
         }
 
         var q = _query.Trim();
-        _filtered = _all.Where(x => Filter is not null
-                ? Filter(x, q)
-                : DisplayOf(x).Contains(q, StringComparison.OrdinalIgnoreCase))
-            .ToList();
+        _filtered = _all.Where(x => Filter?
+                .Invoke(x, q) ?? DisplayOf(x)
+                .Contains(q, StringComparison.OrdinalIgnoreCase))
+                .ToList();
     }
 
     private void SetActive(int i)
