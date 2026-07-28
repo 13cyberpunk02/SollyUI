@@ -1,0 +1,41 @@
+@inherits SComponentBase
+
+<div class="@Cls("s-empty", Compact ? "s-empty-sm" : null)" style="@Style" @attributes="Attributes">
+    @if (IconContent is not null)
+    {
+        <div class="s-empty-icon">@IconContent</div>
+    }
+    else if (!string.IsNullOrEmpty(Icon))
+    {
+        <div class="s-empty-icon"><SIcon Name="@Icon" Size="@(Compact ? 28 : 40)" /></div>
+    }
+
+    @if (!string.IsNullOrEmpty(Title))
+    {
+        <div class="s-empty-title">@Title</div>
+    }
+
+    @if (ChildContent is not null)
+    {
+        <div class="s-empty-text">@ChildContent</div>
+    }
+    else if (!string.IsNullOrEmpty(Text))
+    {
+        <div class="s-empty-text">@Text</div>
+    }
+
+    @if (ActionContent is not null)
+    {
+        <div class="s-empty-action">@ActionContent</div>
+    }
+</div>
+
+@code {
+    [Parameter] public string? Icon { get; set; }
+    [Parameter] public RenderFragment? IconContent { get; set; }
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public string? Text { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public RenderFragment? ActionContent { get; set; }
+    [Parameter] public bool Compact { get; set; }
+}

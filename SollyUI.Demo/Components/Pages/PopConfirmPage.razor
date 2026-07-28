@@ -1,0 +1,94 @@
+@page "/popconfirm"
+
+<DemoPage Title="Popconfirm" Subtitle="Мини-подтверждение над элементом. Легче модалки для «точно?».">
+
+    <DemoBlock Title="Basic" Code="@_basicCode">
+        <SPopconfirm Message="Удалить этот элемент?"
+                     OnConfirm="@(() => Toasts.Success("Удалено"))">
+            <SButton Variant="SVariant.Ghost" Icon="@SIcons.X">Удалить</SButton>
+        </SPopconfirm>
+    </DemoBlock>
+
+    <DemoBlock Title="Danger with title" Code="@_dangerCode">
+        <SPopconfirm Danger
+                     Title="Удалить проект?"
+                     Message="Все данные будут потеряны безвозвратно."
+                     ConfirmText="Удалить"
+                     CancelText="Отмена"
+                     OnConfirm="@(() => Toasts.Error("Проект удалён"))">
+            <SButton Variant="SVariant.Danger" Icon="@SIcons.X">Удалить проект</SButton>
+        </SPopconfirm>
+    </DemoBlock>
+
+    <DemoBlock Title="Async action"
+               Description="OnConfirm асинхронный — кнопка сама показывает спиннер до завершения."
+               Code="@_asyncCode">
+        <SPopconfirm Title="Подтвердить оплату?"
+                     Message="Спишется 49 €."
+                     ConfirmText="Оплатить"
+                     OnConfirm="PayAsync">
+            <SButton Variant="SVariant.Primary" Icon="@SIcons.Check">Оплатить</SButton>
+        </SPopconfirm>
+    </DemoBlock>
+
+    <DemoBlock Title="Placement" Code="@_placeCode">
+        <div class="demo-row">
+            <SPopconfirm Message="Сверху" Placement="top" OnConfirm="@(() => {})">
+                <SButton>Top</SButton>
+            </SPopconfirm>
+            <SPopconfirm Message="Справа" Placement="right" OnConfirm="@(() => {})">
+                <SButton>Right</SButton>
+            </SPopconfirm>
+            <SPopconfirm Message="Снизу" Placement="bottom" OnConfirm="@(() => {})">
+                <SButton>Bottom</SButton>
+            </SPopconfirm>
+        </div>
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    [Inject] SToastService Toasts { get; set; } = default!;
+
+    async Task PayAsync()
+    {
+        await Task.Delay(1200);   // имитация запроса
+        Toasts.Success("Оплачено");
+    }
+
+    const string _basicCode = """
+<SPopconfirm Message="Удалить этот элемент?"
+             OnConfirm="Delete">
+    <SButton Variant="SVariant.Ghost">Удалить</SButton>
+</SPopconfirm>
+""";
+
+    const string _dangerCode = """
+<SPopconfirm Danger
+             Title="Удалить проект?"
+             Message="Все данные будут потеряны."
+             ConfirmText="Удалить"
+             OnConfirm="Delete">
+    <SButton Variant="SVariant.Danger">Удалить проект</SButton>
+</SPopconfirm>
+""";
+
+    const string _asyncCode = """
+<SPopconfirm Title="Подтвердить оплату?"
+             OnConfirm="PayAsync">
+    <SButton Variant="SVariant.Primary">Оплатить</SButton>
+</SPopconfirm>
+
+@code {
+    async Task PayAsync()
+    {
+        await Http.PostAsync(...);   // кнопка крутит спиннер
+    }
+}
+""";
+
+    const string _placeCode = """
+<SPopconfirm Message="Сверху" Placement="top">…</SPopconfirm>
+<SPopconfirm Message="Справа" Placement="right">…</SPopconfirm>
+""";
+}

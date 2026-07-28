@@ -1,0 +1,139 @@
+@inherits SComponentBase
+
+@if (TotalPages > 1 || AlwaysShow)
+{
+    <div class="@Cls("s-pager")" style="@Style" @attributes="Attributes">
+
+        @if (ShowRange && TotalItems > 0)
+        {
+            <span class="s-pager-range">
+                @(RangeStart)–@(RangeEnd) @RangeSeparator @TotalItems
+            </span>
+        }
+
+        <div class="s-pager-spacer"></div>
+
+        @if (PageSizeOptions is not null && PageSizeOptions.Any())
+        {
+            <span class="s-pager-size-label">@RowsLabel</span>
+            <select class="s-pager-size" value="@PageSize" @onchange="OnPageSizeAsync">
+                @foreach (var n in PageSizeOptions)
+                {
+                    <option value="@n">@n</option>
+                }
+            </select>
+        }
+
+        <div class="s-pager-pages">
+            @if (ShowEdges)
+            {
+                <button type="button" class="s-pager-btn" disabled="@(Page == 0)"
+                        aria-label="First page" @onclick="() => GoAsync(0)">
+                    <SIcon Name="@SIcons.ChevronsLeft" Size="14" Weight="2.2" />
+                </button>
+            }
+            <button type="button" class="s-pager-btn" disabled="@(Page == 0)"
+                    aria-label="Previous page" @onclick="() => GoAsync(Page - 1)">
+                <SIcon Name="@SIcons.ChevronLeft" Size="14" Weight="2.2" />
+            </button>
+
+            @foreach (var p in Window())
+            {
+                @if (p < 0)
+                {
+                    <span class="s-pager-gap">…</span>
+                }
+                else
+                {
+                    var pageIndex = p;
+                    <button type="button"
+                            class="s-pager-btn @(pageIndex == Page ? "s-active" : null)"
+                            @onclick="() => GoAsync(pageIndex)">
+                        @(pageIndex + 1)
+                    </button>
+                }
+            }
+
+            <button type="button" class="s-pager-btn" disabled="@(Page >= LastPage)"
+                    aria-label="Next page" @onclick="() => GoAsync(Page + 1)">
+                <SIcon Name="@SIcons.ChevronRight" Size="14" Weight="2.2" />
+            </button>
+            @if (ShowEdges)
+            {
+                <button type="button" class="s-pager-btn" disabled="@(Page >= LastPage)"
+                        aria-label="Last page" @onclick="() => GoAsync(LastPage)">
+                    <SIcon Name="@SIcons.ChevronsRight" Size="14" Weight="2.2" />
+                </button>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    /// <summary>Current page, zero-based.</summary>
+    [Parameter] public int Page { get; set; }
+    [Parameter] public EventCallback<int> PageChanged { get; set; }
+
+    [Parameter] public int PageSize { get; set; } = 10;
+    [Parameter] public EventCallback<int> PageSizeChanged { get; set; }
+    [Parameter] public IEnumerable<int>? PageSizeOptions { get; set; }
+
+    [Parameter] public int TotalItems { get; set; }
+
+    /// <summary>How many numbered buttons around the current page.</summary>
+    [Parameter] public int SiblingCount { get; set; } = 1;
+
+    [Parameter] public bool ShowEdges { get; set; } = true;
+    [Parameter] public bool ShowRange { get; set; } = true;
+    [Parameter] public bool AlwaysShow { get; set; }
+
+    [Parameter] public string RowsLabel { get; set; } = "Rows";
+    [Parameter] public string RangeSeparator { get; set; } = "of";
+
+    private int LastPage => TotalItems == 0 ? 0 : (int)Math.Ceiling(TotalItems / (double)PageSize) - 1;
+    private int TotalPages => LastPage + 1;
+
+    private int RangeStart => TotalItems == 0 ? 0 : Page * PageSize + 1;
+    private int RangeEnd => Math.Min((Page + 1) * PageSize, TotalItems);
+
+    private async Task GoAsync(int page)
+    {
+        var target = Math.Clamp(page, 0, LastPage);
+        if (target == Page) return;
+        Page = target;
+        await PageChanged.InvokeAsync(target);
+    }
+
+    private async Task OnPageSizeAsync(ChangeEventArgs e)
+    {
+        if (!int.TryParse(e.Value?.ToString(), out var n)) return;
+        PageSize = n;
+        await PageSizeChanged.InvokeAsync(n);
+        // reset to first page on size change
+        if (Page != 0) { Page = 0; await PageChanged.InvokeAsync(0); }
+    }
+
+    /// <summary>Page indices to render, with -1 marking an ellipsis gap.</summary>
+    private IEnumerable<int> Window()
+    {
+        var last = LastPage;
+        var span = SiblingCount * 2 + 5; // first, last, current, 2 gaps, siblings
+
+        if (last + 1 <= span)
+        {
+            for (var i = 0; i <= last; i++) yield return i;
+            yield break;
+        }
+
+        yield return 0;
+
+        var from = Math.Max(1, Page - SiblingCount);
+        var to = Math.Min(last - 1, Page + SiblingCount);
+
+        if (from > 1) yield return -1;
+        for (var i = from; i <= to; i++) yield return i;
+        if (to < last - 1) yield return -1;
+
+        yield return last;
+    }
+}

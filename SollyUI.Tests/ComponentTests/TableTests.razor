@@ -183,7 +183,7 @@
                              <SColumn TItem="Person" Title="Name" Value="@(p => p.Name)" />
                          </STable>);
 
-        var pageButtons = cut.FindAll(".s-table-page");
+        var pageButtons = cut.FindAll(".s-pager-btn");
         pageButtons.First(b => b.TextContent.Trim() == "2").Click();
 
         cut.Markup.Should().Contain("Clara");
@@ -197,7 +197,7 @@
                              <SColumn TItem="Person" Title="Name" Value="@(p => p.Name)" />
                          </STable>);
 
-        cut.Find(".s-table-range").TextContent.Should().Contain("5");
+        cut.Find(".s-pager-range").TextContent.Should().Contain("5");
     }
 
     // ---- search ----

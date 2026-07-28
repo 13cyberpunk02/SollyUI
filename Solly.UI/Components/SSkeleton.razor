@@ -1,0 +1,55 @@
+@inherits SComponentBase
+
+@if (Kind == SSkeletonKind.Text && Lines > 1)
+{
+    <div class="s-skel-lines @Class" style="@Style" @attributes="Attributes">
+        @for (var i = 0; i < Lines; i++)
+        {
+            <span class="s-skel s-skel-text" style="@LineStyle(i)"></span>
+        }
+    </div>
+}
+else
+{
+    <span class="@Cls("s-skel", KindClass)" style="@SizeStyle @Style" @attributes="Attributes"></span>
+}
+
+@code {
+    [Parameter] public SSkeletonKind Kind { get; set; } = SSkeletonKind.Text;
+
+    /// <summary>For multi-line text blocks.</summary>
+    [Parameter] public int Lines { get; set; } = 1;
+
+    [Parameter] public string? Width { get; set; }
+    [Parameter] public string? Height { get; set; }
+
+    /// <summary>Diameter for Circle, ignored otherwise.</summary>
+    [Parameter] public string? Size { get; set; }
+
+    private string KindClass => Kind switch
+    {
+        SSkeletonKind.Circle => "s-skel-circle",
+        SSkeletonKind.Rect   => "s-skel-rect",
+        _                    => "s-skel-text"
+    };
+
+    private string SizeStyle
+    {
+        get
+        {
+            if (Kind == SSkeletonKind.Circle && !string.IsNullOrEmpty(Size))
+                return $"width:{Size};height:{Size};";
+
+            var w = Width is null ? "" : $"width:{Width};";
+            var h = Height is null ? "" : $"height:{Height};";
+            return w + h;
+        }
+    }
+
+    // last line shorter, for a natural paragraph look
+    private string LineStyle(int i)
+    {
+        if (i == Lines - 1) return "width:60%;";
+        return Width is null ? "" : $"width:{Width};";
+    }
+}

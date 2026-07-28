@@ -67,7 +67,7 @@
 
     private string AvatarStyle =>
         string.IsNullOrEmpty(Src) && string.IsNullOrEmpty(Icon) && !string.IsNullOrEmpty(Name)
-            ? $"--g-av-h:{DerivedHue};"
+            ? $"--s-av-h:{DerivedHue};"
             : "";
 
     private string SizeClass => Size switch

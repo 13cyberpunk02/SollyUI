@@ -1,0 +1,116 @@
+@inherits SollyTestContext
+
+@code {
+    [Fact]
+    public void Hidden_when_single_page()
+    {
+        var cut = Render(@<SPagination Page="0" PageSize="10" TotalItems="5" />);
+        cut.FindAll(".s-pager-btn").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void AlwaysShow_renders_single_page()
+    {
+        var cut = Render(@<SPagination Page="0" PageSize="10" TotalItems="5" AlwaysShow="true" />);
+        cut.FindAll(".s-pager").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void Renders_page_buttons()
+    {
+        var cut = Render(@<SPagination Page="0" PageSize="10" TotalItems="30" />);
+        // 3 pages → buttons "1" "2" "3"
+        var nums = cut.FindAll(".s-pager-btn")
+            .Select(b => b.TextContent.Trim())
+            .Where(t => int.TryParse(t, out _));
+        nums.Should().Contain(new[] { "1", "2", "3" });
+    }
+
+    [Fact]
+    public void Current_page_is_active()
+    {
+        var cut = Render(@<SPagination Page="1" PageSize="10" TotalItems="30" />);
+        cut.Find(".s-pager-btn.s-active").TextContent.Trim().Should().Be("2");
+    }
+
+    [Fact]
+    public void Clicking_page_raises_PageChanged()
+    {
+        var page = 0;
+        var cut = Render(@<SPagination Page="page" PageSize="10" TotalItems="30"
+                                       PageChanged="@((int p) => page = p)" />);
+
+        cut.FindAll(".s-pager-btn").First(b => b.TextContent.Trim() == "3").Click();
+        page.Should().Be(2);
+    }
+
+    [Fact]
+    public void Prev_disabled_on_first_page()
+    {
+        var cut = Render(@<SPagination Page="0" PageSize="10" TotalItems="30" />);
+        var prev = cut.FindAll(".s-pager-btn").First(b => b.GetAttribute("aria-label") == "Previous page");
+        prev.HasAttribute("disabled").Should().BeTrue();
+    }
+
+    [Fact]
+    public void Next_disabled_on_last_page()
+    {
+        var cut = Render(@<SPagination Page="2" PageSize="10" TotalItems="30" />);
+        var next = cut.FindAll(".s-pager-btn").First(b => b.GetAttribute("aria-label") == "Next page");
+        next.HasAttribute("disabled").Should().BeTrue();
+    }
+
+    [Fact]
+    public void Range_text_shows_bounds()
+    {
+        var cut = Render(@<SPagination Page="1" PageSize="10" TotalItems="45" />);
+        var t = cut.Find(".s-pager-range").TextContent;
+        t.Should().Contain("11");
+        t.Should().Contain("20");
+        t.Should().Contain("45");
+    }
+
+    [Fact]
+    public void Ellipsis_for_many_pages()
+    {
+        var cut = Render(@<SPagination Page="5" PageSize="10" TotalItems="200" />);
+        cut.FindAll(".s-pager-gap").Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public void First_and_last_always_present_with_ellipsis()
+    {
+        var cut = Render(@<SPagination Page="5" PageSize="10" TotalItems="200" />);
+        var nums = cut.FindAll(".s-pager-btn").Select(b => b.TextContent.Trim()).ToList();
+        nums.Should().Contain("1");
+        nums.Should().Contain("20"); // last page = 200/10
+    }
+
+    [Fact]
+    public void Page_size_select_renders_options()
+    {
+        var cut = Render(@<SPagination Page="0" PageSize="10" TotalItems="100"
+                                       PageSizeOptions="@(new[] { 10, 25, 50 })" />);
+        cut.FindAll(".s-pager-size option").Should().HaveCount(3);
+    }
+
+    [Fact]
+    public void Changing_page_size_raises_callback()
+    {
+        var size = 10;
+        var cut = Render(@<SPagination Page="0" PageSize="10" TotalItems="100"
+                                       PageSizeOptions="@(new[] { 10, 25, 50 })"
+                                       PageSizeChanged="@((int s) => size = s)" />);
+
+        cut.Find(".s-pager-size").Change("25");
+        size.Should().Be(25);
+    }
+
+    [Fact]
+    public void ShowEdges_false_hides_first_last()
+    {
+        var cut = Render(@<SPagination Page="1" PageSize="10" TotalItems="50" ShowEdges="false" />);
+        cut.FindAll(".s-pager-btn")
+            .Any(b => b.GetAttribute("aria-label") == "First page").Should().BeFalse();
+    }
+}

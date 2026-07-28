@@ -127,12 +127,24 @@
             </STable>
         </div>
     </DemoBlock>
+    
+    <DemoBlock Title="Standalone pagination" Code="@_pagerCode">
+        <div class="demo-col" style="max-width:none;gap:16px;">
+            <SPagination Page="_page"
+                         PageChanged="@((int p) => _page = p)"
+                         PageSize="10"
+                         TotalItems="237"
+                         PageSizeOptions="@([10, 25, 50])"
+                         PageSizeChanged="@((int s) => {})" />
+            <span class="demo-note">Текущая страница: @(_page + 1)</span>
+        </div>
+    </DemoBlock>
 
 </DemoPage>
 
 @code {
     [Inject] SToastService Toasts { get; set; } = default!;
-
+    int _page;
     public class Employee
     {
         public int Id { get; init; }
@@ -213,6 +225,14 @@
             TotalCount = list.Count
         };
     }
+    
+    const string _pagerCode = """
+                              <GPagination Page="_page"
+                                           PageChanged="@((int p) => _page = p)"
+                                           PageSize="10"
+                                           TotalItems="237"
+                                           PageSizeOptions="@(new[] { 10, 25, 50 })" />
+                              """;
 
     const string _basicCode = """
 <STable TItem="Employee" Items="_people">

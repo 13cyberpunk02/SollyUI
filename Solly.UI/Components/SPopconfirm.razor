@@ -1,0 +1,95 @@
+@inherits SComponentBase
+
+<SPopover @ref="_pop" Placement="@Placement" OffsetMain="8">
+    <Anchor>
+        <span class="s-pc-trigger" @onclick="OpenAsync">
+            @ChildContent
+        </span>
+    </Anchor>
+    <ChildContent>
+        <div class="s-pc" style="@($"max-width:{Width}")">
+            <div class="s-pc-head">
+                @if (ShowIcon)
+                {
+                    <span class="s-pc-icon @IconClass">
+                        <SIcon Name="@(string.IsNullOrEmpty(Icon) ? DefaultIcon : Icon)" Size="18" />
+                    </span>
+                }
+                <div class="s-pc-body">
+                    @if (!string.IsNullOrEmpty(Title))
+                    {
+                        <div class="s-pc-title">@Title</div>
+                    }
+                    @if (MessageContent is not null)
+                    {
+                        <div class="s-pc-text">@MessageContent</div>
+                    }
+                    else if (!string.IsNullOrEmpty(Message))
+                    {
+                        <div class="s-pc-text">@Message</div>
+                    }
+                </div>
+            </div>
+
+            <div class="s-pc-actions">
+                <SButton Variant="SVariant.Ghost" Disabled="@_busy"
+                         OnClick="@(CancelAsync)">@CancelText</SButton>
+                <SButton Variant="@ConfirmVariant" Disabled="@_busy"
+                         OnClick="@(ConfirmAsync)">@ConfirmText</SButton>
+            </div>
+        </div>
+    </ChildContent>
+</SPopover>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public RenderFragment? MessageContent { get; set; }
+
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public string? Message { get; set; } = "Are you sure?";
+
+    [Parameter] public string ConfirmText { get; set; } = "Confirm";
+    [Parameter] public string CancelText { get; set; } = "Cancel";
+
+    /// <summary>Danger styling for destructive actions.</summary>
+    [Parameter] public bool Danger { get; set; }
+
+    [Parameter] public string? Icon { get; set; }
+    [Parameter] public bool ShowIcon { get; set; } = true;
+
+    [Parameter] public string Placement { get; set; } = "top";
+    [Parameter] public string Width { get; set; } = "17rem";
+
+    [Parameter] public EventCallback OnConfirm { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private SPopover? _pop;
+    private bool _busy;
+
+    private SVariant ConfirmVariant => Danger ? SVariant.Danger : SVariant.Primary;
+    private string IconClass => Danger ? "s-pc-icon-danger" : "s-pc-icon-accent";
+    private string DefaultIcon => Danger ? SIcons.TriangleAlert : SIcons.CircleInfo;
+
+    private async Task OpenAsync() { if (_pop is not null) await _pop.OpenAsync(); }
+
+    private async Task ConfirmAsync()
+    {
+        if (_busy) return;
+        _busy = true;
+        try
+        {
+            if (OnConfirm.HasDelegate) await OnConfirm.InvokeAsync();
+        }
+        finally
+        {
+            _busy = false;
+        }
+        if (_pop is not null) await _pop.CloseAsync();
+    }
+
+    private async Task CancelAsync()
+    {
+        if (OnCancel.HasDelegate) await OnCancel.InvokeAsync();
+        if (_pop is not null) await _pop.CloseAsync();
+    }
+}

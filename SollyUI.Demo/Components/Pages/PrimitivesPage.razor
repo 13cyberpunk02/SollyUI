@@ -1,0 +1,146 @@
+@page "/primitives"
+@using Solly.UI.Core
+
+<DemoPage Title="Chip · Skeleton · Empty" Subtitle="Мелкие строительные блоки: метки, заглушки загрузки, пустые состояния.">
+
+    <DemoBlock Title="Chip levels" Code="@_chipCode">
+        <div class="demo-row">
+            <SChip>Accent</SChip>
+            <SChip Level="SChipLevel.Neutral">Neutral</SChip>
+            <SChip Level="SChipLevel.Success">Success</SChip>
+            <SChip Level="SChipLevel.Warning">Warning</SChip>
+            <SChip Level="SChipLevel.Error">Error</SChip>
+            <SChip Level="SChipLevel.Info">Info</SChip>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Removable"
+               Description="Крестик эмитит OnRemove. Здесь фильтры удаляются из списка."
+               Code="@_removeCode">
+        <div class="demo-row">
+            @foreach (var tag in _tags)
+            {
+                <SChip Removable OnRemove="@(() => _tags.Remove(tag))">@tag</SChip>
+            }
+            @if (_tags.Count == 0)
+            {
+                <span class="demo-note">Все удалены. <a href="primitives">Обновить</a></span>
+            }
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="With icon & avatar" Code="@_iconCode">
+        <div class="demo-row">
+            <SChip Icon="@SIcons.Check" Level="SChipLevel.Success">Verified</SChip>
+            <SChip Icon="@SIcons.Bell">Subscribed</SChip>
+            <SChip AvatarSrc="https://i.pravatar.cc/40?img=8">Anna M.</SChip>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Small, outline, clickable" Code="@_variantCode">
+        <div class="demo-row">
+            <SChip Small>Small</SChip>
+            <SChip Small Removable OnRemove="@(() => {})">Small · x</SChip>
+            <SChip Outline>Outline</SChip>
+            <SChip Clickable OnClick="@(() => _clicks++)">Clicked @_clicks</SChip>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Skeleton" Code="@_skelCode">
+        <div class="demo-col" style="max-width:none;gap:22px;">
+            <div class="demo-row" style="align-items:center;gap:14px;">
+                <SSkeleton Kind="SSkeletonKind.Circle" Size="48px" />
+                <div style="flex:1;">
+                    <SSkeleton Kind="SSkeletonKind.Text" Lines="2" />
+                </div>
+            </div>
+            <SSkeleton Kind="SSkeletonKind.Rect" Height="120px" />
+            <SSkeleton Kind="SSkeletonKind.Text" Width="70%" />
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Skeleton in a card"
+               Description="Типичный паттерн — заглушка на время загрузки."
+               Code="@_skelCardCode">
+        <SCard Title="Loading…" Style="max-width:20rem;">
+            <div class="demo-col" style="max-width:none;gap:14px;">
+                <div class="demo-row" style="align-items:center;gap:12px;">
+                    <SSkeleton Kind="SSkeletonKind.Circle" Size="40px" />
+                    <div style="flex:1;"><SSkeleton Lines="2" /></div>
+                </div>
+                <SSkeleton Kind="SSkeletonKind.Rect" Height="80px" />
+            </div>
+        </SCard>
+    </DemoBlock>
+
+    <DemoBlock Title="Empty state" Code="@_emptyCode">
+        <SCard Padding="SCardPadding.None" Style="max-width:30rem;">
+            <SEmpty Icon="@SIcons.Search"
+                    Title="Ничего не найдено"
+                    Text="Попробуй изменить фильтры или поисковый запрос.">
+                <ActionContent>
+                    <SButton Variant="SVariant.Primary" Icon="@SIcons.X">Сбросить фильтры</SButton>
+                </ActionContent>
+            </SEmpty>
+        </SCard>
+    </DemoBlock>
+
+    <DemoBlock Title="Compact empty" Code="@_emptyCompactCode">
+        <SCard Style="max-width:24rem;">
+            <SEmpty Compact Icon="@SIcons.Bell" Title="Нет уведомлений" Text="Здесь пусто." />
+        </SCard>
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    List<string> _tags = ["Design", "Frontend", "Urgent", "Backend"];
+    int _clicks;
+
+    const string _chipCode = """
+<SChip>Accent</SChip>
+<SChip Level="SChipLevel.Success">Success</SChip>
+""";
+
+    const string _removeCode = """@foreach (var tag in _tags){<SChip Removable OnRemove="@(() => _tags.Remove(tag))">@tag</SChip>}""";
+
+    const string _iconCode = """
+<SChip Icon="@SIcons.Check" Level="SChipLevel.Success">Verified</SChip>
+<SChip AvatarSrc="https://…">Anna M.</SChip>
+""";
+
+    const string _variantCode = """
+<SChip Small>Small</SChip>
+<SChip Outline>Outline</SChip>
+<SChip Clickable OnClick="Handler">Clickable</SChip>
+""";
+
+    const string _skelCode = """
+<SSkeleton Kind="SSkeletonKind.Circle" Size="48px" />
+<SSkeleton Kind="SSkeletonKind.Text" Lines="2" />
+<SSkeleton Kind="SSkeletonKind.Rect" Height="120px" />
+<SSkeleton Width="70%" />
+""";
+
+    const string _skelCardCode = """
+<SCard Title="Loading…">
+    <SSkeleton Kind="SSkeletonKind.Circle" Size="40px" />
+    <SSkeleton Lines="2" />
+    <SSkeleton Kind="SSkeletonKind.Rect" Height="80px" />
+</SCard>
+""";
+
+    const string _emptyCode = """
+<SEmpty Icon="@SIcons.Search"
+        Title="Ничего не найдено"
+        Text="Попробуй изменить фильтры.">
+    <ActionContent>
+        <SButton Variant="SVariant.Primary">Сбросить</SButton>
+    </ActionContent>
+</SEmpty>
+""";
+
+    const string _emptyCompactCode = """
+<SEmpty Compact Icon="@SIcons.Bell" Title="Нет уведомлений" Text="Здесь пусто." />
+""";
+}

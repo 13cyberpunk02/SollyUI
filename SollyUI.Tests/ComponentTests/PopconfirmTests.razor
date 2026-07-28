@@ -1,0 +1,138 @@
+@inherits SollyTestContext
+
+@code {
+    [Fact]
+    public void Trigger_renders()
+    {
+        var cut = Render(@<SPopconfirm Message="Sure?">
+                             <SButton>Delete</SButton>
+                         </SPopconfirm>);
+        cut.FindAll(".s-pc-trigger").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void Confirm_closed_by_default()
+    {
+        var cut = Render(@<SPopconfirm Message="Sure?">
+                             <SButton>Delete</SButton>
+                         </SPopconfirm>);
+        cut.FindAll(".s-pc").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Clicking_trigger_opens_confirm()
+    {
+        var cut = Render(@<SPopconfirm Message="Delete this?">
+                             <SButton>Delete</SButton>
+                         </SPopconfirm>);
+
+        cut.Find(".s-pc-trigger").Click();
+
+        cut.FindAll(".s-pc").Should().HaveCount(1);
+        cut.Markup.Should().Contain("Delete this?");
+    }
+
+    [Fact]
+    public void Renders_title()
+    {
+        var cut = Render(@<SPopconfirm Title="Remove?" Message="x">
+                             <SButton>Delete</SButton>
+                         </SPopconfirm>);
+
+        cut.Find(".s-pc-trigger").Click();
+        cut.Find(".s-pc-title").TextContent.Should().Contain("Remove?");
+    }
+
+    [Fact]
+    public void Confirm_button_fires_callback()
+    {
+        var confirmed = false;
+        var cut = Render(@<SPopconfirm Message="x" ConfirmText="Yes"
+                                       OnConfirm="@(() => confirmed = true)">
+                             <SButton>Delete</SButton>
+                         </SPopconfirm>);
+
+        cut.Find(".s-pc-trigger").Click();
+        cut.FindAll(".s-pc-actions .s-btn")
+            .First(b => b.TextContent.Contains("Yes")).Click();
+
+        confirmed.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Cancel_button_fires_callback()
+    {
+        var cancelled = false;
+        var cut = Render(@<SPopconfirm Message="x" CancelText="No"
+                                       OnCancel="@(() => cancelled = true)">
+                             <SButton>Delete</SButton>
+                         </SPopconfirm>);
+
+        cut.Find(".s-pc-trigger").Click();
+        cut.FindAll(".s-pc-actions .s-btn")
+            .First(b => b.TextContent.Contains("No")).Click();
+
+        cancelled.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Confirm_closes_after_click()
+    {
+        var cut = Render(@<SPopconfirm Message="x" ConfirmText="Yes"
+                                       OnConfirm="@(() => {})">
+                             <SButton>Delete</SButton>
+                         </SPopconfirm>);
+
+        cut.Find(".s-pc-trigger").Click();
+        cut.FindAll(".s-pc-actions .s-btn")
+            .First(b => b.TextContent.Contains("Yes")).Click();
+
+        cut.FindAll(".s-pc").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Danger_uses_danger_icon_class()
+    {
+        var cut = Render(@<SPopconfirm Danger Message="x">
+                             <SButton>Delete</SButton>
+                         </SPopconfirm>);
+
+        cut.Find(".s-pc-trigger").Click();
+        cut.FindAll(".s-pc-icon-danger").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void Custom_button_texts()
+    {
+        var cut = Render(@<SPopconfirm Message="x" ConfirmText="Yep" CancelText="Nope">
+                             <SButton>Delete</SButton>
+                         </SPopconfirm>);
+
+        cut.Find(".s-pc-trigger").Click();
+        cut.Markup.Should().Contain("Yep");
+        cut.Markup.Should().Contain("Nope");
+    }
+
+    [Fact]
+    public void ShowIcon_false_hides_icon()
+    {
+        var cut = Render(@<SPopconfirm Message="x" ShowIcon="false">
+                             <SButton>Delete</SButton>
+                         </SPopconfirm>);
+
+        cut.Find(".s-pc-trigger").Click();
+        cut.FindAll(".s-pc-icon").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void MessageContent_overrides_message()
+    {
+        var cut = Render(@<SPopconfirm>
+                             <ChildContent><SButton>Delete</SButton></ChildContent>
+                             <MessageContent><b id="rich">rich</b></MessageContent>
+                         </SPopconfirm>);
+
+        cut.Find(".s-pc-trigger").Click();
+        cut.FindAll("#rich").Should().HaveCount(1);
+    }
+}
