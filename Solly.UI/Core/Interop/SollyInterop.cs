@@ -6,7 +6,7 @@ namespace Solly.UI.Core.Interop;
 public sealed class SollyInterop(IJSRuntime js) : IAsyncDisposable, IDisposable
 {
     private readonly Lazy<Task<IJSObjectReference>> _module = new(() => js.InvokeAsync<IJSObjectReference>(
-        "import", "./_content/Solly.UI/solly.js").AsTask());
+        "import", "./_content/SollyUI/solly.js").AsTask());
 
     private Task<IJSObjectReference> Module => _module.Value;
 

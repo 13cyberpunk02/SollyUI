@@ -4,10 +4,6 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-
-    <!-- static assets served at _content/SollyUI/... -->
-    <StaticWebAssetBasePath>SollyUI</StaticWebAssetBasePath>
-
     <!-- NuGet package metadata -->
     <PackageId>SollyUI</PackageId>
     <Version>0.2.0</Version>
