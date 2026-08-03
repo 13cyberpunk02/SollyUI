@@ -6,6 +6,8 @@ A glassmorphism + neon component library for Blazor — frosted-glass surfaces, 
 [![License: MIT](https://img.shields.io/badge/License-MIT-informational.svg)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4.svg)](https://dotnet.microsoft.com)
 
+**[Live demo →](https://13cyberpunk02.github.io/SollyUI/)**
+
 # SollyUI with dark theme
 ![SollyUI with dark theme](https://raw.githubusercontent.com/13cyberpunk02/SollyUI/refs/heads/main/Solly.UI/CommonFiles/1.jpg)
 # SollyUI with light theme
