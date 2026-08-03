@@ -1,0 +1,85 @@
+﻿@page "/rating"
+
+<DemoPage Title="Rating" Subtitle="Звёзды, сердечки, половинки. Hover-превью, клавиатура, read-only.">
+
+    <DemoBlock Title="Basic" Code="@_basicCode">
+        <div class="demo-col" style="max-width:none;gap:16px;">
+            <SRating TValue="int" Value="_r1" ValueChanged="@((v) => _r1 = v)" ShowValue />
+            <span class="demo-note">Значение: @_r1. Клик по той же звезде сбрасывает.</span>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Half stars" Code="@_halfCode">
+        <div class="demo-col" style="max-width:none;gap:16px;">
+            <SRating TValue="double" Value="_r2" ValueChanged="@((v) => _r2 = v)"
+                     AllowHalf ShowValue />
+            <span class="demo-note">Наведи на левую/правую половину звезды.</span>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Hearts & custom color" Code="@_heartCode">
+        <div class="demo-row">
+            <SRating TValue="int" Value="_r3" ValueChanged="@((v) => _r3 = v)"
+                     Icon="@SIcons.Heart" Color="#ff6b8a" />
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Sizes" Code="@_sizeCode">
+        <div class="demo-col" style="max-width:none;gap:14px;">
+            <SRating TValue="int" Value="4" ReadOnly Size="SRatingSize.Small" />
+            <SRating TValue="int" Value="4" ReadOnly Size="SRatingSize.Medium" />
+            <SRating TValue="int" Value="4" ReadOnly Size="SRatingSize.Large" />
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Read-only with value"
+               Description="Для отображения рейтинга (отзывы, оценки)."
+               Code="@_roCode">
+        <div class="demo-row" style="gap:20px;">
+            <SRating TValue="double" Value="4.5" ReadOnly AllowHalf ShowValue />
+            <SRating TValue="double" Value="3.5" ReadOnly AllowHalf ShowValue Size="SRatingSize.Small" />
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Custom max" Code="@_maxCode">
+        <SRating TValue="int" Value="_r4" ValueChanged="@((v) => _r4 = v)" Max="10" ShowValue />
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    int _r1 = 3;
+    double _r2 = 2.5;
+    int _r3 = 4;
+    int _r4 = 7;
+
+    const string _basicCode = """
+<SRating TValue="int" Value="_rating"
+         ValueChanged="@((int v) => _rating = v)" ShowValue />
+""";
+
+    const string _halfCode = """
+<SRating TValue="double" Value="_rating"
+         ValueChanged="@((double v) => _rating = v)"
+         AllowHalf ShowValue />
+""";
+
+    const string _heartCode = """
+<SRating TValue="int" Value="_r"
+         ValueChanged="@((int v) => _r = v)"
+         Icon="@SIcons.Heart" Color="#ff6b8a" />
+""";
+
+    const string _sizeCode = """
+<SRating TValue="int" Value="4" ReadOnly Size="SRatingSize.Large" />
+""";
+
+    const string _roCode = """
+<SRating TValue="double" Value="4.5" ReadOnly AllowHalf ShowValue />
+""";
+
+    const string _maxCode = """
+<SRating TValue="int" Value="_r" Max="10"
+         ValueChanged="@((int v) => _r = v)" ShowValue />
+""";
+}

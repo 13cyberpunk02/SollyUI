@@ -1,0 +1,166 @@
+﻿@inherits SollyTestContext
+
+@code {
+    [Fact]
+    public void Renders_max_items()
+    {
+        var cut = RenderC<SRating<int>>(p => p.Add(x => x.Value, 0));
+        cut.FindAll(".s-rating-item").Should().HaveCount(5);
+    }
+
+    [Fact]
+    public void Custom_max_renders_that_many()
+    {
+        var cut = RenderC<SRating<int>>(p => p
+            .Add(x => x.Value, 0)
+            .Add(x => x.Max, 10));
+        cut.FindAll(".s-rating-item").Should().HaveCount(10);
+    }
+
+    [Fact]
+    public void Fill_reflects_value()
+    {
+        var cut = RenderC<SRating<int>>(p => p.Add(x => x.Value, 3));
+        var fills = cut.FindAll(".s-rating-fill");
+        fills[0].GetAttribute("style").Should().Contain("width:100%");
+        fills[2].GetAttribute("style").Should().Contain("width:100%");
+        fills[3].GetAttribute("style").Should().Contain("width:0%");
+    }
+
+    [Fact]
+    public void Clicking_star_sets_value()
+    {
+        var value = 0;
+        var cut = RenderC<SRating<int>>(p => p
+            .Bind(x => x.Value, value, v => value = v, () => value));
+
+        cut.FindAll(".s-rating-item")[3].Click();
+        value.Should().Be(4);
+    }
+
+    [Fact]
+    public void Clicking_same_value_clears_it()
+    {
+        var value = 4;
+        var cut = RenderC<SRating<int>>(p => p
+            .Bind(x => x.Value, value, v => value = v, () => value));
+
+        cut.FindAll(".s-rating-item")[3].Click();  // click the 4th again
+        value.Should().Be(0);
+    }
+
+    [Fact]
+    public void ReadOnly_click_does_nothing()
+    {
+        var value = 2;
+        var cut = RenderC<SRating<int>>(p => p
+            .Bind(x => x.Value, value, v => value = v, () => value)
+            .Add(x => x.ReadOnly, true));
+
+        cut.FindAll(".s-rating-item")[4].Click();
+        value.Should().Be(2);
+    }
+
+    [Fact]
+    public void ReadOnly_applies_class()
+    {
+        var cut = RenderC<SRating<int>>(p => p
+            .Add(x => x.Value, 3)
+            .Add(x => x.ReadOnly, true));
+        cut.Find(".s-rating").ClassList.Should().Contain("s-rating-ro");
+    }
+
+    [Fact]
+    public void ShowValue_renders_value()
+    {
+        var cut = RenderC<SRating<int>>(p => p
+            .Add(x => x.Value, 4)
+            .Add(x => x.ShowValue, true));
+        cut.Find(".s-rating-value").TextContent.Should().Contain("4");
+    }
+
+    [Fact]
+    public void Half_mode_renders_half_zones()
+    {
+        var cut = RenderC<SRating<double>>(p => p
+            .Add(x => x.Value, 2.5)
+            .Add(x => x.AllowHalf, true));
+        cut.FindAll(".s-rating-half").Should().HaveCount(10); // 5 items * 2
+    }
+
+    [Fact]
+    public void Half_value_fills_50_percent()
+    {
+        var cut = RenderC<SRating<double>>(p => p
+            .Add(x => x.Value, 2.5)
+            .Add(x => x.AllowHalf, true));
+        var fills = cut.FindAll(".s-rating-fill");
+        fills[1].GetAttribute("style").Should().Contain("width:100%"); // 2nd full
+        fills[2].GetAttribute("style").Should().Contain("width:50%");  // 3rd half
+    }
+
+    [Fact]
+    public void Clicking_left_half_sets_half_value()
+    {
+        double value = 0;
+        var cut = RenderC<SRating<double>>(p => p
+            .Bind(x => x.Value, value, v => value = v, () => value)
+            .Add(x => x.AllowHalf, true));
+
+        // left half of 3rd star => 2.5
+        cut.FindAll(".s-rating-item")[2].QuerySelector(".s-rating-half-left")!.Click();
+        value.Should().Be(2.5);
+    }
+
+    [Fact]
+    public void Arrow_right_increments()
+    {
+        var value = 2;
+        var cut = RenderC<SRating<int>>(p => p
+            .Bind(x => x.Value, value, v => value = v, () => value));
+
+        cut.Find(".s-rating").KeyDown("ArrowRight");
+        value.Should().Be(3);
+    }
+
+    [Fact]
+    public void Arrow_left_decrements()
+    {
+        var value = 2;
+        var cut = RenderC<SRating<int>>(p => p
+            .Bind(x => x.Value, value, v => value = v, () => value));
+
+        cut.Find(".s-rating").KeyDown("ArrowLeft");
+        value.Should().Be(1);
+    }
+
+    [Fact]
+    public void Arrow_does_not_exceed_max()
+    {
+        var value = 5;
+        var cut = RenderC<SRating<int>>(p => p
+            .Bind(x => x.Value, value, v => value = v, () => value)
+            .Add(x => x.Max, 5));
+
+        cut.Find(".s-rating").KeyDown("ArrowRight");
+        value.Should().Be(5);
+    }
+
+    [Fact]
+    public void Works_with_double_type()
+    {
+        double value = 0;
+        var cut = RenderC<SRating<double>>(p => p
+            .Bind(x => x.Value, value, v => value = v, () => value));
+
+        cut.FindAll(".s-rating-item")[2].Click();
+        value.Should().Be(3.0);
+    }
+
+    [Fact]
+    public void Has_slider_role_when_interactive()
+    {
+        var cut = RenderC<SRating<int>>(p => p.Add(x => x.Value, 3));
+        cut.Find(".s-rating").GetAttribute("role").Should().Be("slider");
+    }
+}

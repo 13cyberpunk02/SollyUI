@@ -1,0 +1,192 @@
+﻿@inherits SComponentBase
+@typeparam TValue
+
+<div class="@Cls("s-rating", ReadOnly ? "s-rating-ro" : null, SizeClass)"
+     role="@(ReadOnly ? null : "slider")"
+     aria-valuenow="@ToDouble(Value).ToString(CultureInfo.InvariantCulture)"
+     aria-valuemin="0"
+     aria-valuemax="@Max"
+     tabindex="@(ReadOnly ? -1 : 0)"
+     @onkeydown="OnKeyDownAsync"
+     style="@Style" @attributes="Attributes">
+
+    @for (var i = 1; i <= Max; i++)
+    {
+        var index = i;
+        <span class="s-rating-item"
+              @onmouseenter="@(() => OnHover(index))"
+              @onmouseleave="@(OnLeave)"
+              @onclick="() => OnClickAsync(index, false)">
+
+            @if (AllowHalf)
+            {
+                <span class="s-rating-half s-rating-half-left"
+                      @onmouseenter:stopPropagation="true"
+                      @onmouseenter="@(() => OnHoverHalf(index, true))"
+                      @onclick:stopPropagation="true"
+                      @onclick="() => OnClickAsync(index, true)"></span>
+                <span class="s-rating-half s-rating-half-right"
+                      @onmouseenter:stopPropagation="true"
+                      @onmouseenter="@(() => OnHoverHalf(index, false))"
+                      @onclick:stopPropagation="true"
+                      @onclick="() => OnClickAsync(index, false)"></span>
+            }
+
+            <span class="s-rating-icon s-rating-bg">
+                <SIcon Name="@IconFor(false)" Size="@IconSize" />
+            </span>
+            <span class="s-rating-icon s-rating-fill" style="@FillStyle(index)">
+                <SIcon Name="@IconFor(true)" Size="@IconSize" />
+            </span>
+        </span>
+    }
+
+    @if (ShowValue)
+    {
+        <span class="s-rating-value">@DisplayValue</span>
+    }
+</div>
+
+@code {
+    [Parameter] public TValue Value { get; set; } = default!;
+    [Parameter] public EventCallback<TValue> ValueChanged { get; set; }
+
+    [Parameter] public int Max { get; set; } = 5;
+    [Parameter] public bool AllowHalf { get; set; }
+    [Parameter] public bool ReadOnly { get; set; }
+    [Parameter] public bool ShowValue { get; set; }
+
+    /// <summary>Filled icon (default star). Set with SIcons.*</summary>
+    [Parameter] public string? Icon { get; set; }
+    /// <summary>Outline icon shown for empty state. Defaults to same as Icon.</summary>
+    [Parameter] public string? EmptyIcon { get; set; }
+
+    [Parameter] public SRatingSize Size { get; set; } = SRatingSize.Medium;
+
+    /// <summary>Optional custom color; falls back to accent.</summary>
+    [Parameter] public string? Color { get; set; }
+
+    private double? _hover;
+
+    private double CurrentValue => _hover ?? ToDouble(Value);
+
+    private string SizeClass => Size switch
+    {
+        SRatingSize.Small => "s-rating-sm",
+        SRatingSize.Large => "s-rating-lg",
+        _                 => "s-rating-md"
+    };
+
+    private int IconSize => Size switch
+    {
+        SRatingSize.Small => 16,
+        SRatingSize.Large => 30,
+        _                 => 22
+    };
+
+    private string IconFor(bool filled)
+    {
+        if (filled) return string.IsNullOrEmpty(Icon) ? SIcons.StarFilled : Icon;
+        return string.IsNullOrEmpty(EmptyIcon)
+            ? (string.IsNullOrEmpty(Icon) ? SIcons.Star : Icon)
+            : EmptyIcon;
+    }
+
+    private string FillStyle(int index)
+    {
+        var v = CurrentValue;
+        double pct;
+        if (v >= index) pct = 100;
+        else if (v <= index - 1) pct = 0;
+        else pct = (v - (index - 1)) * 100;
+
+        var inv = CultureInfo.InvariantCulture;
+        var style = $"width:{pct.ToString("0.##", inv)}%;";
+        if (!string.IsNullOrEmpty(Color)) style += $"color:{Color};";
+        return style;
+    }
+
+    private string DisplayValue
+    {
+        get
+        {
+            var v = ToDouble(Value);
+            var inv = CultureInfo.InvariantCulture;
+            return v.ToString("0.#", inv);
+        }
+    }
+
+    private void OnHover(int index)
+    {
+        if (ReadOnly || AllowHalf) return;
+        _hover = index;
+    }
+
+    private void OnHoverHalf(int index, bool leftHalf)
+    {
+        if (ReadOnly) return;
+        _hover = leftHalf ? index - 0.5 : index;
+    }
+
+    private void OnLeave()
+    {
+        if (ReadOnly) return;
+        _hover = null;
+    }
+
+    private async Task OnClickAsync(int index, bool half)
+    {
+        if (ReadOnly) return;
+        double newVal = half ? index - 0.5 : index;
+
+        // click same value again clears it (toggle off)
+        if (Math.Abs(ToDouble(Value) - newVal) < 0.001) newVal = 0;
+
+        _hover = null;
+        await ValueChanged.InvokeAsync(FromDouble(newVal));
+    }
+
+    private async Task OnKeyDownAsync(KeyboardEventArgs e)
+    {
+        if (ReadOnly) return;
+        var v = ToDouble(Value);
+        var step = AllowHalf ? 0.5 : 1;
+
+        double? next = e.Key switch
+        {
+            "ArrowRight" or "ArrowUp" => Math.Min(Max, v + step),
+            "ArrowLeft" or "ArrowDown" => Math.Max(0, v - step),
+            "Home" => 0,
+            "End" => Max,
+            _ => null
+        };
+
+        if (next is not null)
+            await ValueChanged.InvokeAsync(FromDouble(next.Value));
+    }
+
+    // --- generic numeric conversion (int / double / decimal) ---
+    private static double ToDouble(TValue v) => v switch
+    {
+        int i => i,
+        double d => d,
+        decimal m => (double)m,
+        float f => f,
+        _ => 0
+    };
+
+    private TValue FromDouble(double d)
+    {
+        var t = typeof(TValue);
+        var underlying = Nullable.GetUnderlyingType(t) ?? t;
+        object o = underlying switch
+        {
+            var x when x == typeof(int) => (int)Math.Round(d),
+            var x when x == typeof(double) => d,
+            var x when x == typeof(decimal) => (decimal)d,
+            var x when x == typeof(float) => (float)d,
+            _ => d
+        };
+        return (TValue)o;
+    }
+}
