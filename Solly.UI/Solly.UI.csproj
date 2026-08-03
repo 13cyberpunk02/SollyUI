@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <!-- NuGet package metadata -->
     <PackageId>SollyUI</PackageId>
-    <Version>0.2.0</Version>
+    <Version>0.2.1</Version>
     <Authors>13cyberpunk02</Authors>
     <Description>Glassmorphism + neon component library for Blazor Server and WebAssembly.</Description>
     <PackageTags>blazor;components;ui;glassmorphism;neon;razor;blazor-server;blazor-wasm;component-library</PackageTags>

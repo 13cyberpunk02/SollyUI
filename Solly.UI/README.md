@@ -33,7 +33,7 @@ builder.Services.AddSolly.UI(options =>
 Reference the stylesheet in your host page (`App.razor`, `_Host.cshtml`, or `index.html`):
 
 ```html
-<link rel="stylesheet" href="SollyUI/solly.css" />
+<link rel="stylesheet" href="_content/SollyUI/solly.css"/>
 ```
 
 To avoid a flash of the wrong theme on first paint, apply the stored theme before Blazor boots — add this to the `<head>` of your host page:
