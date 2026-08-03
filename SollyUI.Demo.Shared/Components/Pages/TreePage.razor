@@ -1,0 +1,118 @@
+﻿@page "/tree"
+
+<DemoPage Title="Tree" Subtitle="Иерархия с раскрытием и каскадными чекбоксами. Data-driven.">
+
+    <DemoBlock Title="Basic file tree" Code="@_basicCode">
+        <SCard Padding="SCardPadding.Compact" Style="max-width:24rem;">
+            <STree TItem="Node"
+                   Items="_files"
+                   ChildrenSelector="@(n => n.Children)"
+                   TextSelector="@(n => n.Name)"
+                   IconSelector="@(n => n.Icon)"
+                   KeySelector="@(n => n.Id)"
+                   Selected="_selected"
+                   SelectedChanged="@((Node n) => _selected = n)"
+                   InitiallyExpanded />
+        </SCard>
+        @if (_selected is not null)
+        {
+            <span class="demo-note" style="margin-top:12px;display:block;">Выбрано: @_selected.Name</span>
+        }
+    </DemoBlock>
+
+    <DemoBlock Title="Cascading checkboxes"
+               Description="Отметь папку — отметятся все дети. Часть детей — родитель в состоянии «частично»."
+               Code="@_checkCode">
+        <SCard Padding="SCardPadding.Compact" Style="max-width:24rem;">
+            <STree TItem="Node"
+                   Items="_perms"
+                   ChildrenSelector="@(n => n.Children)"
+                   TextSelector="@(n => n.Name)"
+                   KeySelector="@(n => n.Id)"
+                   ShowCheckboxes
+                   CheckedItems="_checked"
+                   CheckedItemsChanged="@((IEnumerable<Node> c) => _checked = c.ToList())"
+                   InitiallyExpanded />
+        </SCard>
+        <span class="demo-note" style="margin-top:12px;display:block;">
+            Отмечено листьев: @_checked.Count — @string.Join(", ", _checked.Select(c => c.Name))
+        </span>
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    class Node
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+        public string? Icon { get; set; }
+        public List<Node>? Children { get; set; }
+    }
+
+    Node? _selected;
+    List<Node> _checked = new();
+
+    int _id = 0;
+    Node N(string name, string? icon = null, params Node[] kids) =>
+        new() { Id = ++_id, Name = name, Icon = icon, Children = kids.Length > 0 ? kids.ToList() : null };
+
+    List<Node> _files = null!;
+    List<Node> _perms = null!;
+
+    protected override void OnInitialized()
+    {
+        _files = new()
+        {
+            N("src", SIcons.Layers,
+                N("Components", SIcons.Layers,
+                    N("SButton.razor", SIcons.Type),
+                    N("STree.razor", SIcons.Type)),
+                N("wwwroot", SIcons.Layers,
+                    N("solly.css", SIcons.Type))),
+            N("README.md", SIcons.Type),
+            N("LICENSE", SIcons.Type),
+        };
+
+        _perms =
+        [
+
+            N("Администрирование", null,
+                N("Пользователи", null,
+                    N("Просмотр"),
+                    N("Редактирование"),
+                    N("Удаление")),
+                N("Роли", null,
+                    N("Просмотр ролей"),
+                    N("Назначение"))),
+
+            N("Отчёты", null,
+                N("Экспорт"),
+                N("Печать"))
+        ];
+    }
+
+    const string _basicCode = """
+<STree TItem="Node"
+       Items="_files"
+       ChildrenSelector="@(n => n.Children)"
+       TextSelector="@(n => n.Name)"
+       IconSelector="@(n => n.Icon)"
+       KeySelector="@(n => n.Id)"
+       Selected="_selected"
+       SelectedChanged="@((Node n) => _selected = n)"
+       InitiallyExpanded />
+""";
+
+    const string _checkCode = """
+<STree TItem="Node"
+       Items="_perms"
+       ChildrenSelector="@(n => n.Children)"
+       TextSelector="@(n => n.Name)"
+       KeySelector="@(n => n.Id)"
+       ShowCheckboxes
+       CheckedItems="_checked"
+       CheckedItemsChanged="@((IEnumerable<Node> c) => _checked = c.ToList())"
+       InitiallyExpanded />
+""";
+}

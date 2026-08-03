@@ -1,0 +1,170 @@
+﻿@inherits SComponentBase
+@typeparam TItem
+
+<CascadingValue Value="this" IsFixed="true">
+    <ul class="@Cls("s-tree")" role="tree" style="@Style" @attributes="Attributes">
+        @foreach (var item in Items)
+        {
+            <STreeNodeView TItem="TItem" Item="item" Depth="0" />
+        }
+    </ul>
+</CascadingValue>
+
+@code {
+    [Parameter, EditorRequired] public IEnumerable<TItem> Items { get; set; } = default!;
+
+    /// <summary>Returns child items of a node, or null/empty for leaves.</summary>
+    [Parameter] public Func<TItem, IEnumerable<TItem>?>? ChildrenSelector { get; set; }
+
+    /// <summary>Node label text.</summary>
+    [Parameter, EditorRequired] public Func<TItem, string> TextSelector { get; set; } = default!;
+
+    /// <summary>Stable unique key per item. Defaults to the item itself.</summary>
+    [Parameter] public Func<TItem, object>? KeySelector { get; set; }
+
+    /// <summary>Optional icon name per node.</summary>
+    [Parameter] public Func<TItem, string?>? IconSelector { get; set; }
+
+    /// <summary>Custom node content; overrides Text+Icon rendering.</summary>
+    [Parameter] public RenderFragment<TItem>? NodeTemplate { get; set; }
+
+    [Parameter] public bool ShowCheckboxes { get; set; }
+    [Parameter] public bool ShowLines { get; set; } = true;
+
+    // selection (single highlighted node)
+    [Parameter] public TItem? Selected { get; set; }
+    [Parameter] public EventCallback<TItem> SelectedChanged { get; set; }
+
+    // checked items (cascading)
+    [Parameter] public IEnumerable<TItem>? CheckedItems { get; set; }
+    [Parameter] public EventCallback<IEnumerable<TItem>> CheckedItemsChanged { get; set; }
+
+    [Parameter] public EventCallback<TItem> OnNodeExpand { get; set; }
+    [Parameter] public EventCallback<TItem> OnNodeClick { get; set; }
+
+    /// <summary>Expand all nodes on first render.</summary>
+    [Parameter] public bool InitiallyExpanded { get; set; }
+
+    private readonly HashSet<object> _expanded = new();
+    private readonly HashSet<object> _checked = new();
+    private bool _initialized;
+
+    internal bool ShowChecks => ShowCheckboxes;
+    internal bool Lines => ShowLines;
+
+    protected override void OnParametersSet()
+    {
+        if (!_initialized)
+        {
+            _initialized = true;
+            if (InitiallyExpanded) ExpandAll(Items);
+        }
+
+        // sync checked from parameter
+        if (CheckedItems is not null)
+        {
+            _checked.Clear();
+            foreach (var i in CheckedItems) _checked.Add(KeyOf(i));
+        }
+    }
+
+    private void ExpandAll(IEnumerable<TItem> items)
+    {
+        foreach (var i in items)
+        {
+            var kids = ChildrenOf(i);
+            if (kids.Any())
+            {
+                _expanded.Add(KeyOf(i));
+                ExpandAll(kids);
+            }
+        }
+    }
+
+    // --- helpers used by node views ---
+    internal object KeyOf(TItem item) => KeySelector?.Invoke(item) ?? item!;
+    internal string TextOf(TItem item) => TextSelector(item);
+    internal string? IconOf(TItem item) => IconSelector?.Invoke(item);
+    internal IEnumerable<TItem> ChildrenOf(TItem item) =>
+        ChildrenSelector?.Invoke(item) ?? Enumerable.Empty<TItem>();
+    internal bool HasChildren(TItem item) => ChildrenOf(item).Any();
+    internal RenderFragment<TItem>? Template => NodeTemplate;
+
+    internal bool IsExpanded(TItem item) => _expanded.Contains(KeyOf(item));
+    internal bool IsSelected(TItem item) =>
+        Selected is not null && EqualityComparer<object>.Default.Equals(KeyOf(item), KeyOf(Selected));
+
+    internal async Task ToggleExpandAsync(TItem item)
+    {
+        var key = KeyOf(item);
+        if (!_expanded.Remove(key))
+        {
+            _expanded.Add(key);
+            await OnNodeExpand.InvokeAsync(item);
+        }
+        StateHasChanged();
+    }
+
+    internal async Task SelectAsync(TItem item)
+    {
+        await SelectedChanged.InvokeAsync(item);
+        await OnNodeClick.InvokeAsync(item);
+        StateHasChanged();
+    }
+
+    // --- cascading check logic ---
+    internal SCheckState CheckStateOf(TItem item)
+    {
+        var kids = ChildrenOf(item).ToList();
+        if (kids.Count == 0)
+            return _checked.Contains(KeyOf(item)) ? SCheckState.Checked : SCheckState.Unchecked;
+
+        var states = kids.Select(CheckStateOf).ToList();
+        if (states.All(s => s == SCheckState.Checked)) return SCheckState.Checked;
+        return states.All(s => s == SCheckState.Unchecked) ? SCheckState.Unchecked : SCheckState.Indeterminate;
+    }
+
+    internal async Task ToggleCheckAsync(TItem item)
+    {
+        var current = CheckStateOf(item);
+        var newChecked = current != SCheckState.Checked; // indeterminate -> checked
+        SetCheckRecursive(item, newChecked);
+        await EmitCheckedAsync();
+        StateHasChanged();
+    }
+
+    private void SetCheckRecursive(TItem item, bool isChecked)
+    {
+        var kids = ChildrenOf(item).ToList();
+        if (kids.Count == 0)
+        {
+            if (isChecked) _checked.Add(KeyOf(item));
+            else _checked.Remove(KeyOf(item));
+        }
+        else
+        {
+            foreach (var k in kids) SetCheckRecursive(k, isChecked);
+        }
+    }
+
+    private async Task EmitCheckedAsync()
+    {
+        // collect all leaf items that are checked
+        var result = new List<TItem>();
+        CollectChecked(Items, result);
+        await CheckedItemsChanged.InvokeAsync(result);
+    }
+
+    private void CollectChecked(IEnumerable<TItem> items, List<TItem> acc)
+    {
+        foreach (var i in items)
+        {
+            var kids = ChildrenOf(i).ToList();
+            if (kids.Count == 0)
+            {
+                if (_checked.Contains(KeyOf(i))) acc.Add(i);
+            }
+            else CollectChecked(kids, acc);
+        }
+    }
+}

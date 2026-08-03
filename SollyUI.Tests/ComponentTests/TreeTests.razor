@@ -1,0 +1,177 @@
+﻿@inherits SollyTestContext
+
+@code {
+    public class Node
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+        public List<Node>? Children { get; set; }
+    }
+
+    private List<Node> Sample()
+    {
+        var id = 0;
+        Node N(string name, params Node[] kids) =>
+            new() { Id = ++id, Name = name, Children = kids.Length > 0 ? kids.ToList() : null };
+
+        return new()
+        {
+            N("Root A",
+                N("Child A1"),
+                N("Child A2",
+                    N("Leaf A2a"),
+                    N("Leaf A2b"))),
+            N("Root B"),
+        };
+    }
+
+    private IRenderedComponent<STree<Node>> RenderTree(
+        List<Node> items, bool checks = false, bool expanded = true,
+        Action<ComponentParameterCollectionBuilder<STree<Node>>>? extra = null)
+    {
+        return Render<STree<Node>>(p =>
+        {
+            p.Add(x => x.Items, items);
+            p.Add(x => x.ChildrenSelector, n => n.Children);
+            p.Add(x => x.TextSelector, n => n.Name);
+            p.Add(x => x.KeySelector, n => (object)n.Id);
+            p.Add(x => x.ShowCheckboxes, checks);
+            p.Add(x => x.InitiallyExpanded, expanded);
+            extra?.Invoke(p);
+        });
+    }
+
+    [Fact]
+    public void Renders_root_nodes()
+    {
+        var cut = RenderTree(Sample(), expanded: false);
+        cut.Markup.Should().Contain("Root A");
+        cut.Markup.Should().Contain("Root B");
+    }
+
+    [Fact]
+    public void Collapsed_hides_children()
+    {
+        var cut = RenderTree(Sample(), expanded: false);
+        cut.Markup.Should().NotContain("Child A1");
+    }
+
+    [Fact]
+    public void Expanded_shows_children()
+    {
+        var cut = RenderTree(Sample(), expanded: true);
+        cut.Markup.Should().Contain("Child A1");
+        cut.Markup.Should().Contain("Leaf A2a");
+    }
+
+    [Fact]
+    public void Clicking_toggle_expands_node()
+    {
+        var cut = RenderTree(Sample(), expanded: false);
+        // first node has children -> its toggle is clickable
+        cut.FindAll(".s-tree-toggle")[0].Click();
+        cut.Markup.Should().Contain("Child A1");
+    }
+
+    [Fact]
+    public void Leaf_has_empty_toggle()
+    {
+        var cut = RenderTree(Sample(), expanded: true);
+        cut.FindAll(".s-tree-toggle-empty").Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public void Clicking_node_selects_it()
+    {
+        Node? selected = null;
+        var cut = RenderTree(Sample(), expanded: true, extra: p =>
+            p.Add(x => x.SelectedChanged, EventCallback.Factory.Create<Node>(this, n => selected = n)));
+
+        cut.FindAll(".s-tree-row")[0].Click();
+        selected.Should().NotBeNull();
+        selected!.Name.Should().Be("Root A");
+    }
+
+    [Fact]
+    public void No_checkboxes_by_default()
+    {
+        var cut = RenderTree(Sample(), checks: false);
+        cut.FindAll(".s-tree-check").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Checkboxes_render_when_enabled()
+    {
+        var cut = RenderTree(Sample(), checks: true);
+        cut.FindAll(".s-tree-check").Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public void Checking_leaf_marks_it()
+    {
+        List<Node> chk = new();
+        var cut = RenderTree(Sample(), checks: true, extra: p =>
+            p.Add(x => x.CheckedItemsChanged,
+                EventCallback.Factory.Create<IEnumerable<Node>>(this, c => chk = c.ToList())));
+
+        // find the check for "Child A1" (a leaf)
+        var rows = cut.FindAll(".s-tree-row");
+        var a1Index = rows.ToList().FindIndex(r => r.TextContent.Contains("Child A1"));
+        cut.FindAll(".s-tree-check")[a1Index].Click();
+
+        chk.Should().ContainSingle(n => n.Name == "Child A1");
+    }
+
+    [Fact]
+    public void Checking_parent_checks_all_leaves()
+    {
+        List<Node> chk = [];
+        var cut = RenderTree(Sample(), checks: true, extra: p =>
+            p.Add(x => x.CheckedItemsChanged,
+                EventCallback.Factory.Create<IEnumerable<Node>>(this, c => chk = c.ToList())));
+
+        // "Root A" is first check
+        cut.FindAll(".s-tree-check")[0].Click();
+
+        // all leaves under Root A: Child A1, Leaf A2a, Leaf A2b
+        chk.Select(n => n.Name).Should().Contain(["Child A1", "Leaf A2a", "Leaf A2b"]);
+    }
+
+    [Fact]
+    public void Parent_indeterminate_when_some_children_checked()
+    {
+        var cut = RenderTree(Sample(), checks: true);
+
+        // check one leaf under "Child A2" (Leaf A2a)
+        var rows = cut.FindAll(".s-tree-row");
+        var leafIndex = rows.ToList().FindIndex(r => r.TextContent.Contains("Leaf A2a"));
+        cut.FindAll(".s-tree-check")[leafIndex].Click();
+
+        // "Child A2" parent should now be indeterminate
+        var a2Index = rows.ToList().FindIndex(r => r.TextContent.Contains("Child A2"));
+        cut.FindAll(".s-tree-check")[a2Index].ClassList.Should().Contain("s-indeterminate");
+    }
+
+    [Fact]
+    public void Parent_checked_when_all_children_checked()
+    {
+        var cut = RenderTree(Sample(), checks: true);
+        var rows = cut.FindAll(".s-tree-row");
+
+        var a2aIndex = rows.ToList().FindIndex(r => r.TextContent.Contains("Leaf A2a"));
+        var a2bIndex = rows.ToList().FindIndex(r => r.TextContent.Contains("Leaf A2b"));
+
+        cut.FindAll(".s-tree-check")[a2aIndex].Click();
+        cut.FindAll(".s-tree-check")[a2bIndex].Click();
+
+        var a2Index = rows.ToList().FindIndex(r => r.TextContent.Contains("Child A2"));
+        cut.FindAll(".s-tree-check")[a2Index].ClassList.Should().Contain("s-checked");
+    }
+
+    [Fact]
+    public void Has_tree_role()
+    {
+        var cut = RenderTree(Sample());
+        cut.Find(".s-tree").GetAttribute("role").Should().Be("tree");
+    }
+}

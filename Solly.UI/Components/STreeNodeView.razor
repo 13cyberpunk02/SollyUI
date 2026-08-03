@@ -1,0 +1,106 @@
+﻿@inherits SComponentBase
+@typeparam TItem
+
+<li class="s-tree-node" role="treeitem"
+    aria-expanded="@(HasKids ? (Expanded ? "true" : "false") : null)">
+
+    <div class="@RowClass"
+         style="@($"--s-tree-depth:{Depth}")"
+         @onclick="OnRowClickAsync">
+
+        <span class="s-tree-toggle @(HasKids ? null : "s-tree-toggle-empty")"
+              @onclick:stopPropagation="true"
+              @onclick="OnToggleAsync">
+            @if (HasKids)
+            {
+                <SIcon Name="@SIcons.ChevronRight" Size="15" Weight="2.2" />
+            }
+        </span>
+
+        @if (Tree.ShowChecks)
+        {
+            <span class="s-tree-check @CheckClass"
+                  @onclick:stopPropagation="true"
+                  @onclick="OnCheckAsync">
+                @switch (CheckState)
+                {
+                    case SCheckState.Checked:
+                        <SIcon Name="@SIcons.Check" Size="13" Weight="3" />
+                        break;
+                    case SCheckState.Indeterminate:
+                        <SIcon Name="@SIcons.Minus" Size="13" Weight="3" />
+                        break;
+                    case SCheckState.Unchecked:
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            </span>
+        }
+
+        <span class="s-tree-label">
+            @if (Tree.Template is not null)
+            {
+                @Tree.Template(Item)
+            }
+            else
+            {
+                @if (!string.IsNullOrEmpty(Icon))
+                {
+                    <span class="s-tree-icon"><SIcon Name="@Icon" Size="16" /></span>
+                }
+                <span class="s-tree-text">@Text</span>
+            }
+        </span>
+    </div>
+
+    @if (HasKids && Expanded)
+    {
+        <ul class="s-tree-children" role="group">
+            @foreach (var child in Children)
+            {
+                <STreeNodeView TItem="TItem" Item="child" Depth="@(Depth + 1)" />
+            }
+        </ul>
+    }
+</li>
+
+@code {
+    [CascadingParameter] private STree<TItem> Tree { get; set; } = default!;
+
+    [Parameter, EditorRequired] public TItem Item { get; set; } = default!;
+    [Parameter] public int Depth { get; set; }
+
+    private bool HasKids => Tree.HasChildren(Item);
+    private bool Expanded => Tree.IsExpanded(Item);
+    private IEnumerable<TItem> Children => Tree.ChildrenOf(Item);
+    private string Text => Tree.TextOf(Item);
+    private string? Icon => Tree.IconOf(Item);
+    private SCheckState CheckState => Tree.CheckStateOf(Item);
+
+    private string RowClass => Cls(
+        "s-tree-row",
+        Tree.IsSelected(Item) ? "s-tree-selected" : null,
+        Expanded ? "s-tree-expanded" : null);
+
+    private string CheckClass => CheckState switch
+    {
+        SCheckState.Checked => "s-checked",
+        SCheckState.Indeterminate => "s-indeterminate",
+        _ => null!
+    };
+
+    private async Task OnToggleAsync()
+    {
+        if (HasKids) await Tree.ToggleExpandAsync(Item);
+    }
+
+    private async Task OnRowClickAsync()
+    {
+        await Tree.SelectAsync(Item);
+        // clicking a folder row also toggles it
+        if (HasKids) await Tree.ToggleExpandAsync(Item);
+    }
+
+    private async Task OnCheckAsync() => await Tree.ToggleCheckAsync(Item);
+}
