@@ -27,16 +27,7 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Publish WASM
-        run: |
-          dotnet clean SollyUI.Demo.Wasm/SollyUI.Demo.Wasm.csproj -c Release
-          dotnet publish SollyUI.Demo.Wasm/SollyUI.Demo.Wasm.csproj -c Release -o publish
-          
-      - name: Check index.html
-        run: |
-          echo "=== importmap present? ==="
-          grep -i "importmap" publish/wwwroot/index.html || echo "NO IMPORTMAP FOUND"
-          echo "=== blazor script line ==="
-          grep -i "blazor.webassembly" publish/wwwroot/index.html
+        run: dotnet publish src/SollyUI.Demo.Wasm/SollyUI.Demo.Wasm.csproj -c Release -o publish        
           
       - name: Rewrite base href for project subpath
         run: |
