@@ -31,7 +31,7 @@ jobs:
       - name: Pack
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          dotnet pack Solly.UI/SollyUI.csproj -c Release -o artifacts -p:Version=$VERSION
+          dotnet pack Solly.UI/Solly.UI.csproj -c Release -o artifacts -p:Version=$VERSION
 
       - name: NuGet login (Trusted Publishing)
         uses: NuGet/login@v1
