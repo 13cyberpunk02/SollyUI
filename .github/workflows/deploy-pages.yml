@@ -37,20 +37,6 @@ jobs:
 
       - name: Create 404 fallback
         run: cp publish/wwwroot/index.html publish/wwwroot/404.html
-
-      - name: Verify publish output
-        run: |
-          echo "=== publish/ ==="
-          ls -la publish/
-          echo "=== publish/wwwroot/ ==="
-          ls -la publish/wwwroot/
-          echo "=== _framework? ==="
-          ls -la publish/wwwroot/_framework/ 2>&1 | head -20
-        
-      - name: Check blazor js
-        run: |
-          echo "=== blazor js files ==="
-          ls -la publish/wwwroot/_framework/ | grep -i blazor
       
       - name: Add .nojekyll
         run: touch publish/wwwroot/.nojekyll
