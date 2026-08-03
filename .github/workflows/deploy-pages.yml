@@ -31,7 +31,7 @@ jobs:
 
       - name: Rewrite base href for project subpath
         run: |
-          sed -i 's|<base href="/" />|<base href="/SollyUI/" />|g' publish/wwwroot/index.html
+          sed -i 's|<base href="/" />|<base href="_content/SollyUI/" />|g' publish/wwwroot/index.html
 
       - name: Create 404 fallback
         run: cp publish/wwwroot/index.html publish/wwwroot/404.html
