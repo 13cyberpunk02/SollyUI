@@ -1,0 +1,125 @@
+﻿@inherits SollyTestContext
+
+@code {
+    [Fact]
+    public void Renders_field_and_hue()
+    {
+        var cut = RenderC<SColorPicker>(p => p.Add(x => x.Value, "#22e6c8"));
+        cut.FindAll(".s-cp-field").Should().HaveCount(1);
+        cut.FindAll(".s-cp-hue-input").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void Preview_shows_current_color()
+    {
+        var cut = RenderC<SColorPicker>(p => p.Add(x => x.Value, "#ff0000"));
+        cut.Find(".s-cp-preview").GetAttribute("style").Should().Contain("#ff0000");
+    }
+
+    [Fact]
+    public void Hex_input_shows_value_without_hash()
+    {
+        var cut = RenderC<SColorPicker>(p => p.Add(x => x.Value, "#abcdef"));
+        cut.Find(".s-cp-hex-input").GetAttribute("value").Should().Be("abcdef");
+    }
+
+    [Fact]
+    public void Valid_hex_input_updates_value()
+    {
+        var value = "#000000";
+        var cut = RenderC<SColorPicker>(p => p
+            .Bind(x => x.Value, value, v => value = v, () => value));
+
+        cut.Find(".s-cp-hex-input").Change("ff8800");
+        value.ToLower().Should().Be("#ff8800");
+    }
+
+    [Fact]
+    public void Invalid_hex_input_does_not_update()
+    {
+        var value = "#22e6c8";
+        var cut = RenderC<SColorPicker>(p => p
+            .Bind(x => x.Value, value, v => value = v, () => value));
+
+        cut.Find(".s-cp-hex-input").Change("zzzz");
+        value.Should().Be("#22e6c8");  // unchanged
+    }
+
+    [Fact]
+    public void Hue_slider_changes_value()
+    {
+        var value = "#ff0000";  // hue 0
+        var cut = RenderC<SColorPicker>(p => p
+            .Bind(x => x.Value, value, v => value = v, () => value));
+
+        cut.Find(".s-cp-hue-input").Input("120");  // green
+
+        value.ToLower().Should().StartWith("#00");  // green-ish, red channel low
+        value.ToLower().Should().Contain("ff00");
+    }
+
+    [Fact]
+    public void Renders_swatches()
+    {
+        var cut = RenderC<SColorPicker>(p => p
+            .Add(x => x.Value, "#000000")
+            .Add(x => x.Swatches, new[] { "#ff0000", "#00ff00", "#0000ff" }));
+        cut.FindAll(".s-cp-swatch").Should().HaveCount(3);
+    }
+
+    [Fact]
+    public void Clicking_swatch_sets_value()
+    {
+        var value = "#000000";
+        var cut = RenderC<SColorPicker>(p => p
+            .Bind(x => x.Value, value, v => value = v, () => value)
+            .Add(x => x.Swatches, new[] { "#ff0000", "#00ff00" }));
+
+        cut.FindAll(".s-cp-swatch")[1].Click();
+        value.ToLower().Should().Be("#00ff00");
+    }
+
+    [Fact]
+    public void Active_swatch_highlighted()
+    {
+        var cut = RenderC<SColorPicker>(p => p
+            .Add(x => x.Value, "#ff0000")
+            .Add(x => x.Swatches, new[] { "#ff0000", "#00ff00" }));
+
+        cut.FindAll(".s-cp-swatch")[0].ClassList.Should().Contain("s-active");
+    }
+
+    [Fact]
+    public void No_swatches_no_swatch_row()
+    {
+        var cut = RenderC<SColorPicker>(p => p.Add(x => x.Value, "#000000"));
+        cut.FindAll(".s-cp-swatches").Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task OnPick_updates_saturation_value()
+    {
+        var value = "#ff0000"; // pure red, s=1 v=1
+        var cut = RenderC<SColorPicker>(p => p
+            .Bind(x => x.Value, value, v => value = v, () => value));
+
+        // pick center: s=0.5, v=0.5 (y=0.5 -> v = 1-0.5)
+        await cut.InvokeAsync(() => cut.Instance.OnPickAsync(0.5, 0.5));
+
+        value.Should().NotBe("#ff0000");  // changed
+    }
+
+    [Fact]
+    public void Roundtrip_hex_preserves_color()
+    {
+        // known-safe colors survive hex->hsv->hex
+        foreach (var hex in new[] { "#ff0000", "#00ff00", "#0000ff", "#ffffff", "#000000" })
+        {
+            var value = "#123456";
+            var cut = RenderC<SColorPicker>(p => p
+                .Bind(x => x.Value, value, v => value = v, () => value));
+            cut.Find(".s-cp-hex-input").Change(hex.TrimStart('#'));
+            value.ToLower().Should().Be(hex.ToLower());
+        }
+    }
+}

@@ -285,3 +285,32 @@ export function registerHotkey(dotnet, combo) {
         dispose: () => document.removeEventListener('keydown', handler)
     };
 }
+
+export function colorField(el, dotnet) {
+    let dragging = false;
+
+    const report = (e) => {
+        const r = el.getBoundingClientRect();
+        let x = (e.clientX - r.left) / r.width;
+        let y = (e.clientY - r.top) / r.height;
+        x = Math.max(0, Math.min(1, x));
+        y = Math.max(0, Math.min(1, y));
+        dotnet.invokeMethodAsync('OnPickAsync', x, y);
+    };
+
+    const down = (e) => { dragging = true; report(e); e.preventDefault(); };
+    const move = (e) => { if (dragging) report(e); };
+    const up = () => { dragging = false; };
+
+    el.addEventListener('pointerdown', down);
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+
+    return {
+        dispose: () => {
+            el.removeEventListener('pointerdown', down);
+            window.removeEventListener('pointermove', move);
+            window.removeEventListener('pointerup', up);
+        }
+    };
+}

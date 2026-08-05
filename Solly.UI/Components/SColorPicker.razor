@@ -1,0 +1,226 @@
+﻿@inherits SComponentBase
+@implements IAsyncDisposable
+@inject SollyInterop Interop
+
+<div class="@Cls("s-cp")" style="@Style" @attributes="Attributes">
+
+    <!-- saturation / value field -->
+    <div class="s-cp-field"
+         @ref="_field"
+         style="@($"background-color:hsl({_h},100%,50%);")">
+        <div class="s-cp-field-sat"></div>
+        <div class="s-cp-field-val"></div>
+        <div class="s-cp-thumb"
+             style="@ThumbStyle"></div>
+    </div>
+
+    <div class="s-cp-controls">
+        <!-- preview swatch -->
+        <div class="s-cp-preview" style="@($"background:{Value};")"></div>
+
+        <div class="s-cp-sliders">
+            <!-- hue slider -->
+            <div class="s-cp-hue">
+                <input type="range" min="0" max="360" step="1"
+                       value="@((int)_h)"
+                       @oninput="OnHueInput"
+                       class="s-cp-hue-input"
+                       aria-label="Hue" />
+            </div>
+
+            <!-- hex input -->
+            <div class="s-cp-hex">
+                <span class="s-cp-hex-hash">#</span>
+                <input class="s-cp-hex-input"
+                       value="@HexNoHash"
+                       @onchange="OnHexChange"
+                       maxlength="6"
+                       spellcheck="false"
+                       autocomplete="off"
+                       aria-label="Hex color" />
+            </div>
+        </div>
+    </div>
+
+    @if (Swatches is not null && Swatches.Any())
+    {
+        <div class="s-cp-swatches">
+            @foreach (var sw in Swatches)
+            {
+                var c = sw;
+                <button type="button"
+                        class="s-cp-swatch @(string.Equals(c, Value, StringComparison.OrdinalIgnoreCase) ? "s-active" : null)"
+                        style="@($"background:{c};")"
+                        title="@c"
+                        @onclick="@(() => SetHexAsync(c))"></button>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string Value { get; set; } = "#22e6c8";
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+
+    /// <summary>Optional preset swatches.</summary>
+    [Parameter] public IEnumerable<string>? Swatches { get; set; }
+    
+    private string ThumbStyle
+    {
+        get
+        {
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
+            var left = (_s * 100).ToString("0.##", inv);
+            var top = ((1 - _v) * 100).ToString("0.##", inv);
+            return $"left:{left}%;top:{top}%;--s-cp-thumb:{Value};";
+        }
+    }
+
+    private ElementReference _field;
+    private DotNetObjectReference<SColorPicker>? _self;
+    private IJSObjectReference? _fieldHandle;
+
+    // HSV state
+    private double _h;   // 0..360
+    private double _s;   // 0..1
+    private double _v;   // 0..1
+
+    private string _lastValue = "";
+
+    private string HexNoHash => Value.TrimStart('#');
+
+    protected override void OnParametersSet()
+    {
+        if (Value != _lastValue)
+        {
+            _lastValue = Value;
+            (_h, _s, _v) = HexToHsv(Value);
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool first)
+    {
+        if (first)
+        {
+            _self = DotNetObjectReference.Create(this);
+            _fieldHandle = await Interop.ColorFieldAsync(_field, _self);
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnPickAsync(double x, double y)
+    {
+        _s = x;
+        _v = 1 - y;
+        await EmitAsync();
+    }
+
+    private async Task OnHueInput(ChangeEventArgs e)
+    {
+        if (double.TryParse(e.Value?.ToString(), System.Globalization.CultureInfo.InvariantCulture, out var h))
+        {
+            _h = h;
+            await EmitAsync();
+        }
+    }
+
+    private async Task OnHexChange(ChangeEventArgs e)
+    {
+        var hex = "#" + (e.Value?.ToString() ?? "").TrimStart('#');
+        if (IsValidHex(hex)) await SetHexAsync(hex);
+        else StateHasChanged();
+    }
+
+    private async Task SetHexAsync(string hex)
+    {
+        (_h, _s, _v) = HexToHsv(hex);
+        await EmitAsync();
+    }
+
+    private async Task EmitAsync()
+    {
+        var hex = HsvToHex(_h, _s, _v);
+        _lastValue = hex;
+        Value = hex;
+        await ValueChanged.InvokeAsync(hex);
+        StateHasChanged();
+    }
+
+    private static bool IsValidHex(string hex)
+    {
+        hex = hex.TrimStart('#');
+        return hex.Length == 6 && hex.All(Uri.IsHexDigit);
+    }
+
+    private static (double h, double s, double v) HexToHsv(string hex)
+    {
+        hex = hex.TrimStart('#');
+        if (hex.Length != 6 || !hex.All(Uri.IsHexDigit)) return (173, 1, 0.9);
+
+        var r = Convert.ToInt32(hex.Substring(0, 2), 16) / 255.0;
+        var g = Convert.ToInt32(hex.Substring(2, 2), 16) / 255.0;
+        var b = Convert.ToInt32(hex.Substring(4, 2), 16) / 255.0;
+
+        var max = Math.Max(r, Math.Max(g, b));
+        var min = Math.Min(r, Math.Min(g, b));
+        var d = max - min;
+
+        double h = 0;
+        if (d != 0)
+        {
+            if (max == r) h = ((g - b) / d) % 6;
+            else if (max == g) h = (b - r) / d + 2;
+            else h = (r - g) / d + 4;
+            h *= 60;
+            if (h < 0) h += 360;
+        }
+        var s = max == 0 ? 0 : d / max;
+        return (h, s, max);
+    }
+
+    private static string HsvToHex(double h, double s, double v)
+    {
+        var c = v * s;
+        var x = c * (1 - Math.Abs((h / 60) % 2 - 1));
+        var m = v - c;
+        double r = 0, g = 0, b = 0;
+
+        switch (h)
+        {
+            case < 60:
+                r = c; g = x;
+                break;
+            case < 120:
+                r = x; g = c;
+                break;
+            case < 180:
+                g = c; b = x;
+                break;
+            case < 240:
+                g = x; b = c;
+                break;
+            case < 300:
+                r = x; b = c;
+                break;
+            default:
+                r = c; b = x;
+                break;
+        }
+
+        var R = (int)Math.Round((r + m) * 255);
+        var G = (int)Math.Round((g + m) * 255);
+        var B = (int)Math.Round((b + m) * 255);
+        return $"#{R:X2}{G:X2}{B:X2}";
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try { if (_fieldHandle is not null) { await _fieldHandle.InvokeVoidAsync("dispose"); await _fieldHandle.DisposeAsync(); } }
+        catch
+        {
+            // ignored
+        }
+
+        _self?.Dispose();
+    }
+}

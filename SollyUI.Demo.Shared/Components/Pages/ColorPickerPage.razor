@@ -1,0 +1,96 @@
+﻿@page "/color-picker"
+
+<DemoPage Title="Color Picker" Subtitle="HSV-поле, hue-слайдер, hex-ввод, пресеты. Выдаёт #RRGGBB.">
+
+    <DemoBlock Title="Basic" Code="@_basicCode">
+        <div class="demo-row" style="align-items:flex-start;gap:24px;">
+            <SColorPicker @bind-Value="_color" />
+            <div class="demo-col" style="gap:8px;">
+                <div style="@($"width:80px;height:80px;border-radius:12px;background:{_color};border:1px solid var(--s-border-hi);")"></div>
+                <span class="demo-note" style="font-family:var(--s-font-mono);">@_color</span>
+            </div>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="With swatches"
+               Description="Пресеты для быстрого выбора."
+               Code="@_swatchCode">
+        <SColorPicker @bind-Value="_color2" Swatches="_presets" />
+    </DemoBlock>
+
+    <DemoBlock Title="Live theme accent"
+               Description="Пикер управляет акцентом всей библиотеки через палитру."
+               Code="@_themeCode">
+        <div class="demo-row" style="align-items:flex-start;gap:24px;">
+            <SColorPicker Value="_accent" ValueChanged="OnAccentChanged" />
+            <div class="demo-col" style="gap:12px;">
+                <SButton Variant="SVariant.Primary">Primary</SButton>
+                <SBadge Level="SBadgeLevel.Info">Badge</SBadge>
+                <SProgress Value="66" ShowValue />
+            </div>
+        </div>
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    [Inject] SollyThemeService Theme { get; set; } = default!;
+
+    string _color = "#22e6c8";
+    string _color2 = "#7c5cff";
+    string _accent = "#22e6c8";
+
+    string[] _presets =
+    {
+        "#22e6c8", "#4dd8ff", "#7c5cff", "#ff5c8a",
+        "#ffd166", "#7affb2", "#ff8a5c", "#c8ff5c"
+    };
+
+    async Task OnAccentChanged(string hex)
+    {
+        _accent = hex;
+        var (h, s, l) = HexToHsl(hex);
+        await Theme.SetPaletteAsync(h, s, l);
+    }
+
+    static (int h, int s, int l) HexToHsl(string hex)
+    {
+        hex = hex.TrimStart('#');
+        var r = Convert.ToInt32(hex.Substring(0, 2), 16) / 255.0;
+        var g = Convert.ToInt32(hex.Substring(2, 2), 16) / 255.0;
+        var b = Convert.ToInt32(hex.Substring(4, 2), 16) / 255.0;
+        var max = Math.Max(r, Math.Max(g, b));
+        var min = Math.Min(r, Math.Min(g, b));
+        var d = max - min;
+        double h = 0, s, l = (max + min) / 2;
+        if (d != 0)
+        {
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            if (max == r) h = ((g - b) / d) % 6;
+            else if (max == g) h = (b - r) / d + 2;
+            else h = (r - g) / d + 4;
+            h *= 60; if (h < 0) h += 360;
+        }
+        else s = 0;
+        return ((int)Math.Round(h), (int)Math.Round(s * 100), (int)Math.Round(l * 100));
+    }
+
+    const string _basicCode = """
+<SColorPicker @bind-Value="_color" />
+""";
+
+    const string _swatchCode = """
+<SColorPicker @bind-Value="_color"
+              Swatches="@(new[] { "#22e6c8", "#7c5cff", "#ff5c8a" })" />
+""";
+
+    const string _themeCode = """
+<SColorPicker Value="_accent" ValueChanged="OnAccentChanged" />
+
+async Task OnAccentChanged(string hex)
+{
+    var (h, s, l) = HexToHsl(hex);
+    await Theme.SetPaletteAsync(h, s, l);   // recolor whole library
+}
+""";
+}

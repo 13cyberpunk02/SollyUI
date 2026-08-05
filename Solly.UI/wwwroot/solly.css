@@ -3526,3 +3526,146 @@
     font: 500 10px var(--s-font-mono);
     color: var(--s-text-dim);
 }
+
+/* ============================================================
+   COLOR PICKER
+   ============================================================ */
+.s-cp {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 260px;
+    padding: 14px;
+    border-radius: var(--s-radius-md);
+    border: 1px solid var(--s-border-hi);
+    background: var(--s-panel);
+    backdrop-filter: blur(var(--s-blur)) saturate(140%);
+    -webkit-backdrop-filter: blur(var(--s-blur)) saturate(140%);
+    box-sizing: border-box;
+    box-shadow: var(--s-shadow);
+    font-family: var(--s-font);
+    user-select: none;
+}
+
+/* --- saturation/value field --- */
+.s-cp-field {
+    position: relative;
+    width: 100%;
+    height: 150px;
+    border-radius: var(--s-radius-sm);
+    overflow: hidden;
+    cursor: crosshair;
+    border: 1px solid var(--s-border);
+    touch-action: none;
+}
+.s-cp-field-sat,
+.s-cp-field-val {
+    position: absolute;
+    inset: 0;
+}
+/* white → transparent, left to right (saturation) */
+.s-cp-field-sat { background: linear-gradient(to right, #fff, transparent); }
+/* transparent → black, top to bottom (value) */
+.s-cp-field-val { background: linear-gradient(to bottom, transparent, #000); }
+
+.s-cp-thumb {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: 999px;
+    border: 2px solid #fff;
+    background: var(--s-cp-thumb, transparent);
+    box-shadow: 0 0 0 1px rgba(0,0,0,.35), 0 1px 4px rgba(0,0,0,.5);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+/* --- controls row --- */
+.s-cp-controls { display: flex; gap: 12px; align-items: stretch; min-width: 0; }
+
+.s-cp-preview {
+    width: 44px;
+    flex-shrink: 0;
+    border-radius: var(--s-radius-sm);
+    border: 1px solid var(--s-border-hi);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.15);
+}
+
+.s-cp-sliders { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; justify-content: center; }
+
+/* --- hue slider --- */
+.s-cp-hue-input {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 12px;
+    border-radius: 999px;
+    outline: none;
+    cursor: pointer;
+    border: 1px solid var(--s-border);
+    background: linear-gradient(to right,
+    #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%);
+}
+.s-cp-hue-input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 999px;
+    background: #fff;
+    border: 2px solid rgba(0,0,0,.3);
+    box-shadow: 0 1px 4px rgba(0,0,0,.4);
+    cursor: pointer;
+}
+.s-cp-hue-input::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 999px;
+    background: #fff;
+    border: 2px solid rgba(0,0,0,.3);
+    cursor: pointer;
+}
+
+/* --- hex input --- */
+.s-cp-hex {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 7px 10px;
+    border-radius: var(--s-radius-xs);
+    border: 1px solid var(--s-border-hi);
+    background: var(--s-sunken);
+    min-width: 0;
+}
+.s-cp-hex:focus-within { border-color: var(--s-accent-65); box-shadow: 0 0 0 3px var(--s-accent-12); }
+.s-cp-hex-hash { color: var(--s-text-mute); font: 500 13px var(--s-font-mono); }
+.s-cp-hex-input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: none;
+    outline: none;
+    font: 500 13px var(--s-font-mono);
+    color: var(--s-text-hi);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+}
+
+/* --- swatches --- */
+.s-cp-swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.s-cp-swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 7px;
+    border: 1px solid var(--s-border-hi);
+    cursor: pointer;
+    padding: 0;
+    transition: transform var(--s-dur-fast) var(--s-ease), box-shadow var(--s-dur-fast) var(--s-ease);
+}
+.s-cp-swatch:hover { transform: scale(1.12); }
+.s-cp-swatch.s-active {
+    box-shadow: 0 0 0 2px var(--s-bg), 0 0 0 4px var(--s-accent);
+}

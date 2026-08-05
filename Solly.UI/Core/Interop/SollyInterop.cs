@@ -180,6 +180,19 @@ public sealed class SollyInterop(IJSRuntime js) : IAsyncDisposable, IDisposable
         catch (JSException) { }
     }
     
+    public async ValueTask<IJSObjectReference?> ColorFieldAsync<T>(
+        ElementReference el, DotNetObjectReference<T> target) where T : class
+    {
+        try
+        {
+            var m = await Module;
+            return await m.InvokeAsync<IJSObjectReference>("colorField", el, target);
+        }
+        catch (JSDisconnectedException) { return null; }
+        catch (ObjectDisposedException) { return null; }
+        catch (JSException) { return null; }
+    }
+    
     public void Dispose()
     {
     }
