@@ -1,0 +1,292 @@
+﻿@inherits SComponentBase
+@implements IAsyncDisposable
+@inject SollyInterop Interop
+@inject NavigationManager Nav
+
+@if (_render)
+{
+    <div class="s-cmdk-root @(_visible ? "s-in" : "s-out")" @ref="_root" @onclick="OnBackdropAsync">
+        <div class="s-cmdk" @onclick:stopPropagation="true" @onkeydown="OnKeyDownAsync">
+            <div class="s-cmdk-search">
+                <span class="s-cmdk-search-icon"><SIcon Name="@SIcons.Search" Size="18" /></span>
+                <input @ref="_input"
+                       class="s-cmdk-input"
+                       placeholder="@Placeholder"
+                       value="@_query"
+                       @oninput="OnInputAsync"
+                       autocomplete="off"
+                       spellcheck="false" />
+                <kbd class="s-cmdk-esc">ESC</kbd>
+            </div>
+
+            <div class="s-cmdk-list" @ref="_list">
+                @if (_loading)
+                {
+                    <div class="s-cmdk-loading"><SIcon Name="@SIcons.Spinner" Size="18" /> Поиск…</div>
+                }
+                else if (_results.Count == 0)
+                {
+                    <div class="s-cmdk-empty">
+                        <SIcon Name="@SIcons.Search" Size="24" />
+                        <span>Ничего не найдено</span>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var group in _grouped)
+                    {
+                        @if (!string.IsNullOrEmpty(group.Key))
+                        {
+                            <div class="s-cmdk-group">@group.Key</div>
+                        }
+                        @foreach (var cmd in group)
+                        {
+                            var idx = _flatOrder.IndexOf(cmd);
+                            var active = idx == _activeIndex;
+                            <div class="s-cmdk-item @(active ? "s-active" : null) @(cmd.Disabled ? "s-disabled" : null)"
+                                 @onclick="@(() => InvokeAsync(cmd))"
+                                 @onmouseenter="@(() => _activeIndex = idx)">
+                                @if (!string.IsNullOrEmpty(cmd.Icon))
+                                {
+                                    <span class="s-cmdk-item-icon"><SIcon Name="@cmd.Icon" Size="17" /></span>
+                                }
+                                <span class="s-cmdk-item-body">
+                                    <span class="s-cmdk-item-title">@cmd.Title</span>
+                                    @if (!string.IsNullOrEmpty(cmd.Description))
+                                    {
+                                        <span class="s-cmdk-item-desc">@cmd.Description</span>
+                                    }
+                                </span>
+                                @if (!string.IsNullOrEmpty(cmd.Shortcut))
+                                {
+                                    <kbd class="s-cmdk-item-kbd">@cmd.Shortcut</kbd>
+                                }
+                            </div>
+                        }
+                    }
+                }
+            </div>
+
+            @if (ShowFooter)
+            {
+                <div class="s-cmdk-foot">
+                    <span><kbd>↑</kbd><kbd>↓</kbd> навигация</span>
+                    <span><kbd>↵</kbd> выбрать</span>
+                    <span><kbd>esc</kbd> закрыть</span>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    /// <summary>Static command list.</summary>
+    [Parameter] public IEnumerable<SCommand>? Items { get; set; }
+
+    /// <summary>Async search provider; overrides Items filtering when set.</summary>
+    [Parameter] public Func<string, Task<IEnumerable<SCommand>>>? SearchProvider { get; set; }
+
+    [Parameter] public string Placeholder { get; set; } = "Введите команду или поиск…";
+    [Parameter] public bool ShowFooter { get; set; } = true;
+
+    /// <summary>Register a global Cmd/Ctrl+K hotkey to open the palette.</summary>
+    [Parameter] public bool GlobalHotkey { get; set; } = true;
+    [Parameter] public string Hotkey { get; set; } = "mod+k";
+
+    private bool _render;
+    private bool _visible;
+    private bool _loading;
+    private string _query = "";
+    private int _activeIndex;
+    private List<SCommand> _flatOrder = [];
+
+    private List<SCommand> _results = new();
+    private List<IGrouping<string, SCommand>> _grouped = new();
+
+    private ElementReference _root;
+    private ElementReference _input;
+    private ElementReference _list;
+
+    private DotNetObjectReference<SCommandPalette>? _self;
+    private IJSObjectReference? _hotkeyHandle;
+    private IJSObjectReference? _trap;
+    private CancellationTokenSource? _searchCts;
+
+    protected override async Task OnAfterRenderAsync(bool first)
+    {
+        if (first && GlobalHotkey)
+        {
+            _self = DotNetObjectReference.Create(this);
+            _hotkeyHandle = await Interop.RegisterHotkeyAsync(_self, Hotkey);
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnHotkeyAsync()
+    {
+        if (_render) await CloseAsync();
+        else await OpenAsync();
+    }
+
+    public async Task OpenAsync()
+    {
+        _query = "";
+        _activeIndex = 0;
+        _render = true;
+        StateHasChanged();
+        await Task.Yield();
+        _visible = true;
+        StateHasChanged();
+
+        await RunSearchAsync("");
+
+        try
+        {
+            _trap = await Interop.TrapFocusAsync(_root, _self ??= DotNetObjectReference.Create(this));
+            await Interop.FocusAsync(_input);
+        }
+        catch
+        {
+            // ignored
+        }
+    }
+
+    public async Task CloseAsync()
+    {
+        _visible = false;
+        StateHasChanged();
+
+        try { if (_trap is not null) { await _trap.InvokeVoidAsync("dispose"); await _trap.DisposeAsync(); } }
+        catch
+        {
+            // ignored
+        }
+
+        _trap = null;
+
+        await Task.Delay(160);
+        _render = false;
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public async Task OnEscapeAsync() => await CloseAsync();
+
+    private async Task OnBackdropAsync() => await CloseAsync();
+
+    private async Task OnInputAsync(ChangeEventArgs e)
+    {
+        _query = e.Value?.ToString() ?? "";
+        _activeIndex = 0;
+        await RunSearchAsync(_query);
+    }
+
+    private async Task RunSearchAsync(string query)
+    {
+        if (SearchProvider is not null)
+        {
+            _searchCts?.Cancel();
+            _searchCts = new CancellationTokenSource();
+            var token = _searchCts.Token;
+
+            _loading = true;
+            StateHasChanged();
+            try
+            {
+                var res = await SearchProvider(query);
+                if (token.IsCancellationRequested) return;
+                _results = res.ToList();
+            }
+            catch { _results = new(); }
+            _loading = false;
+        }
+        else
+        {
+            _results = FilterStatic(query);
+        }
+
+        _grouped = [.. _results.GroupBy(c => c.Group ?? "")];
+        _flatOrder = [.. _grouped.SelectMany(g => g)];
+        StateHasChanged();
+    }
+
+    private List<SCommand> FilterStatic(string query)
+    {
+        var all = Items?.ToList() ?? [];
+        if (string.IsNullOrWhiteSpace(query)) return all;
+
+        return
+        [
+            .. all
+                .Select(c => (cmd: c, score: FuzzyScore(query, $"{c.Title} {c.Keywords} {c.Group}")))
+                .Where(x => x.score > 0)
+                .OrderByDescending(x => x.score)
+                .Select(x => x.cmd)
+        ];
+    }
+
+    // subsequence fuzzy match: all query chars appear in order; closer = higher score
+    private static int FuzzyScore(string query, string text)
+    {
+        query = query.Trim().ToLowerInvariant();
+        text = text.ToLowerInvariant();
+        if (query.Length == 0) return 1;
+
+        int qi = 0, score = 0, streak = 0;
+        foreach (var ch in text)
+        {
+            if (qi < query.Length && ch == query[qi])
+            {
+                qi++;
+                streak++;
+                score += streak * 2;   // reward consecutive matches
+            }
+            else streak = 0;
+        }
+        return qi == query.Length ? score : 0;
+    }
+
+    private async Task OnKeyDownAsync(KeyboardEventArgs e)
+    {
+        switch (e.Key)
+        {
+            case "ArrowDown":
+                _activeIndex = Math.Min(_flatOrder.Count - 1, _activeIndex + 1);
+                await ScrollToActiveAsync();
+                break;
+            case "ArrowUp":
+                _activeIndex = Math.Max(0, _activeIndex - 1);
+                await ScrollToActiveAsync();
+                break;
+            case "Enter":
+                if (_activeIndex >= 0 && _activeIndex < _flatOrder.Count)
+                    await InvokeAsync(_flatOrder[_activeIndex]);
+                break;
+            case "Escape":
+                await CloseAsync();
+                break;
+        }
+    }
+
+    private async Task ScrollToActiveAsync()
+    {
+        try { await Interop.ScrollItemIntoViewAsync(_list, _activeIndex); } catch { }
+    }
+
+    private async Task InvokeAsync(SCommand cmd)
+    {
+        if (cmd.Disabled) return;
+
+        if (cmd.OnInvoke is not null) await cmd.OnInvoke();
+        else if (!string.IsNullOrEmpty(cmd.Href)) Nav.NavigateTo(cmd.Href);
+        
+        await CloseAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try { if (_hotkeyHandle is not null) { await _hotkeyHandle.InvokeVoidAsync("dispose"); await _hotkeyHandle.DisposeAsync(); } } catch { }
+        try { if (_trap is not null) { await _trap.InvokeVoidAsync("dispose"); await _trap.DisposeAsync(); } } catch { }
+        _self?.Dispose();
+    }
+}

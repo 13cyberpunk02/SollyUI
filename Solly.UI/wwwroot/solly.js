@@ -266,3 +266,22 @@ export function getStoredPalette() {
         return null;
     }
 }
+
+export function registerHotkey(dotnet, combo) {
+    const parts = combo.toLowerCase().split('+');
+    const needMod = parts.includes('mod');
+    const key = parts[parts.length - 1];
+
+    const handler = (e) => {
+        const mod = e.metaKey || e.ctrlKey;
+        if (needMod && !mod) return;
+        if (e.key.toLowerCase() !== key) return;
+        e.preventDefault();
+        dotnet.invokeMethodAsync('OnHotkeyAsync');
+    };
+
+    document.addEventListener('keydown', handler);
+    return {
+        dispose: () => document.removeEventListener('keydown', handler)
+    };
+}

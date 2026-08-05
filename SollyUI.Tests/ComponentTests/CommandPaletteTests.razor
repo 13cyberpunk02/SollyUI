@@ -1,0 +1,149 @@
+﻿@inherits SollyTestContext
+
+@code {
+    private List<SCommand> Sample(Action<SCommand>? mutate = null)
+    {
+        var list = new List<SCommand>
+        {
+            new() { Title = "Open Table", Group = "Nav", Href = "table" },
+            new() { Title = "Dark Theme", Group = "Actions", Keywords = "night" },
+            new() { Title = "Create Document", Group = "Actions" },
+        };
+        if (mutate is not null) foreach (var c in list) mutate(c);
+        return list;
+    }
+
+    private IRenderedComponent<SCommandPalette> RenderPalette(List<SCommand> items)
+        => Render<SCommandPalette>(p => p
+            .Add(x => x.Items, items)
+            .Add(x => x.GlobalHotkey, false));
+
+    [Fact]
+    public void Closed_by_default()
+    {
+        var cut = RenderPalette(Sample());
+        cut.FindAll(".s-cmdk").Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task OpenAsync_renders_palette()
+    {
+        var cut = RenderPalette(Sample());
+        await cut.InvokeAsync(() => cut.Instance.OpenAsync());
+        cut.FindAll(".s-cmdk").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task Shows_all_items_when_empty_query()
+    {
+        var cut = RenderPalette(Sample());
+        await cut.InvokeAsync(() => cut.Instance.OpenAsync());
+        cut.FindAll(".s-cmdk-item").Should().HaveCount(3);
+    }
+
+    [Fact]
+    public async Task Groups_are_rendered()
+    {
+        var cut = RenderPalette(Sample());
+        await cut.InvokeAsync(() => cut.Instance.OpenAsync());
+        var groups = cut.FindAll(".s-cmdk-group").Select(g => g.TextContent);
+        groups.Should().Contain("Nav");
+        groups.Should().Contain("Actions");
+    }
+
+    [Fact]
+    public async Task Typing_filters_items()
+    {
+        var cut = RenderPalette(Sample());
+        await cut.InvokeAsync(() => cut.Instance.OpenAsync());
+        cut.Find(".s-cmdk-input").Input("table");
+        cut.FindAll(".s-cmdk-item").Should().HaveCount(1);
+        cut.Markup.Should().Contain("Open Table");
+    }
+
+    [Fact]
+    public async Task Fuzzy_matches_subsequence()
+    {
+        var cut = RenderPalette(Sample());
+        await cut.InvokeAsync(() => cut.Instance.OpenAsync());
+        cut.Find(".s-cmdk-input").Input("crdoc");
+        cut.Markup.Should().Contain("Create Document");
+    }
+
+    [Fact]
+    public async Task Matches_keywords()
+    {
+        var cut = RenderPalette(Sample());
+        await cut.InvokeAsync(() => cut.Instance.OpenAsync());
+        cut.Find(".s-cmdk-input").Input("night");
+        cut.Markup.Should().Contain("Dark Theme");
+    }
+
+    [Fact]
+    public async Task No_match_shows_empty()
+    {
+        var cut = RenderPalette(Sample());
+        await cut.InvokeAsync(() => cut.Instance.OpenAsync());
+        cut.Find(".s-cmdk-input").Input("zzzzz");
+        cut.FindAll(".s-cmdk-empty").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task Clicking_item_invokes_and_closes()
+    {
+        var invoked = false;
+        var items = Sample();
+        items[2].OnInvoke = () => { invoked = true; return Task.CompletedTask; };
+
+        var cut = RenderPalette(items);
+        await cut.InvokeAsync(() => cut.Instance.OpenAsync());
+
+        cut.FindAll(".s-cmdk-item").First(i => i.TextContent.Contains("Create Document")).Click();
+
+        invoked.Should().BeTrue();
+        cut.WaitForAssertion(() => cut.FindAll(".s-cmdk").Should().BeEmpty(),
+            timeout: TimeSpan.FromSeconds(1));
+    }
+
+    [Fact]
+    public async Task First_item_active_by_default()
+    {
+        var cut = RenderPalette(Sample());
+        await cut.InvokeAsync(() => cut.Instance.OpenAsync());
+        cut.FindAll(".s-cmdk-item")[0].ClassList.Should().Contain("s-active");
+    }
+
+    [Fact]
+    public async Task Arrow_down_moves_active()
+    {
+        var cut = RenderPalette(Sample());
+        await cut.InvokeAsync(() => cut.Instance.OpenAsync());
+        cut.Find(".s-cmdk").KeyDown("ArrowDown");
+        cut.FindAll(".s-cmdk-item")[1].ClassList.Should().Contain("s-active");
+    }
+
+    [Fact]
+    public async Task Disabled_item_not_invoked()
+    {
+        var invoked = false;
+        var items = Sample();
+        items[0].Disabled = true;
+        items[0].OnInvoke = () => { invoked = true; return Task.CompletedTask; };
+
+        var cut = RenderPalette(items);
+        await cut.InvokeAsync(() => cut.Instance.OpenAsync());
+
+        cut.FindAll(".s-cmdk-item")[0].Click();
+        invoked.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Escape_closes()
+    {
+        var cut = RenderPalette(Sample());
+        await cut.InvokeAsync(() => cut.Instance.OpenAsync());
+        await cut.InvokeAsync(() => cut.Instance.OnEscapeAsync());
+        cut.WaitForAssertion(() => cut.FindAll(".s-cmdk").Should().BeEmpty(),
+            timeout: TimeSpan.FromSeconds(1));
+    }
+}

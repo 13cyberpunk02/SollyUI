@@ -1,0 +1,135 @@
+﻿@page "/command-palette"
+@inject NavigationManager Nav
+
+<DemoPage Title="Command Palette" Subtitle="Cmd/Ctrl+K поиск по действиям. Нечёткий поиск, группы, клавиатура.">
+
+    <DemoBlock Title="Press ⌘K / Ctrl+K"
+               Description="Глобальный хоткей открывает палитру откуда угодно. Или кнопкой ниже."
+               Code="@_code">
+        <div class="demo-row">
+            <SButton Icon="@SIcons.Search" OnClick="@(() => _palette!.OpenAsync())">
+                Открыть палитру
+            </SButton>
+            <SBadge Level="SBadgeLevel.Neutral" Mono>⌘K</SBadge>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Async provider"
+               Description="Тот же компонент, но результаты приходят из async-функции (имитация сервера)."
+               Code="@_asyncCode">
+        <SButton Icon="@SIcons.Search" OnClick="@(() => _asyncPalette!.OpenAsync())">
+            Открыть async-палитру
+        </SButton>
+    </DemoBlock>
+
+</DemoPage>
+
+@* static palette *@
+<SCommandPalette @ref="_palette" Items="_commands" />
+
+@* async palette *@
+<SCommandPalette @ref="_asyncPalette" GlobalHotkey="false" SearchProvider="SearchAsync" />
+
+@code {
+    [Inject] SToastService Toasts { get; set; } = default!;
+
+    SCommandPalette? _palette;
+    SCommandPalette? _asyncPalette;
+
+    List<SCommand> _commands = null!;
+
+    protected override void OnInitialized()
+    {
+        _commands =
+        [
+            new() { Title = "Overview", Group = "Навигация", Icon = SIcons.Home, Href = "" },
+            new() { Title = "Table", Group = "Навигация", Icon = SIcons.Columns, Href = "table" },
+            new() { Title = "Tree", Group = "Навигация", Icon = SIcons.Layers, Href = "tree" },
+            new() { Title = "Theming", Group = "Навигация", Icon = SIcons.Palette, Href = "theming" },
+
+            new()
+            {
+                Title = "Тёмная тема", Group = "Действия", Icon = SIcons.Moon, Shortcut = "⌘D",
+                Keywords = "dark theme night", OnInvoke = () =>
+                {
+                    Toasts.Info("Тёмная тема");
+                    return Task.CompletedTask;
+                }
+            },
+
+            new()
+            {
+                Title = "Светлая тема", Group = "Действия", Icon = SIcons.Sun,
+                Keywords = "light theme day", OnInvoke = () =>
+                {
+                    Toasts.Info("Светлая тема");
+                    return Task.CompletedTask;
+                }
+            },
+
+            new()
+            {
+                Title = "Создать документ", Group = "Действия", Icon = SIcons.Type, Shortcut = "⌘N",
+                Description = "Новый пустой документ",
+                OnInvoke = () =>
+                {
+                    Toasts.Success("Документ создан");
+                    return Task.CompletedTask;
+                }
+            },
+
+            new()
+            {
+                Title = "Скопировать ссылку", Group = "Действия", Icon = SIcons.Clipboard,
+                OnInvoke = () =>
+                {
+                    Toasts.Success("Скопировано");
+                    return Task.CompletedTask;
+                }
+            },
+
+            new() { Title = "Недоступное действие", Group = "Действия", Icon = SIcons.X, Disabled = true }
+        ];
+    }
+
+    // simulate a server-backed search
+    async Task<IEnumerable<SCommand>> SearchAsync(string query)
+    {
+        await Task.Delay(220);
+        var pool = new[] { "Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel" };
+        return pool
+            .Where(x => string.IsNullOrEmpty(query) || x.Contains(query, StringComparison.OrdinalIgnoreCase))
+            .Select(x => new SCommand
+            {
+                Title = x, Group = "Результаты", Icon = SIcons.CircleCheck,
+                OnInvoke = () => { Toasts.Info($"Выбрано: {x}"); return Task.CompletedTask; }
+            });
+    }
+
+    const string _code = """
+<SCommandPalette @ref="_palette" Items="_commands" />
+
+@* открыть программно *@
+<SButton OnClick="@(() => _palette!.OpenAsync())">Открыть</SButton>
+
+@code {
+    SCommandPalette? _palette;
+    List<SCommand> _commands = new()
+    {
+        new() { Title = "Table", Icon = SIcons.Columns, Href = "table" },
+        new() { Title = "Тёмная тема", Shortcut = "⌘D",
+                OnInvoke = () => { /* ... */ return Task.CompletedTask; } },
+    };
+}
+""";
+
+    const string _asyncCode = """
+<SCommandPalette SearchProvider="SearchAsync" />
+
+async Task<IEnumerable<SCommand>> SearchAsync(string query)
+{
+    var res = await Http.GetFromJsonAsync<...>(...);
+    return res.Select(x => new SCommand { Title = x.Name, ... });
+}
+""";
+}

@@ -7,6 +7,7 @@ public static class SIcons
     public const string ChevronLeft  = "<path d='m15 18-6-6 6-6'/>";
     public const string ChevronRight = "<path d='m9 18 6-6-6-6'/>";
     public const string Check        = "<path d='M20 6 9 17l-5-5'/>";
+    public const string Badge = "<path d='M12 2l2.4 2.4L18 4l-.4 3.6L20 10l-2.4 2.4.4 3.6-3.6-.4L12 18l-2.4-2.4L6 16l.4-3.6L4 10l2.4-2.4L6 4l3.6.4z'/>";
     public const string X            = "<path d='M18 6 6 18M6 6l12 12'/>";
     public const string Calendar     = "<rect x='3' y='4' width='18' height='18' rx='2'/><path d='M16 2v4M8 2v4M3 10h18'/>";
     public const string Spinner      = "<path d='M21 12a9 9 0 1 1-6.2-8.6'/>";

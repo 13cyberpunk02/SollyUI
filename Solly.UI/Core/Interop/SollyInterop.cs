@@ -155,6 +155,31 @@ public sealed class SollyInterop(IJSRuntime js) : IAsyncDisposable, IDisposable
         catch (ObjectDisposedException) { return null; }
     }
     
+    public async ValueTask<IJSObjectReference?> RegisterHotkeyAsync<T>(
+        DotNetObjectReference<T> target, string combo) where T : class
+    {
+        try
+        {
+            var m = await Module;
+            return await m.InvokeAsync<IJSObjectReference>("registerHotkey", target, combo);
+        }
+        catch (JSDisconnectedException) { return null; }
+        catch (ObjectDisposedException) { return null; }
+        catch (JSException) { return null; }
+    }
+    
+    public async ValueTask ScrollItemIntoViewAsync(ElementReference container, int index)
+    {
+        try
+        {
+            var m = await Module;
+            await m.InvokeVoidAsync("scrollItemIntoView", container, index);
+        }
+        catch (JSDisconnectedException) { }
+        catch (ObjectDisposedException) { }
+        catch (JSException) { }
+    }
+    
     public void Dispose()
     {
     }
