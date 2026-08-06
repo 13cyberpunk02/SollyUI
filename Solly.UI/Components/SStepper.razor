@@ -1,0 +1,185 @@
+﻿@inherits SComponentBase
+
+<CascadingValue Value="this" IsFixed="true">
+    @* hidden pass: register steps *@
+    <div style="display:none">@ChildContent</div>
+
+    <div class="@Cls("s-stepper", OrientationClass)" style="@Style" @attributes="Attributes">
+
+        <!-- indicator -->
+        <ol class="s-step-track">
+            @for (var i = 0; i < _steps.Count; i++)
+            {
+                var step = _steps[i];
+                var status = StatusOf(i);
+                var idx = i;
+                <li class="@StepLiClass(status)"
+                    @onclick="@(() => OnStepClickAsync(idx))">
+
+                    <span class="s-step-marker">
+                        @if (status == SStepStatus.Complete)
+                        {
+                            <SIcon Name="@SIcons.Check" Size="15" Weight="3" />
+                        }
+                        else if (!string.IsNullOrEmpty(step.Icon))
+                        {
+                            <SIcon Name="@step.Icon" Size="16" />
+                        }
+                        else
+                        {
+                            <span class="s-step-num">@(i + 1)</span>
+                        }
+                    </span>
+
+                    <span class="s-step-labels">
+                        <span class="s-step-title">@step.Title</span>
+                        @if (!string.IsNullOrEmpty(step.Description))
+                        {
+                            <span class="s-step-desc">@step.Description</span>
+                        }
+                    </span>
+
+                    @if (i < _steps.Count - 1)
+                    {
+                        <span class="s-step-line"></span>
+                    }
+                </li>
+            }
+        </ol>
+
+        <!-- active step content -->
+        <div class="s-step-panel">
+            @if (_current >= 0 && _current < _steps.Count)
+            {
+                @_steps[_current].ChildContent
+            }
+        </div>
+
+        <!-- navigation -->
+        @if (ShowNavigation)
+        {
+            <div class="s-step-nav">
+                <div class="s-step-nav-start">
+                    @if (_current > 0)
+                    {
+                        <SButton Variant="SVariant.Ghost" OnClick="@(BackAsync)">@BackText</SButton>
+                    }
+                </div>
+                <div class="s-step-nav-end">
+                    @if (_current < _steps.Count - 1)
+                    {
+                        <SButton Variant="SVariant.Primary" OnClick="@(NextAsync)">@NextText</SButton>
+                    }
+                    else
+                    {
+                        <SButton Variant="SVariant.Primary" OnClick="@(FinishAsync)">@FinishText</SButton>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</CascadingValue>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    [Parameter] public SStepperOrientation Orientation { get; set; } = SStepperOrientation.Horizontal;
+
+    [Parameter] public int CurrentStep { get; set; }
+    [Parameter] public EventCallback<int> CurrentStepChanged { get; set; }
+
+    [Parameter] public bool ShowNavigation { get; set; } = true;
+    [Parameter] public bool LinearOnly { get; set; } = true; // can't jump ahead by clicking
+
+    [Parameter] public string BackText { get; set; } = "Назад";
+    [Parameter] public string NextText { get; set; } = "Далее";
+    [Parameter] public string FinishText { get; set; } = "Готово";
+
+    [Parameter] public EventCallback OnFinish { get; set; }
+
+    private readonly List<SStep> _steps = new();
+    private int _current;
+    private bool _initialized;
+
+    private string OrientationClass =>
+        Orientation == SStepperOrientation.Vertical ? "s-stepper-vertical" : "s-stepper-horizontal";
+
+    internal void Register(SStep step)
+    {
+        if (!_steps.Contains(step)) { _steps.Add(step); StateHasChanged(); }
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (!_initialized) { _current = CurrentStep; _initialized = true; }
+    }
+
+    internal SStepStatus StatusOf(int index)
+    {
+        if (index < _current) return SStepStatus.Complete;
+        if (index == _current) return SStepStatus.Active;
+        return SStepStatus.Upcoming;
+    }
+
+    private string StepLiClass(SStepStatus status) => Cls(
+        "s-step",
+        status switch
+        {
+            SStepStatus.Complete => "s-step-complete",
+            SStepStatus.Active => "s-step-active",
+            _ => "s-step-upcoming"
+        },
+        (!LinearOnly || status == SStepStatus.Complete) ? "s-step-clickable" : null);
+
+    public async Task NextAsync()
+    {
+        if (_current >= _steps.Count - 1) return;
+
+        // validate current step if it has a validator
+        var step = _steps[_current];
+        if (step.OnValidate.HasDelegate)
+        {
+            var ok = await step.InvokeValidateAsync();
+            if (!ok) return;
+        }
+
+        _current++;
+        await CurrentStepChanged.InvokeAsync(_current);
+        StateHasChanged();
+    }
+
+    public async Task BackAsync()
+    {
+        if (_current <= 0) return;
+        _current--;
+        await CurrentStepChanged.InvokeAsync(_current);
+        StateHasChanged();
+    }
+
+    public async Task GoToAsync(int index)
+    {
+        if (index < 0 || index >= _steps.Count) return;
+        _current = index;
+        await CurrentStepChanged.InvokeAsync(_current);
+        StateHasChanged();
+    }
+
+    private async Task FinishAsync()
+    {
+        var step = _steps[_current];
+        if (step.OnValidate.HasDelegate)
+        {
+            var ok = await step.InvokeValidateAsync();
+            if (!ok) return;
+        }
+        await OnFinish.InvokeAsync();
+    }
+
+    private async Task OnStepClickAsync(int index)
+    {
+        var status = StatusOf(index);
+        // linear: only allow going back to completed steps
+        if (LinearOnly && status != SStepStatus.Complete) return;
+        await GoToAsync(index);
+    }
+}

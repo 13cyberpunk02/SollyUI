@@ -1,0 +1,30 @@
+﻿@inherits SComponentBase
+@implements IDisposable
+
+@code {
+    [CascadingParameter] private SStepper? Parent { get; set; }
+
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public string? Description { get; set; }
+    [Parameter] public string? Icon { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Return false to block advancing past this step.</summary>
+    [Parameter] public EventCallback<StepValidateArgs> OnValidate { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (Parent is null)
+            throw new InvalidOperationException($"{nameof(SStep)} must be inside {nameof(SStepper)}.");
+        Parent.Register(this);
+    }
+
+    internal async Task<bool> InvokeValidateAsync()
+    {
+        var args = new StepValidateArgs();
+        await OnValidate.InvokeAsync(args);
+        return args.IsValid;
+    }
+
+    public void Dispose() { }
+}

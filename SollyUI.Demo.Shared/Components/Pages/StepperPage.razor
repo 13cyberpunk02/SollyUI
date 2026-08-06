@@ -1,0 +1,112 @@
+﻿@page "/stepper"
+
+<DemoPage Title="Stepper" Subtitle="Многошаговые процессы. Прогресс, валидация, горизонтальный/вертикальный.">
+
+    <DemoBlock Title="Basic wizard" Code="@_basicCode">
+        <SStepper OnFinish="@(() => Toasts.Success("Готово!"))">
+            <SStep Title="Аккаунт" Description="Учётные данные" Icon="@SIcons.Type">
+                <div class="demo-col" style="max-width:none;gap:16px;">
+                    <SInput @bind-Value="_email" Label="Email" />
+                    <SInput @bind-Value="_pass" Label="Пароль" Type="password" />
+                </div>
+            </SStep>
+            <SStep Title="Профиль" Description="О себе" Icon="@SIcons.Sliders">
+                <div class="demo-col" style="max-width:none;gap:16px;">
+                    <SInput @bind-Value="_name" Label="Имя" />
+                    <SSelect TValue="string" Items="@(["Developer","Designer","Manager"])"
+                             @bind-Value="_role" Label="Роль" />
+                </div>
+            </SStep>
+            <SStep Title="Готово" Description="Подтверждение" Icon="@SIcons.Check">
+                <SAlert Level="SAlertLevel.Success" Title="Почти всё">
+                    Проверь данные и нажми «Готово».
+                </SAlert>
+            </SStep>
+        </SStepper>
+    </DemoBlock>
+
+    <DemoBlock Title="With validation"
+               Description="Шаг блокирует переход, пока не заполнено поле."
+               Code="@_validateCode">
+        <SStepper OnFinish="@(() => Toasts.Success("Отправлено"))">
+            <SStep Title="Обязательное" OnValidate="ValidateStep1">
+                <div class="demo-col" style="max-width:none;gap:8px;">
+                    <SInput @bind-Value="_required" Label="Заполни это поле" />
+                    @if (_showError)
+                    {
+                        <span style="color:var(--s-danger);font-size:13px;">Поле обязательно</span>
+                    }
+                </div>
+            </SStep>
+            <SStep Title="Второй шаг">
+                <p>Досюда дойдёшь, только заполнив поле на первом шаге.</p>
+            </SStep>
+        </SStepper>
+    </DemoBlock>
+
+    <DemoBlock Title="Vertical" Code="@_verticalCode">
+        <SStepper Orientation="SStepperOrientation.Vertical">
+            <SStep Title="Заказ оформлен" Description="10:24">
+                <p>Мы получили твой заказ.</p>
+            </SStep>
+            <SStep Title="В сборке" Description="11:30">
+                <p>Собираем на складе.</p>
+            </SStep>
+            <SStep Title="Доставка" Description="Ожидается завтра">
+                <p>Курьер уже в пути.</p>
+            </SStep>
+        </SStepper>
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    [Inject] SToastService Toasts { get; set; } = default!;
+
+    string _email = "", _pass = "", _name = "", _role = "Developer";
+    string _required = "";
+    bool _showError;
+
+    void ValidateStep1(StepValidateArgs args)
+    {
+        if (string.IsNullOrWhiteSpace(_required))
+        {
+            args.IsValid = false;
+            _showError = true;
+        }
+        else _showError = false;
+    }
+
+    const string _basicCode = """
+<SStepper OnFinish="Submit">
+    <SStep Title="Аккаунт" Icon="@SIcons.Type">
+        <SInput @bind-Value="_email" Label="Email" />
+    </SStep>
+    <SStep Title="Профиль" Icon="@SIcons.Sliders">
+        <SInput @bind-Value="_name" Label="Имя" />
+    </SStep>
+    <SStep Title="Готово" Icon="@SIcons.Check">
+        <SAlert Level="SAlertLevel.Success">Подтверди.</SAlert>
+    </SStep>
+</SStepper>
+""";
+
+    const string _validateCode = """
+<SStep Title="Обязательное" OnValidate="ValidateStep1">
+    <SInput @bind-Value="_required" Label="Заполни" />
+</SStep>
+
+void ValidateStep1(StepValidateArgs args)
+{
+    if (string.IsNullOrWhiteSpace(_required))
+        args.IsValid = false;   // блокирует Next
+}
+""";
+
+    const string _verticalCode = """
+<SStepper Orientation="SStepperOrientation.Vertical">
+    <SStep Title="Заказ оформлен" Description="10:24">…</SStep>
+    <SStep Title="В сборке" Description="11:30">…</SStep>
+</SStepper>
+""";
+}

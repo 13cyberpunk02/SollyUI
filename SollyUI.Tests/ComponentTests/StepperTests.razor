@@ -1,0 +1,187 @@
+﻿@inherits SollyTestContext
+
+@code {
+    [Fact]
+    public void Renders_all_step_markers()
+    {
+        var cut = Render(@<SStepper>
+                             <SStep Title="One"><p>c1</p></SStep>
+                             <SStep Title="Two"><p>c2</p></SStep>
+                             <SStep Title="Three"><p>c3</p></SStep>
+                         </SStepper>);
+        cut.FindAll(".s-step").Should().HaveCount(3);
+    }
+
+    [Fact]
+    public void Renders_step_titles()
+    {
+        var cut = Render(@<SStepper>
+                             <SStep Title="First"><p>c1</p></SStep>
+                             <SStep Title="Second"><p>c2</p></SStep>
+                         </SStepper>);
+        cut.Markup.Should().Contain("First");
+        cut.Markup.Should().Contain("Second");
+    }
+
+    [Fact]
+    public void First_step_active_initially()
+    {
+        var cut = Render(@<SStepper>
+                             <SStep Title="One"><p>c1</p></SStep>
+                             <SStep Title="Two"><p>c2</p></SStep>
+                         </SStepper>);
+        cut.FindAll(".s-step")[0].ClassList.Should().Contain("s-step-active");
+    }
+
+    [Fact]
+    public void Shows_active_step_content()
+    {
+        var cut = Render(@<SStepper>
+                             <SStep Title="One"><p id="c1">first content</p></SStep>
+                             <SStep Title="Two"><p id="c2">second content</p></SStep>
+                         </SStepper>);
+        cut.FindAll("#c1").Should().HaveCount(1);
+        cut.FindAll("#c2").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Next_advances_step()
+    {
+        var cut = Render(@<SStepper>
+                             <SStep Title="One"><p id="c1">first</p></SStep>
+                             <SStep Title="Two"><p id="c2">second</p></SStep>
+                         </SStepper>);
+
+        cut.FindAll(".s-step-nav-end button")[0].Click();
+
+        cut.FindAll("#c2").Should().HaveCount(1);
+        cut.FindAll(".s-step")[1].ClassList.Should().Contain("s-step-active");
+    }
+
+    [Fact]
+    public void Previous_step_becomes_complete()
+    {
+        var cut = Render(@<SStepper>
+                             <SStep Title="One"><p>c1</p></SStep>
+                             <SStep Title="Two"><p>c2</p></SStep>
+                         </SStepper>);
+
+        cut.FindAll(".s-step-nav-end button")[0].Click();
+
+        cut.FindAll(".s-step")[0].ClassList.Should().Contain("s-step-complete");
+    }
+
+    [Fact]
+    public void Back_returns_to_previous()
+    {
+        var cut = Render(@<SStepper>
+                             <SStep Title="One"><p id="c1">first</p></SStep>
+                             <SStep Title="Two"><p id="c2">second</p></SStep>
+                         </SStepper>);
+
+        cut.FindAll(".s-step-nav-end button")[0].Click(); // next
+        cut.FindAll(".s-step-nav-start button")[0].Click(); // back
+
+        cut.FindAll("#c1").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void No_back_button_on_first_step()
+    {
+        var cut = Render(@<SStepper>
+                             <SStep Title="One"><p>c1</p></SStep>
+                             <SStep Title="Two"><p>c2</p></SStep>
+                         </SStepper>);
+        cut.FindAll(".s-step-nav-start button").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Finish_button_on_last_step()
+    {
+        var cut = Render(@<SStepper FinishText="Done">
+                             <SStep Title="One"><p>c1</p></SStep>
+                             <SStep Title="Two"><p>c2</p></SStep>
+                         </SStepper>);
+
+        cut.FindAll(".s-step-nav-end button")[0].Click(); // to last
+
+        cut.FindAll(".s-step-nav-end button")[0].TextContent.Should().Contain("Done");
+    }
+
+    [Fact]
+    public void Finish_fires_callback()
+    {
+        var finished = false;
+        var cut = Render(@<SStepper OnFinish="@(() => finished = true)">
+                             <SStep Title="One"><p>c1</p></SStep>
+                             <SStep Title="Two"><p>c2</p></SStep>
+                         </SStepper>);
+
+        cut.FindAll(".s-step-nav-end button")[0].Click(); // next -> last
+        cut.FindAll(".s-step-nav-end button")[0].Click(); // finish
+
+        finished.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Validation_blocks_advance()
+    {
+        var cut = Render(@<SStepper>
+                             <SStep Title="One" OnValidate="@((StepValidateArgs a) => a.IsValid = false)">
+                                 <p id="c1">first</p>
+                             </SStep>
+                             <SStep Title="Two"><p id="c2">second</p></SStep>
+                         </SStepper>);
+
+        cut.FindAll(".s-step-nav-end button")[0].Click();
+
+        // still on first step
+        cut.FindAll("#c1").Should().HaveCount(1);
+        cut.FindAll("#c2").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Validation_pass_allows_advance()
+    {
+        var cut = Render(@<SStepper>
+                             <SStep Title="One" OnValidate="@((StepValidateArgs a) => a.IsValid = true)">
+                                 <p id="c1">first</p>
+                             </SStep>
+                             <SStep Title="Two"><p id="c2">second</p></SStep>
+                         </SStepper>);
+
+        cut.FindAll(".s-step-nav-end button")[0].Click();
+
+        cut.FindAll("#c2").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void Vertical_applies_class()
+    {
+        var cut = Render(@<SStepper Orientation="SStepperOrientation.Vertical">
+                             <SStep Title="One"><p>c1</p></SStep>
+                         </SStepper>);
+        cut.Find(".s-stepper").ClassList.Should().Contain("s-stepper-vertical");
+    }
+
+    [Fact]
+    public void Hidden_navigation_when_disabled()
+    {
+        var cut = Render(@<SStepper ShowNavigation="false">
+                             <SStep Title="One"><p>c1</p></SStep>
+                             <SStep Title="Two"><p>c2</p></SStep>
+                         </SStepper>);
+        cut.FindAll(".s-step-nav").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Renders_step_numbers()
+    {
+        var cut = Render(@<SStepper>
+                             <SStep Title="One"><p>c1</p></SStep>
+                             <SStep Title="Two"><p>c2</p></SStep>
+                         </SStepper>);
+        // upcoming step 2 shows number "2"
+        cut.Markup.Should().Contain("2");
+    }
+}
