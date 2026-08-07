@@ -1,0 +1,111 @@
+﻿@page "/autocomplete"
+
+<DemoPage Title="Autocomplete" Subtitle="Свободный ввод с подсказками. Статический список или async-поиск.">
+
+    <DemoBlock Title="Static suggestions" Code="@_basicCode">
+        <div class="demo-col" style="max-width:22rem;gap:8px;">
+            <SAutocomplete TItem="string"
+                           Items="_countries"
+                           TextSelector="@(c => c)"
+                           @bind-Value="_country"
+                           Icon="@SIcons.Search"
+                           Placeholder="Начни вводить страну…"
+                           Label="Страна" />
+            <span class="demo-note">Значение: @(_country ?? "—")</span>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Async search"
+               Description="Подсказки приходят из async-функции с дебаунсом (имитация сервера)."
+               Code="@_asyncCode">
+        <SAutocomplete TItem="User"
+                       SearchProvider="SearchUsersAsync"
+                       TextSelector="@(u => u.Name)"
+                       @bind-Value="_userQuery"
+                       SelectedItemChanged="@((User u) => _selectedUser = u)"
+                       Icon="@SIcons.Search"
+                       Placeholder="Поиск пользователя…"
+                       Label="Пользователь"
+                       MinChars="1">
+            <OptionTemplate Context="u">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <SAvatar Name="@u.Name" Size="SAvatarSize.Small" />
+                    <div style="display:flex;flex-direction:column;">
+                        <span style="font-weight:500;">@u.Name</span>
+                        <span style="font-size:12px;color:var(--s-text-mute);">@u.Email</span>
+                    </div>
+                </div>
+            </OptionTemplate>
+        </SAutocomplete>
+        @if (_selectedUser is not null)
+        {
+            <span class="demo-note" style="margin-top:8px;display:block;">Выбран: @_selectedUser.Name</span>
+        }
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    string? _country;
+    string? _userQuery;
+    User? _selectedUser;
+
+    string[] _countries =
+    {
+        "Австралия", "Австрия", "Азербайджан", "Албания", "Алжир",
+        "Аргентина", "Армения", "Беларусь", "Бельгия", "Болгария",
+        "Бразилия", "Великобритания", "Венгрия", "Германия", "Греция",
+        "Грузия", "Дания", "Египет", "Израиль", "Индия", "Испания",
+        "Италия", "Казахстан", "Канада", "Китай", "Норвегия",
+        "Польша", "Португалия", "Россия", "США", "Турция",
+        "Украина", "Франция", "Швейцария", "Швеция", "Япония"
+    };
+
+    record User(string Name, string Email);
+
+    User[] _allUsers =
+    {
+        new("Anna Meyer", "anna@example.com"),
+        new("Boris Klein", "boris@example.com"),
+        new("Clara Wolf", "clara@example.com"),
+        new("Dmitri Ivanov", "dmitri@example.com"),
+        new("Elena Fischer", "elena@example.com"),
+        new("Felix Braun", "felix@example.com"),
+    };
+
+    async Task<IEnumerable<User>> SearchUsersAsync(string query)
+    {
+        await Task.Delay(300); // simulate network
+        return _allUsers.Where(u =>
+            u.Name.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+            u.Email.Contains(query, StringComparison.OrdinalIgnoreCase));
+    }
+
+    const string _basicCode = """
+<SAutocomplete TItem="string"
+               Items="_countries"
+               TextSelector="@(c => c)"
+               @bind-Value="_country"
+               Icon="@SIcons.Search"
+               Label="Страна" />
+""";
+
+    const string _asyncCode = """
+<SAutocomplete TItem="User"
+               SearchProvider="SearchUsersAsync"
+               TextSelector="@(u => u.Name)"
+               @bind-Value="_query"
+               SelectedItemChanged="OnUserSelected"
+               MinChars="1">
+    <OptionTemplate Context="u">
+        <SAvatar Name="@u.Name" Size="SAvatarSize.Small" />
+        @u.Name
+    </OptionTemplate>
+</SAutocomplete>
+
+async Task<IEnumerable<User>> SearchUsersAsync(string query)
+{
+    return await Http.GetFromJsonAsync<User[]>($"/api/users?q={query}");
+}
+""";
+}

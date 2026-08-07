@@ -1,0 +1,308 @@
+﻿@inherits SComponentBase
+@typeparam TItem
+@implements IAsyncDisposable
+@inject SollyInterop Interop
+
+<div class="@Cls("s-ac")" style="@Style" @attributes="Attributes">
+    @if (!string.IsNullOrEmpty(Label))
+    {
+        <label class="s-field-label">@Label</label>
+    }
+
+    <div class="s-ac-wrap @(_open ? "s-open" : null)" @ref="_wrap">
+        @if (!string.IsNullOrEmpty(Icon))
+        {
+            <span class="s-ac-icon"><SIcon Name="@Icon" Size="17" /></span>
+        }
+
+        <input @ref="_input"
+               class="s-ac-input"
+               value="@_text"
+               placeholder="@Placeholder"
+               disabled="@Disabled"
+               autocomplete="off"
+               spellcheck="false"
+               @oninput="OnInputAsync"
+               @onfocus="OnFocusAsync"
+               @onkeydown="OnKeyDownAsync" />
+
+        @if (Clearable && !string.IsNullOrEmpty(_text))
+        {
+            <button type="button" class="s-ac-clear" @onclick="ClearAsync" tabindex="-1">
+                <SIcon Name="@SIcons.X" Size="14" />
+            </button>
+        }
+
+        @if (_loading)
+        {
+            <span class="s-ac-spin"><SIcon Name="@SIcons.Spinner" Size="16" /></span>
+        }
+    </div>
+</div>
+
+@if (_open && _render)
+{
+    <div class="s-ac-pop" @ref="_pop" role="listbox">
+        @if (_loading && _results.Count == 0)
+        {
+            <div class="s-ac-msg">Поиск…</div>
+        }
+        else if (_results.Count == 0)
+        {
+            <div class="s-ac-msg">@NoResultsText</div>
+        }
+        else
+        {
+            @for (var i = 0; i < _results.Count; i++)
+            {
+                var idx = i;
+                var item = _results[i];
+                <div class="s-ac-option @(idx == _active ? "s-active" : null)"
+                     role="option"
+                     @onclick="@(() => SelectAsync(item))"
+                     @onmouseenter="@(() => _active = idx)">
+                    @if (OptionTemplate is not null)
+                    {
+                        @OptionTemplate(item)
+                    }
+                    else
+                    {
+                        <span class="s-ac-option-text">@TextSelector(item)</span>
+                    }
+                </div>
+            }
+        }
+    </div>
+}
+
+@code {
+    // value: the free-text string
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public EventCallback<string?> ValueChanged { get; set; }
+
+    // selection: the chosen item (may differ from free text)
+    [Parameter] public TItem? SelectedItem { get; set; }
+    [Parameter] public EventCallback<TItem> SelectedItemChanged { get; set; }
+
+    /// <summary>Static suggestions source.</summary>
+    [Parameter] public IEnumerable<TItem>? Items { get; set; }
+
+    /// <summary>Async suggestions provider; overrides Items when set.</summary>
+    [Parameter] public Func<string, Task<IEnumerable<TItem>>>? SearchProvider { get; set; }
+
+    [Parameter, EditorRequired] public Func<TItem, string> TextSelector { get; set; } = default!;
+    [Parameter] public RenderFragment<TItem>? OptionTemplate { get; set; }
+
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public string? Placeholder { get; set; }
+    [Parameter] public string? Icon { get; set; }
+    [Parameter] public bool Clearable { get; set; } = true;
+    [Parameter] public bool Disabled { get; set; }
+
+    /// <summary>Minimum chars before searching.</summary>
+    [Parameter] public int MinChars { get; set; }
+
+    /// <summary>Debounce delay for async search, ms.</summary>
+    [Parameter] public int DebounceMs { get; set; } = 250;
+
+    [Parameter] public string NoResultsText { get; set; } = "Ничего не найдено";
+    [Parameter] public int MaxResults { get; set; } = 50;
+
+    private string? _text;
+    private bool _open;
+    private bool _render;
+    private bool _loading;
+    private bool _needAnchor;
+    private int _active = -1;
+    private IJSObjectReference? _portal;
+
+    private List<TItem> _results = [];
+
+    private ElementReference _wrap;
+    private ElementReference _input;
+    private ElementReference _pop;
+
+    private DotNetObjectReference<SAutocomplete<TItem>>? _self;
+    private IJSObjectReference? _dismiss;
+    private CancellationTokenSource? _debounceCts;
+    private string _lastValue = "";
+
+    protected override void OnParametersSet()
+    {
+        if (Value != _lastValue)
+        {
+            _lastValue = Value ?? "";
+            _text = Value;
+        }
+    }
+
+    private async Task OnInputAsync(ChangeEventArgs e)
+    {
+        _text = e.Value?.ToString();
+        _lastValue = _text ?? "";
+        await ValueChanged.InvokeAsync(_text);
+
+        _active = -1;
+        await SearchAsync(_text ?? "");
+    }
+
+    private async Task OnFocusAsync()
+    {
+        if (_results.Count > 0 || (_text?.Length ?? 0) >= MinChars)
+            await SearchAsync(_text ?? "");
+    }
+
+    private async Task SearchAsync(string query)
+    {
+        if (query.Length < MinChars)
+        {
+            await CloseAsync();
+            return;
+        }
+
+        if (SearchProvider is not null)
+        {
+            _debounceCts?.Cancel();
+            _debounceCts = new CancellationTokenSource();
+            var token = _debounceCts.Token;
+
+            try
+            {
+                await Task.Delay(DebounceMs, token);
+                _loading = true;
+                await OpenAsync();
+                StateHasChanged();
+
+                var res = await SearchProvider(query);
+                if (token.IsCancellationRequested) return;
+                _results = res.Take(MaxResults).ToList();
+            }
+            catch (TaskCanceledException) { return; }
+            catch { _results = new(); }
+            _loading = false;
+        }
+        else
+        {
+            _results = FilterStatic(query);
+        }
+
+        if (_results.Count > 0 || _loading) await OpenAsync();
+        else await OpenAsync(); // keep open to show "no results"
+        StateHasChanged();
+    }
+
+    private List<TItem> FilterStatic(string query)
+    {
+        var all = Items?.ToList() ?? new();
+        if (string.IsNullOrWhiteSpace(query)) return all.Take(MaxResults).ToList();
+
+        return all
+            .Where(i => TextSelector(i).Contains(query, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(i => TextSelector(i).StartsWith(query, StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+            .Take(MaxResults)
+            .ToList();
+    }
+
+    private async Task OnKeyDownAsync(KeyboardEventArgs e)
+    {
+        if (!_open && e.Key == "ArrowDown")
+        {
+            await SearchAsync(_text ?? "");
+            return;
+        }
+
+        switch (e.Key)
+        {
+            case "ArrowDown":
+                _active = Math.Min(_results.Count - 1, _active + 1);
+                break;
+            case "ArrowUp":
+                _active = Math.Max(0, _active - 1);
+                break;
+            case "Enter":
+                if (_active >= 0 && _active < _results.Count)
+                    await SelectAsync(_results[_active]);
+                break;
+            case "Escape":
+                await CloseAsync();
+                break;
+        }
+    }
+
+    private async Task SelectAsync(TItem item)
+    {
+        _text = TextSelector(item);
+        _lastValue = _text;
+        await ValueChanged.InvokeAsync(_text);
+        await SelectedItemChanged.InvokeAsync(item);
+        await CloseAsync();
+    }
+
+    private async Task ClearAsync()
+    {
+        _text = "";
+        _lastValue = "";
+        await ValueChanged.InvokeAsync("");
+        await CloseAsync();
+        try { await Interop.FocusAsync(_input); }
+        catch
+        {
+            // ignored
+        }
+    }
+
+    private async Task OpenAsync()
+    {
+        if (_open) return;
+        _open = true;
+        _render = true;
+        _needAnchor = true; 
+        StateHasChanged();
+    }
+    
+    protected override async Task OnAfterRenderAsync(bool first)
+    {
+        if (_needAnchor)
+        {
+            _needAnchor = false;
+            try
+            {
+                _self ??= DotNetObjectReference.Create(this);
+                _portal = await Interop.PortalRemoveAsync(_pop);
+                await Interop.AnchorAsync(_pop, _wrap);
+                _dismiss = await Interop.RegisterDismissAsync(_wrap, _pop, _self);
+            }
+            catch
+            {
+                // ignored
+            }
+        }
+    }
+
+    private async Task CloseAsync()
+    {
+        if (!_open) return;
+        _open = false;
+        StateHasChanged();
+
+        try { if (_dismiss is not null) { await _dismiss.InvokeVoidAsync("dispose"); await _dismiss.DisposeAsync(); } } catch { }
+        _dismiss = null;
+
+        await Task.Delay(140);
+        _render = false;
+        StateHasChanged();
+        await Task.Yield();
+
+        try { if (_portal is not null) { await _portal.InvokeVoidAsync("dispose"); await _portal.DisposeAsync(); } } catch { }
+        _portal = null;
+    }
+
+    [JSInvokable]
+    public async Task OnDismissAsync() => await CloseAsync();
+
+    public async ValueTask DisposeAsync()
+    {
+        try { if (_dismiss is not null) { await _dismiss.InvokeVoidAsync("dispose"); await _dismiss.DisposeAsync(); } } catch { }
+        _self?.Dispose();
+    }
+}

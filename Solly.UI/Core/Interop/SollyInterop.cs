@@ -99,6 +99,18 @@ public sealed class SollyInterop(IJSRuntime js) : IAsyncDisposable, IDisposable
         catch (JSException) { return null; }
     }
     
+    public async ValueTask<IJSObjectReference?> PortalRemoveAsync(ElementReference el)
+    {
+        try
+        {
+            var m = await Module;
+            return await m.InvokeAsync<IJSObjectReference>("portalRemove", el);
+        }
+        catch (JSDisconnectedException) { return null; }
+        catch (ObjectDisposedException) { return null; }
+        catch (JSException) { return null; }
+    }
+    
     public async ValueTask<IJSObjectReference?> TrapFocusAsync<T>(
         ElementReference el, DotNetObjectReference<T> target) where T : class
     {

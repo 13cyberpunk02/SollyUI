@@ -112,11 +112,14 @@ export function portal(el) {
     return {
         dispose: () => {
             try {
-                if (!home) return;
-                if (next && next.parentElement === home) {
-                    home.insertBefore(el, next);
+                if (home && home.isConnected) {
+                    if (next && next.parentElement === home) {
+                        home.insertBefore(el, next);
+                    } else {
+                        home.appendChild(el);
+                    }
                 } else {
-                    home.appendChild(el);
+                    el.remove();
                 }
             } catch {
                 el.remove();
@@ -311,6 +314,16 @@ export function colorField(el, dotnet) {
             el.removeEventListener('pointerdown', down);
             window.removeEventListener('pointermove', move);
             window.removeEventListener('pointerup', up);
+        }
+    };
+}
+
+export function portalRemove(el) {
+    if (!el || el.parentElement === document.body) return null;
+    document.body.appendChild(el);
+    return {
+        dispose: () => {
+            try { el.remove(); } catch { }
         }
     };
 }
