@@ -1,0 +1,114 @@
+﻿@inherits SollyTestContext
+
+@code {
+    private IRenderedComponent<SSplitter> RenderSplit(
+        Action<ComponentParameterCollectionBuilder<SSplitter>>? extra = null)
+    {
+        return Render<SSplitter>(p =>
+        {
+            p.Add(x => x.First, "<div id=\"a\">A</div>");
+            p.Add(x => x.Second, "<div id=\"b\">B</div>");
+            extra?.Invoke(p);
+        });
+    }
+
+    [Fact]
+    public void Renders_both_panes()
+    {
+        var cut = RenderSplit();
+        cut.FindAll("#a").Should().HaveCount(1);
+        cut.FindAll("#b").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void Renders_handle()
+    {
+        var cut = RenderSplit();
+        cut.FindAll(".s-split-handle").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void Horizontal_by_default()
+    {
+        var cut = RenderSplit();
+        cut.Find(".s-split").ClassList.Should().Contain("s-split-horizontal");
+    }
+
+    [Fact]
+    public void Vertical_applies_class()
+    {
+        var cut = RenderSplit(p => p.Add(x => x.Orientation, SSplitOrientation.Vertical));
+        cut.Find(".s-split").ClassList.Should().Contain("s-split-vertical");
+    }
+
+    [Fact]
+    public void Initial_size_sets_first_pane_width()
+    {
+        var cut = RenderSplit(p => p.Add(x => x.InitialSize, 300));
+        cut.Find(".s-split-first").GetAttribute("style").Should().Contain("width:300px");
+    }
+
+    [Fact]
+    public void Vertical_initial_size_sets_height()
+    {
+        var cut = RenderSplit(p => p
+            .Add(x => x.Orientation, SSplitOrientation.Vertical)
+            .Add(x => x.InitialSize, 150));
+        cut.Find(".s-split-first").GetAttribute("style").Should().Contain("height:150px");
+    }
+
+    [Fact]
+    public async Task OnDrag_updates_size()
+    {
+        var cut = RenderSplit(p => p.Add(x => x.InitialSize, 200));
+        await cut.InvokeAsync(() => cut.Instance.OnDragAsync(350));
+        cut.Find(".s-split-first").GetAttribute("style").Should().Contain("width:350px");
+    }
+
+    [Fact]
+    public async Task OnDrag_clamps_to_min()
+    {
+        var cut = RenderSplit(p => p
+            .Add(x => x.InitialSize, 200)
+            .Add(x => x.MinSize, 120));
+        await cut.InvokeAsync(() => cut.Instance.OnDragAsync(50)); // below min
+        cut.Find(".s-split-first").GetAttribute("style").Should().Contain("width:120px");
+    }
+
+    [Fact]
+    public async Task OnDrag_clamps_to_max()
+    {
+        var cut = RenderSplit(p => p
+            .Add(x => x.InitialSize, 200)
+            .Add(x => x.MaxSize, 400));
+        await cut.InvokeAsync(() => cut.Instance.OnDragAsync(900)); // above max
+        cut.Find(".s-split-first").GetAttribute("style").Should().Contain("width:400px");
+    }
+
+    [Fact]
+    public async Task OnDrag_raises_size_changed()
+    {
+        double reported = 0;
+        var cut = RenderSplit(p => p
+            .Add(x => x.InitialSize, 200)
+            .Add(x => x.SizeChanged, EventCallback.Factory.Create<double>(this, s => reported = s)));
+
+        await cut.InvokeAsync(() => cut.Instance.OnDragAsync(280));
+        reported.Should().Be(280);
+    }
+
+    [Fact]
+    public void Size_uses_invariant_culture()
+    {
+        // 250.5 must render "250.5" not "250,5" regardless of locale
+        var cut = RenderSplit(p => p.Add(x => x.InitialSize, 250.5));
+        cut.Find(".s-split-first").GetAttribute("style").Should().Contain("250.5");
+    }
+
+    [Fact]
+    public void Handle_has_separator_role()
+    {
+        var cut = RenderSplit();
+        cut.Find(".s-split-handle").GetAttribute("role").Should().Be("separator");
+    }
+}

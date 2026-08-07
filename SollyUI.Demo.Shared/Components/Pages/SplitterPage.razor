@@ -1,0 +1,81 @@
+﻿@page "/splitter"
+
+<DemoPage Title="Splitter" Subtitle="Раздвижные панели с перетаскиваемой границей. Горизонтально и вертикально.">
+
+    <DemoBlock Title="Horizontal" Code="@_hCode">
+        <div style="height:280px;">
+            <SSplitter InitialSize="240" MinSize="140" MaxSize="500">
+                <First>
+                    <div class="demo-split-pane">
+                        <strong>Sidebar</strong>
+                        <p class="demo-note">Потяни границу вправо →</p>
+                    </div>
+                </First>
+                <Second>
+                    <div class="demo-split-pane">
+                        <strong>Content</strong>
+                        <p class="demo-note">Основная область растягивается.</p>
+                    </div>
+                </Second>
+            </SSplitter>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Vertical" Code="@_vCode">
+        <div style="height:340px;">
+            <SSplitter Orientation="SSplitOrientation.Vertical" InitialSize="140" MinSize="80" MaxSize="240">
+                <First>
+                    <div class="demo-split-pane"><strong>Top</strong></div>
+                </First>
+                <Second>
+                    <div class="demo-split-pane"><strong>Bottom</strong> — консоль, лог, превью.</div>
+                </Second>
+            </SSplitter>
+        </div>
+    </DemoBlock>
+
+    <DemoBlock Title="Live size" Code="@_sizeCode">
+        <div style="height:220px;">
+            <SSplitter InitialSize="_size" SizeChanged="@((double s) => _size = s)" MinSize="100" MaxSize="480">
+                <First>
+                    <div class="demo-split-pane">
+                        <strong>@((int)_size)px</strong>
+                    </div>
+                </First>
+                <Second>
+                    <div class="demo-split-pane demo-note">Ширина панели обновляется вживую.</div>
+                </Second>
+            </SSplitter>
+        </div>
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    double _size = 200;
+
+    const string _hCode = """
+<div style="height:280px;">
+    <SSplitter InitialSize="240" MinSize="140" MaxSize="500">
+        <First><div>Sidebar</div></First>
+        <Second><div>Content</div></Second>
+    </SSplitter>
+</div>
+""";
+
+    const string _vCode = """
+<SSplitter Orientation="SSplitOrientation.Vertical"
+           InitialSize="140" MinSize="80" MaxSize="240">
+    <First><div>Top</div></First>
+    <Second><div>Bottom</div></Second>
+</SSplitter>
+""";
+
+    const string _sizeCode = """
+<SSplitter InitialSize="_size"
+           SizeChanged="@((double s) => _size = s)">
+    <First><div>@((int)_size)px</div></First>
+    <Second><div>Content</div></Second>
+</SSplitter>
+""";
+}

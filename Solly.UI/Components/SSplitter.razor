@@ -1,0 +1,101 @@
+﻿@inherits SComponentBase
+@implements IAsyncDisposable
+@inject SollyInterop Interop
+
+<div class="@Cls("s-split", OrientationClass)"
+     @ref="_container"
+     style="@ContainerStyle">
+
+    <div class="s-split-pane s-split-first" style="@FirstPaneStyle">
+        @First
+    </div>
+
+    <div class="s-split-handle"
+         @ref="_handle"
+         role="separator"
+         aria-orientation="@(Orientation == SSplitOrientation.Vertical ? "horizontal" : "vertical")">
+        <span class="s-split-grip"></span>
+    </div>
+
+    <div class="s-split-pane s-split-second">
+        @Second
+    </div>
+</div>
+
+@code {
+    [Parameter] public RenderFragment? First { get; set; }
+    [Parameter] public RenderFragment? Second { get; set; }
+
+    [Parameter] public SSplitOrientation Orientation { get; set; } = SSplitOrientation.Horizontal;
+
+    /// <summary>Initial size of the first pane, in pixels.</summary>
+    [Parameter] public double InitialSize { get; set; } = 280;
+
+    [Parameter] public double MinSize { get; set; } = 120;
+    [Parameter] public double MaxSize { get; set; } = 640;
+
+    [Parameter] public EventCallback<double> SizeChanged { get; set; }
+
+    private ElementReference _container;
+    private ElementReference _handle;
+    private DotNetObjectReference<SSplitter>? _self;
+    private IJSObjectReference? _handle_ref;
+
+    private double _size;
+    private bool _init;
+
+    private string OrientationClass =>
+        Orientation == SSplitOrientation.Vertical ? "s-split-vertical" : "s-split-horizontal";
+
+    private string ContainerStyle => Style ?? "";
+
+    private string FirstPaneStyle
+    {
+        get
+        {
+            var inv = CultureInfo.InvariantCulture;
+            var px = _size.ToString("0.##", inv);
+            return Orientation == SSplitOrientation.Vertical
+                ? $"height:{px}px;"
+                : $"width:{px}px;";
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        if (!_init) { _size = InitialSize; _init = true; }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool first)
+    {
+        if (first)
+        {
+            _self = DotNetObjectReference.Create(this);
+            _handle_ref = await Interop.SplitterAsync(
+                _handle, _container, _self,
+                Orientation == SSplitOrientation.Vertical);
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnDragAsync(double size)
+    {
+        _size = Math.Clamp(size, MinSize, MaxSize);
+        await SizeChanged.InvokeAsync(_size);
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public Task OnDragEndAsync() => Task.CompletedTask;
+
+    public async ValueTask DisposeAsync()
+    {
+        try { if (_handle_ref is not null) { await _handle_ref.InvokeVoidAsync("dispose"); await _handle_ref.DisposeAsync(); } }
+        catch
+        {
+            // ignored
+        }
+
+        _self?.Dispose();
+    }
+}

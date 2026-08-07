@@ -205,6 +205,20 @@ public sealed class SollyInterop(IJSRuntime js) : IAsyncDisposable, IDisposable
         catch (JSException) { return null; }
     }
     
+    public async ValueTask<IJSObjectReference?> SplitterAsync<T>(
+        ElementReference handle, ElementReference container,
+        DotNetObjectReference<T> target, bool vertical) where T : class
+    {
+        try
+        {
+            var m = await Module;
+            return await m.InvokeAsync<IJSObjectReference>("splitter", handle, container, target, vertical);
+        }
+        catch (JSDisconnectedException) { return null; }
+        catch (ObjectDisposedException) { return null; }
+        catch (JSException) { return null; }
+    }
+    
     public void Dispose()
     {
     }

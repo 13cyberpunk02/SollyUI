@@ -464,3 +464,9 @@ a:hover { color: var(--s-accent-soft); }
     background: var(--s-panel);
     overflow: hidden;
 }
+
+.demo-split-pane {
+    padding: 16px;
+    height: 100%;
+    box-sizing: border-box;
+}

@@ -327,3 +327,43 @@ export function portalRemove(el) {
         }
     };
 }
+
+export function splitter(handleEl, containerEl, dotnet, vertical) {
+    let dragging = false;
+
+    const onDown = (e) => {
+        dragging = true;
+        document.body.style.cursor = vertical ? 'row-resize' : 'col-resize';
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+    };
+
+    const onMove = (e) => {
+        if (!dragging) return;
+        const r = containerEl.getBoundingClientRect();
+        const size = vertical ? (e.clientY - r.top) : (e.clientX - r.left);
+        dotnet.invokeMethodAsync('OnDragAsync', size);
+    };
+
+    const onUp = () => {
+        if (!dragging) return;
+        dragging = false;
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        dotnet.invokeMethodAsync('OnDragEndAsync');
+    };
+
+    handleEl.addEventListener('pointerdown', onDown);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+
+    return {
+        dispose: () => {
+            handleEl.removeEventListener('pointerdown', onDown);
+            window.removeEventListener('pointermove', onMove);
+            window.removeEventListener('pointerup', onUp);
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+        }
+    };
+}
