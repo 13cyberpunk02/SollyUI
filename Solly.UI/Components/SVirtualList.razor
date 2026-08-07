@@ -1,0 +1,90 @@
+﻿@inherits SComponentBase
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@typeparam TItem
+
+<div class="@Cls("s-vlist")" style="@ContainerStyle" @attributes="Attributes">
+    @if (Items is not null)
+    {
+        <Virtualize Items="_itemsList" ItemSize="ItemHeight" Context="item" OverscanCount="OverscanCount">
+            <ItemContent>
+                <div class="s-vlist-row" style="@RowStyle">
+                    @ItemTemplate(item)
+                </div>
+            </ItemContent>
+        </Virtualize>
+    }
+    else if (ItemsProvider is not null)
+    {
+        <Virtualize ItemsProvider="LoadAsync" ItemSize="ItemHeight" Context="item" OverscanCount="OverscanCount">
+            <ItemContent>
+                <div class="s-vlist-row" style="@RowStyle">
+                    @ItemTemplate(item)
+                </div>
+            </ItemContent>
+            <Placeholder>
+                <div class="s-vlist-row s-vlist-placeholder" style="@RowStyle">
+                    @if (PlaceholderTemplate is not null)
+                    {
+                        @PlaceholderTemplate
+                    }
+                    else
+                    {
+                        <div class="s-vlist-skeleton"></div>
+                    }
+                </div>
+            </Placeholder>
+        </Virtualize>
+    }
+    else
+    {
+        <div class="s-vlist-empty">@EmptyText</div>
+    }
+</div>
+
+@code {
+    /// <summary>Static item collection. Use this OR ItemsProvider.</summary>
+    [Parameter] public ICollection<TItem>? Items { get; set; }
+
+    /// <summary>Async data provider for server-side virtualization.</summary>
+    [Parameter] public Func<int, int, Task<(IEnumerable<TItem> items, int totalCount)>>? ItemsProvider { get; set; }
+
+    [Parameter, EditorRequired] public RenderFragment<TItem> ItemTemplate { get; set; } = default!;
+    [Parameter] public RenderFragment? PlaceholderTemplate { get; set; }
+
+    /// <summary>Fixed row height in pixels. Must match actual rendered height.</summary>
+    [Parameter] public float ItemHeight { get; set; } = 48;
+
+    /// <summary>List viewport height (CSS value). Default 400px.</summary>
+    [Parameter] public string Height { get; set; } = "400px";
+
+    /// <summary>Extra rows rendered above/below viewport for smoother scroll.</summary>
+    [Parameter] public int OverscanCount { get; set; } = 4;
+
+    [Parameter] public bool Divided { get; set; } = true;
+
+    [Parameter] public string EmptyText { get; set; } = "Нет данных";
+
+    private ICollection<TItem> _itemsList = Array.Empty<TItem>();
+
+    protected override void OnParametersSet()
+    {
+        _itemsList = Items ?? Array.Empty<TItem>();
+    }
+
+    private string ContainerStyle => $"height:{Height};{Style}";
+    private string RowStyle
+    {
+        get
+        {
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
+            var h = ItemHeight.ToString("0.##", inv);
+            return $"height:{h}px;" + (Divided ? "" : "border-bottom:none;");
+        }
+    }
+
+    private async ValueTask<ItemsProviderResult<TItem>> LoadAsync(ItemsProviderRequest request)
+    {
+        var (items, total) = await ItemsProvider!(request.StartIndex, request.Count);
+        return new ItemsProviderResult<TItem>(items, total);
+    }
+}

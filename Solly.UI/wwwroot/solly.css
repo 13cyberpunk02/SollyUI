@@ -4058,3 +4058,57 @@
 .s-split-horizontal .s-split-grip { width: 2px; height: 28px; }
 .s-split-vertical .s-split-grip { width: 28px; height: 2px; }
 .s-split-handle:hover .s-split-grip { background: #04121a; }
+
+/* ============================================================
+   VIRTUAL LIST
+   ============================================================ */
+.s-vlist {
+    overflow-y: auto;
+    border-radius: var(--s-radius-md);
+    border: 1px solid var(--s-border);
+    background: var(--s-panel);
+    font-family: var(--s-font);
+    scrollbar-width: thin;
+    scrollbar-color: var(--s-accent-25) transparent;
+}
+.s-vlist::-webkit-scrollbar { width: 8px; }
+.s-vlist::-webkit-scrollbar-track { background: transparent; }
+.s-vlist::-webkit-scrollbar-thumb {
+    background: var(--s-accent-25);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+.s-vlist::-webkit-scrollbar-thumb:hover { background: var(--s-accent-45); background-clip: content-box; }
+
+.s-vlist-row {
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--s-border);
+    color: var(--s-text);
+    font: 400 14px var(--s-font);
+    box-sizing: border-box;
+    transition: background var(--s-dur-fast) var(--s-ease);
+}
+.s-vlist-row:hover { background: var(--s-accent-05); }
+
+.s-vlist-placeholder { pointer-events: none; }
+.s-vlist-skeleton {
+    width: 60%;
+    height: 12px;
+    border-radius: 6px;
+    background: linear-gradient(90deg,
+    var(--s-surface) 0%, var(--s-surface-hi) 50%, var(--s-surface) 100%);
+    background-size: 200% 100%;
+    animation: s-shimmer 1.4s ease-in-out infinite;
+}
+
+.s-vlist-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--s-text-mute);
+    font: 400 14px var(--s-font);
+}

@@ -1,0 +1,98 @@
+﻿@inherits SollyTestContext
+
+@code {
+    private IRenderedComponent<SVirtualList<int>> RenderList(
+    int count = 100,
+    float itemHeight = 48,
+    string height = "400px",
+    bool divided = true)
+    {
+        return Render<SVirtualList<int>>(
+            @<SVirtualList TItem="int"
+                           Items="@Enumerable.Range(1, count).ToList()"
+                           ItemHeight="@itemHeight"
+                           Height="@height"
+                           Divided="@divided">
+                <ItemTemplate Context="item">item-@item</ItemTemplate>
+            </SVirtualList>);
+    }
+
+    [Fact]
+    public void Renders_container()
+    {
+        var cut = RenderList();
+        cut.FindAll(".s-vlist").Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void Applies_height()
+    {
+        var cut = RenderList(height: "500px");
+        cut.Find(".s-vlist").GetAttribute("style").Should().Contain("height:500px");
+    }
+
+    [Fact]
+    public void Renders_some_rows()
+    {
+        var cut = RenderList();
+        cut.FindAll(".s-vlist-row").Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public void Row_uses_item_template()
+    {
+        var cut = RenderList();
+        cut.Markup.Should().Contain("item-1");
+    }
+
+    [Fact]
+    public void Row_height_uses_invariant_culture()
+    {
+        var cut = RenderList(itemHeight: 47.5f);
+        cut.FindAll(".s-vlist-row")[0].GetAttribute("style").Should().Contain("47.5px");
+    }
+
+    [Fact]
+    public void Divided_by_default_has_border()
+    {
+        var cut = RenderList();
+        cut.FindAll(".s-vlist-row")[0].GetAttribute("style").Should().NotContain("border-bottom:none");
+    }
+
+    [Fact]
+    public void Undivided_removes_border()
+    {
+        var cut = RenderList(divided: false);
+        cut.FindAll(".s-vlist-row")[0].GetAttribute("style").Should().Contain("border-bottom:none");
+    }
+
+    [Fact]
+    public void Empty_when_no_items_and_no_provider()
+    {
+        var cut = Render<SVirtualList<int>>(
+            @<SVirtualList TItem="int" Items="null">
+                <ItemTemplate Context="item">@item</ItemTemplate>
+            </SVirtualList>);
+        cut.Find(".s-vlist-empty").Should().NotBeNull();
+    }
+
+    [Fact]
+    public void Custom_empty_text()
+    {
+        var cut = Render<SVirtualList<int>>(
+            @<SVirtualList TItem="int" Items="null" EmptyText="Пусто тут">
+                <ItemTemplate Context="item">@item</ItemTemplate>
+            </SVirtualList>);
+        cut.Find(".s-vlist-empty").TextContent.Should().Contain("Пусто тут");
+    }
+
+    [Fact]
+    public void Empty_items_list_renders_no_rows()
+    {
+        var cut = Render<SVirtualList<int>>(
+            @<SVirtualList TItem="int" Items="new List<int>()">
+                <ItemTemplate Context="item">@item</ItemTemplate>
+            </SVirtualList>);
+        cut.FindAll(".s-vlist-row").Should().BeEmpty();
+    }
+}

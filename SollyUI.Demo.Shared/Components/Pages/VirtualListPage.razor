@@ -1,0 +1,97 @@
+﻿@page "/virtual-list"
+
+<DemoPage Title="Virtual List" Subtitle="Виртуализация: тысячи строк, рендерятся только видимые. Статика или async-провайдер.">
+
+    <DemoBlock Title="10 000 items"
+               Description="Прокрути — в DOM только видимые строки. Плавно на любом объёме."
+               Code="@_basicCode">
+        <SVirtualList TItem="int" Items="_numbers" ItemHeight="44" Height="320px">
+            <ItemTemplate Context="n">
+                <span style="font-family:var(--s-font-mono);color:var(--s-accent-soft);width:60px;">#@n</span>
+                <span>Элемент списка номер @n</span>
+            </ItemTemplate>
+        </SVirtualList>
+    </DemoBlock>
+
+    <DemoBlock Title="Rich rows" Code="@_richCode">
+        <SVirtualList TItem="Person" Items="_people" ItemHeight="64" Height="360px">
+            <ItemTemplate Context="p">
+                <SAvatar Name="@p.Name" Size="SAvatarSize.Small" />
+                <div style="display:flex;flex-direction:column;margin-left:12px;flex:1;min-width:0;">
+                    <span style="font-weight:500;">@p.Name</span>
+                    <span style="font-size:12px;color:var(--s-text-mute);">@p.Email</span>
+                </div>
+                <SBadge Level="@(p.Active ? SBadgeLevel.Success : SBadgeLevel.Neutral)">
+                    @(p.Active ? "Active" : "Offline")
+                </SBadge>
+            </ItemTemplate>
+        </SVirtualList>
+    </DemoBlock>
+
+    <DemoBlock Title="Async provider"
+               Description="Данные подгружаются страницами по мере скролла (имитация сервера с 5000 записей)."
+               Code="@_asyncCode">
+        <SVirtualList TItem="string" ItemsProvider="@(LoadRowsAsync)" ItemHeight="44" Height="320px">
+            <ItemTemplate Context="row">
+                <span>@row</span>
+            </ItemTemplate>
+        </SVirtualList>
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    int[] _numbers = Enumerable.Range(1, 10_000).ToArray();
+
+    record Person(string Name, string Email, bool Active);
+    List<Person> _people = null!;
+
+    protected override void OnInitialized()
+    {
+        var names = new[] { "Anna", "Boris", "Clara", "Dmitri", "Elena", "Felix", "Greta", "Hugo" };
+        var rnd = new Random(42);
+        _people = Enumerable.Range(1, 2000)
+            .Select(i => new Person(
+                $"{names[i % names.Length]} #{i}",
+                $"user{i}@example.com",
+                rnd.Next(2) == 0))
+            .ToList();
+    }
+
+    async Task<(IEnumerable<string> items, int totalCount)> LoadRowsAsync(int start, int count)
+    {
+        await Task.Delay(200);
+        var items = Enumerable.Range(start, count).Select(i => $"Строка данных #{i} (загружено с сервера)");
+        return (items, 5000);
+    }
+
+    const string _basicCode = """
+<SVirtualList TItem="int" Items="_numbers" ItemHeight="44" Height="320px">
+    <ItemTemplate Context="n">
+        <span>Элемент @n</span>
+    </ItemTemplate>
+</SVirtualList>
+""";
+
+    const string _richCode = """
+<SVirtualList TItem="Person" Items="_people" ItemHeight="64">
+    <ItemTemplate Context="p">
+        <SAvatar Name="@p.Name" Size="SAvatarSize.Small" />
+        <span>@p.Name</span>
+        <SBadge>@(p.Active ? "Active" : "Offline")</SBadge>
+    </ItemTemplate>
+</SVirtualList>
+""";
+
+    const string _asyncCode = """
+<SVirtualList TItem="string" ItemsProvider="LoadRowsAsync" ItemHeight="44">
+    <ItemTemplate Context="row"><span>@row</span></ItemTemplate>
+</SVirtualList>
+
+async ValueTask<(IEnumerable<string>, int)> LoadRowsAsync(int start, int count)
+{
+    var page = await Http.GetFromJsonAsync<...>($"/api/rows?skip={start}&take={count}");
+    return (page.Items, page.Total);
+}
+""";
+}
