@@ -1,0 +1,48 @@
+﻿@inherits SComponentBase
+
+<div class="@Cls("s-tl-item", LevelClass)" style="@Style" @attributes="Attributes">
+    <div class="s-tl-rail">
+        <span class="s-tl-dot">
+            @if (!string.IsNullOrEmpty(Icon))
+            {
+                <SIcon Name="@Icon" Size="13" Weight="2.6" />
+            }
+        </span>
+        <span class="s-tl-line"></span>
+    </div>
+
+    <div class="s-tl-body">
+        @if (!string.IsNullOrEmpty(Time))
+        {
+            <span class="s-tl-time">@Time</span>
+        }
+        @if (!string.IsNullOrEmpty(Title))
+        {
+            <span class="s-tl-title">@Title</span>
+        }
+        @if (ChildContent is not null)
+        {
+            <div class="s-tl-content">@ChildContent</div>
+        }
+    </div>
+</div>
+
+@code {
+    [CascadingParameter] private STimeline? Parent { get; set; }
+
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public string? Time { get; set; }
+    [Parameter] public string? Icon { get; set; }
+    [Parameter] public STimelineLevel Level { get; set; } = STimelineLevel.Default;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private string LevelClass => Level switch
+    {
+        STimelineLevel.Accent  => "s-tl-accent",
+        STimelineLevel.Success => "s-tl-success",
+        STimelineLevel.Warning => "s-tl-warning",
+        STimelineLevel.Danger  => "s-tl-danger",
+        STimelineLevel.Muted   => "s-tl-muted",
+        _                      => null!
+    };
+}

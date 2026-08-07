@@ -1,0 +1,120 @@
+﻿@inherits SollyTestContext
+
+@code {
+    [Fact]
+    public void Renders_all_items()
+    {
+        var cut = Render(@<STimeline>
+                             <STimelineItem Title="A" />
+                             <STimelineItem Title="B" />
+                             <STimelineItem Title="C" />
+                         </STimeline>);
+        cut.FindAll(".s-tl-item").Should().HaveCount(3);
+    }
+
+    [Fact]
+    public void Renders_titles()
+    {
+        var cut = Render(@<STimeline>
+                             <STimelineItem Title="First event" />
+                             <STimelineItem Title="Second event" />
+                         </STimeline>);
+        cut.Markup.Should().Contain("First event");
+        cut.Markup.Should().Contain("Second event");
+    }
+
+    [Fact]
+    public void Renders_time()
+    {
+        var cut = Render(@<STimeline>
+                             <STimelineItem Title="A" Time="10:24" />
+                         </STimeline>);
+        cut.Find(".s-tl-time").TextContent.Should().Contain("10:24");
+    }
+
+    [Fact]
+    public void No_time_no_time_element()
+    {
+        var cut = Render(@<STimeline>
+                             <STimelineItem Title="A" />
+                         </STimeline>);
+        cut.FindAll(".s-tl-time").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Renders_child_content()
+    {
+        var cut = Render(@<STimeline>
+                             <STimelineItem Title="A">
+                                 <span id="inner">custom body</span>
+                             </STimelineItem>
+                         </STimeline>);
+        cut.Find("#inner").TextContent.Should().Be("custom body");
+    }
+
+    [Fact]
+    public void Every_item_has_dot()
+    {
+        var cut = Render(@<STimeline>
+                             <STimelineItem Title="A" />
+                             <STimelineItem Title="B" />
+                         </STimeline>);
+        cut.FindAll(".s-tl-dot").Should().HaveCount(2);
+    }
+
+    [Fact]
+    public void Accent_level_applies_class()
+    {
+        var cut = Render(@<STimeline>
+                             <STimelineItem Title="A" Level="STimelineLevel.Accent" />
+                         </STimeline>);
+        cut.Find(".s-tl-item").ClassList.Should().Contain("s-tl-accent");
+    }
+
+    [Fact]
+    public void Success_level_applies_class()
+    {
+        var cut = Render(@<STimeline>
+                             <STimelineItem Title="A" Level="STimelineLevel.Success" />
+                         </STimeline>);
+        cut.Find(".s-tl-item").ClassList.Should().Contain("s-tl-success");
+    }
+
+    [Fact]
+    public void Danger_level_applies_class()
+    {
+        var cut = Render(@<STimeline>
+                             <STimelineItem Title="A" Level="STimelineLevel.Danger" />
+                         </STimeline>);
+        cut.Find(".s-tl-item").ClassList.Should().Contain("s-tl-danger");
+    }
+
+    [Fact]
+    public void Default_level_no_level_class()
+    {
+        var cut = Render(@<STimeline>
+                             <STimelineItem Title="A" />
+                         </STimeline>);
+        var cls = cut.Find(".s-tl-item").ClassList;
+        cls.Should().NotContain("s-tl-accent");
+        cls.Should().NotContain("s-tl-success");
+    }
+
+    [Fact]
+    public void Icon_renders_in_dot()
+    {
+        var cut = Render(@<STimeline>
+                             <STimelineItem Title="A" Icon="@SIcons.Check" />
+                         </STimeline>);
+        cut.Find(".s-tl-dot svg").Should().NotBeNull();
+    }
+
+    [Fact]
+    public void Reverse_applies_class()
+    {
+        var cut = Render(@<STimeline Reverse="true">
+                             <STimelineItem Title="A" />
+                         </STimeline>);
+        cut.Find(".s-timeline").ClassList.Should().Contain("s-timeline-reverse");
+    }
+}

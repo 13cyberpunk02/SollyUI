@@ -1,0 +1,77 @@
+﻿@page "/timeline"
+
+<DemoPage Title="Timeline" Subtitle="Вертикальная лента событий. Маркеры, статусы, время, произвольный контент.">
+
+    <DemoBlock Title="Basic" Code="@_basicCode">
+        <STimeline>
+            <STimelineItem Title="Заказ создан" Time="10:24" Level="STimelineLevel.Accent" Icon="@SIcons.Check" />
+            <STimelineItem Title="Оплата подтверждена" Time="10:26" Level="STimelineLevel.Success" Icon="@SIcons.Check" />
+            <STimelineItem Title="Сборка на складе" Time="11:30">
+                Товары комплектуются. Ожидается отгрузка сегодня.
+            </STimelineItem>
+            <STimelineItem Title="Доставка" Time="Завтра" Level="STimelineLevel.Muted" />
+        </STimeline>
+    </DemoBlock>
+
+    <DemoBlock Title="Activity feed"
+               Description="Произвольный контент внутри пунктов."
+               Code="@_feedCode">
+        <STimeline>
+            <STimelineItem Time="2 мин назад" Level="STimelineLevel.Accent" Icon="@SIcons.Type">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <SAvatar Name="Anna Meyer" Size="SAvatarSize.Small" />
+                    <div>
+                        <strong>Anna</strong> закоммитила <code>fix: submenu overflow</code>
+                    </div>
+                </div>
+            </STimelineItem>
+            <STimelineItem Time="1 час назад" Icon="@SIcons.Clipboard">
+                <strong>Boris</strong> открыл pull request <SBadge Level="SBadgeLevel.Info" Mono>#142</SBadge>
+            </STimelineItem>
+            <STimelineItem Time="Вчера" Level="STimelineLevel.Success" Icon="@SIcons.Check">
+                Релиз <SBadge Level="SBadgeLevel.Neutral" Mono>v0.3.0</SBadge> опубликован.
+            </STimelineItem>
+        </STimeline>
+    </DemoBlock>
+
+    <DemoBlock Title="Statuses" Code="@_statusCode">
+        <STimeline>
+            <STimelineItem Title="Default" />
+            <STimelineItem Title="Accent" Level="STimelineLevel.Accent" />
+            <STimelineItem Title="Success" Level="STimelineLevel.Success" />
+            <STimelineItem Title="Warning" Level="STimelineLevel.Warning" />
+            <STimelineItem Title="Danger" Level="STimelineLevel.Danger" />
+            <STimelineItem Title="Muted" Level="STimelineLevel.Muted" />
+        </STimeline>
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    const string _basicCode = """
+<STimeline>
+    <STimelineItem Title="Заказ создан" Time="10:24"
+                   Level="STimelineLevel.Accent" Icon="@SIcons.Check" />
+    <STimelineItem Title="Оплата" Time="10:26"
+                   Level="STimelineLevel.Success" Icon="@SIcons.Check" />
+    <STimelineItem Title="Сборка" Time="11:30">
+        Товары комплектуются.
+    </STimelineItem>
+    <STimelineItem Title="Доставка" Time="Завтра"
+                   Level="STimelineLevel.Muted" />
+</STimeline>
+""";
+
+    const string _feedCode = """
+<STimelineItem Time="2 мин назад" Level="STimelineLevel.Accent" Icon="@SIcons.Type">
+    <SAvatar Name="Anna Meyer" Size="SAvatarSize.Small" />
+    <strong>Anna</strong> закоммитила fix
+</STimelineItem>
+""";
+
+    const string _statusCode = """
+<STimelineItem Title="Success" Level="STimelineLevel.Success" />
+<STimelineItem Title="Warning" Level="STimelineLevel.Warning" />
+<STimelineItem Title="Danger" Level="STimelineLevel.Danger" />
+""";
+}

@@ -3893,3 +3893,108 @@
     font: 400 13.5px var(--s-font);
     color: var(--s-text-mute);
 }
+
+/* ============================================================
+   TIMELINE
+   ============================================================ */
+.s-timeline {
+    display: flex;
+    flex-direction: column;
+    font-family: var(--s-font);
+}
+
+.s-tl-item {
+    display: flex;
+    gap: 16px;
+    min-height: 56px;
+}
+
+/* rail: dot + connecting line */
+.s-tl-rail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    width: 26px;
+}
+
+.s-tl-dot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+    border-radius: 999px;
+    border: 2px solid var(--s-border-hi);
+    background: var(--s-sunken);
+    color: var(--s-text-mute);
+    z-index: 1;
+    transition: all var(--s-dur) var(--s-ease);
+}
+
+.s-tl-line {
+    flex: 1;
+    width: 2px;
+    margin: 4px 0;
+    background: var(--s-border);
+    border-radius: 2px;
+}
+/* last item: no trailing line */
+.s-tl-item:last-child .s-tl-line { display: none; }
+
+.s-tl-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-bottom: 24px;
+    min-width: 0;
+    flex: 1;
+}
+.s-tl-item:last-child .s-tl-body { padding-bottom: 0; }
+
+.s-tl-time {
+    font: 500 11px var(--s-font-mono);
+    letter-spacing: .04em;
+    color: var(--s-text-mute);
+}
+.s-tl-title {
+    font: 600 14.5px var(--s-font);
+    color: var(--s-text-hi);
+}
+.s-tl-content {
+    font: 400 13.5px var(--s-font);
+    color: var(--s-text);
+    line-height: 1.55;
+}
+
+/* --- level variants: dot color + glow --- */
+.s-tl-accent .s-tl-dot {
+    border-color: var(--s-accent);
+    background: linear-gradient(160deg, var(--s-accent-soft), var(--s-accent));
+    color: #04121a;
+    box-shadow: 0 0 12px var(--s-accent-45);
+}
+.s-tl-success .s-tl-dot {
+    border-color: var(--s-success);
+    background: var(--s-success);
+    color: #04121a;
+    box-shadow: 0 0 12px color-mix(in srgb, var(--s-success) 45%, transparent);
+}
+.s-tl-warning .s-tl-dot {
+    border-color: var(--s-warning);
+    background: var(--s-warning);
+    color: #1a1204;
+    box-shadow: 0 0 12px color-mix(in srgb, var(--s-warning) 45%, transparent);
+}
+.s-tl-danger .s-tl-dot {
+    border-color: var(--s-danger);
+    background: var(--s-danger);
+    color: #1a0408;
+    box-shadow: 0 0 12px color-mix(in srgb, var(--s-danger) 45%, transparent);
+}
+.s-tl-muted .s-tl-dot {
+    border-color: var(--s-border);
+    background: var(--s-surface);
+    color: var(--s-text-dim);
+}

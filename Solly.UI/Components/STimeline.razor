@@ -1,0 +1,14 @@
+﻿@inherits SComponentBase
+
+<div class="@Cls("s-timeline", Reverse ? "s-timeline-reverse" : null)" style="@Style" @attributes="Attributes">
+    <CascadingValue Value="this" IsFixed="true">
+        @ChildContent
+    </CascadingValue>
+</div>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Newest-first ordering (visual only; you control item order).</summary>
+    [Parameter] public bool Reverse { get; set; }
+}
