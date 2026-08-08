@@ -367,3 +367,27 @@ export function splitter(handleEl, containerEl, dotnet, vertical) {
         }
     };
 }
+
+export function swipe(el, dotnet) {
+    let startX = 0, startY = 0, tracking = false;
+
+    const down = (e) => { startX = e.clientX; startY = e.clientY; tracking = true; };
+    const up = (e) => {
+        if (!tracking) return;
+        tracking = false;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+            dotnet.invokeMethodAsync('OnSwipeAsync', dx < 0 ? 'left' : 'right');
+        }
+    };
+
+    el.addEventListener('pointerdown', down);
+    el.addEventListener('pointerup', up);
+    return {
+        dispose: () => {
+            el.removeEventListener('pointerdown', down);
+            el.removeEventListener('pointerup', up);
+        }
+    };
+}

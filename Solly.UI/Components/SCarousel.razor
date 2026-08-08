@@ -1,0 +1,183 @@
+﻿@inherits SComponentBase
+@implements IAsyncDisposable
+@inject SollyInterop Interop
+
+<div class="@Cls("s-carousel")"
+     @ref="_root"
+     style="@Style"
+     tabindex="0"
+     @onkeydown="OnKeyDownAsync"
+     @onmouseenter="@(PauseAuto)"
+     @onmouseleave="@(ResumeAuto)"
+     @attributes="Attributes">
+
+    <CascadingValue Value="this" IsFixed="true">
+        <div style="display:none">@ChildContent</div>
+    </CascadingValue>
+
+    <div class="s-carousel-viewport">
+        <div class="s-carousel-track" style="@TrackStyle">
+            @for (var i = 0; i < _slides.Count; i++)
+            {
+                var slide = _slides[i];
+                <div class="s-carousel-slide @(i == _current ? "s-active" : null)">
+                    @slide.ChildContent
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (ShowArrows && _slides.Count > 1)
+    {
+        <button type="button" class="s-carousel-arrow s-carousel-prev"
+                @onclick="Prev" aria-label="Previous">
+            <SIcon Name="@SIcons.ChevronRight" Size="20" Weight="2.4" />
+        </button>
+        <button type="button" class="s-carousel-arrow s-carousel-next"
+                @onclick="Next" aria-label="Next">
+            <SIcon Name="@SIcons.ChevronRight" Size="20" Weight="2.4" />
+        </button>
+    }
+
+    @if (ShowDots && _slides.Count > 1)
+    {
+        <div class="s-carousel-dots">
+            @for (var i = 0; i < _slides.Count; i++)
+            {
+                var idx = i;
+                <button type="button"
+                        class="s-carousel-dot @(idx == _current ? "s-active" : null)"
+                        @onclick="@(() => GoTo(idx))"
+                        aria-label="@($"Slide {idx + 1}")"></button>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    [Parameter] public bool ShowArrows { get; set; } = true;
+    [Parameter] public bool ShowDots { get; set; } = true;
+    [Parameter] public bool Loop { get; set; } = true;
+
+    /// <summary>Autoplay interval in ms. 0 disables autoplay.</summary>
+    [Parameter] public int AutoplayMs { get; set; }
+
+    [Parameter] public bool Swipe { get; set; } = true;
+
+    [Parameter] public int Current { get; set; }
+    [Parameter] public EventCallback<int> CurrentChanged { get; set; }
+
+    private readonly List<SCarouselItem> _slides = [];
+    private int _current;
+    private bool _init;
+
+    private ElementReference _root;
+    private DotNetObjectReference<SCarousel>? _self;
+    private IJSObjectReference? _swipeHandle;
+    private Timer? _timer;
+    private bool _paused;
+
+    private string TrackStyle
+    {
+        get
+        {
+            var inv = CultureInfo.InvariantCulture;
+            var offset = (-_current * 100).ToString("0.##", inv);
+            return $"transform:translateX({offset}%);";
+        }
+    }
+
+    internal void Register(SCarouselItem item)
+    {
+        if (!_slides.Contains(item)) { _slides.Add(item); StateHasChanged(); }
+    }
+
+    protected override void OnInitialized()
+    {
+        if (!_init) { _current = Current; _init = true; }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool first)
+    {
+        if (first)
+        {
+            if (Swipe)
+            {
+                _self = DotNetObjectReference.Create(this);
+                _swipeHandle = await Interop.SwipeAsync(_root, _self);
+            }
+            StartAuto();
+        }
+    }
+
+    public async Task Next()
+    {
+        if (_slides.Count <= 1) return;
+        if (_current < _slides.Count - 1) _current++;
+        else if (Loop) _current = 0;
+        else return;
+        await EmitAsync();
+    }
+
+    public async Task Prev()
+    {
+        if (_slides.Count <= 1) return;
+        if (_current > 0) _current--;
+        else if (Loop) _current = _slides.Count - 1;
+        else return;
+        await EmitAsync();
+    }
+
+    public async Task GoTo(int index)
+    {
+        if (index < 0 || index >= _slides.Count) return;
+        _current = index;
+        await EmitAsync();
+    }
+
+    private async Task EmitAsync()
+    {
+        await CurrentChanged.InvokeAsync(_current);
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public async Task OnSwipeAsync(string dir)
+    {
+        if (dir == "left") await Next();
+        else await Prev();
+    }
+
+    private async Task OnKeyDownAsync(KeyboardEventArgs e)
+    {
+        if (e.Key == "ArrowLeft") await Prev();
+        else if (e.Key == "ArrowRight") await Next();
+    }
+
+    // --- autoplay ---
+    private void StartAuto()
+    {
+        if (AutoplayMs <= 0 || _slides.Count <= 1) return;
+        _timer = new Timer(async _ =>
+        {
+            if (_paused) return;
+            await InvokeAsync(async () =>
+            {
+                await Next();
+            });
+        }, null, AutoplayMs, AutoplayMs);
+    }
+
+    private void PauseAuto() => _paused = true;
+    private void ResumeAuto() => _paused = false;
+
+    public async ValueTask DisposeAsync()
+    {
+        _timer?.Dispose();
+        try { if (_swipeHandle is not null) { await _swipeHandle.InvokeVoidAsync("dispose"); await _swipeHandle.DisposeAsync(); } }
+        catch { }
+        _self?.Dispose();
+    }
+}

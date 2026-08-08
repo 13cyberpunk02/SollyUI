@@ -1,0 +1,13 @@
+﻿@inherits SComponentBase
+
+@code {
+    [CascadingParameter] private SCarousel? Parent { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (Parent is null)
+            throw new InvalidOperationException($"{nameof(SCarouselItem)} must be inside {nameof(SCarousel)}.");
+        Parent.Register(this);
+    }
+}

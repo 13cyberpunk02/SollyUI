@@ -219,6 +219,19 @@ public sealed class SollyInterop(IJSRuntime js) : IAsyncDisposable, IDisposable
         catch (JSException) { return null; }
     }
     
+    public async ValueTask<IJSObjectReference?> SwipeAsync<T>(
+        ElementReference el, DotNetObjectReference<T> target) where T : class
+    {
+        try
+        {
+            var m = await Module;
+            return await m.InvokeAsync<IJSObjectReference>("swipe", el, target);
+        }
+        catch (JSDisconnectedException) { return null; }
+        catch (ObjectDisposedException) { return null; }
+        catch (JSException) { return null; }
+    }
+    
     public void Dispose()
     {
     }

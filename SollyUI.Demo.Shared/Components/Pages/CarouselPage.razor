@@ -1,0 +1,83 @@
+﻿@page "/carousel"
+
+<DemoPage Title="Carousel" Subtitle="Слайдер с стрелками, точками, автопрокруткой, свайпом и клавиатурой.">
+
+    <DemoBlock Title="Basic" Code="@_basicCode">
+        <SCarousel Style="height:260px;">
+            <SCarouselItem>
+                <div class="demo-slide" style="background:linear-gradient(135deg,#0b3d3a,#22e6c8);">Slide 1</div>
+            </SCarouselItem>
+            <SCarouselItem>
+                <div class="demo-slide" style="background:linear-gradient(135deg,#2a1a5e,#7c5cff);">Slide 2</div>
+            </SCarouselItem>
+            <SCarouselItem>
+                <div class="demo-slide" style="background:linear-gradient(135deg,#5e1a3a,#ff5c8a);">Slide 3</div>
+            </SCarouselItem>
+        </SCarousel>
+    </DemoBlock>
+
+    <DemoBlock Title="Autoplay (3s)"
+               Description="Автопрокрутка с паузой при наведении. Стрелки, свайп и клавиши тоже работают."
+               Code="@_autoCode">
+        <SCarousel Style="height:220px;" AutoplayMs="3000">
+            <SCarouselItem>
+                <div class="demo-slide" style="background:linear-gradient(135deg,#0b3d3a,#22e6c8);">Auto 1</div>
+            </SCarouselItem>
+            <SCarouselItem>
+                <div class="demo-slide" style="background:linear-gradient(135deg,#1a3a5e,#4dd8ff);">Auto 2</div>
+            </SCarouselItem>
+            <SCarouselItem>
+                <div class="demo-slide" style="background:linear-gradient(135deg,#3a2a1a,#ffb84d);">Auto 3</div>
+            </SCarouselItem>
+        </SCarousel>
+    </DemoBlock>
+
+    <DemoBlock Title="Content slides"
+               Description="Внутри слайдов — любой контент, не только картинки."
+               Code="@_contentCode">
+        <SCarousel Style="height:200px;" Loop="false">
+            <SCarouselItem>
+                <div class="demo-slide-card">
+                    <SIcon Name="@SIcons.Star" Size="32" />
+                    <h3>Первый экран</h3>
+                    <p class="demo-note">Onboarding, промо, фичи — что угодно.</p>
+                </div>
+            </SCarouselItem>
+            <SCarouselItem>
+                <div class="demo-slide-card">
+                    <SIcon Name="@SIcons.Bell" Size="32" />
+                    <h3>Второй экран</h3>
+                    <p class="demo-note">Loop выключен — на краях стрелка стоп.</p>
+                </div>
+            </SCarouselItem>
+        </SCarousel>
+    </DemoBlock>
+
+</DemoPage>
+
+@code {
+    const string _basicCode = """
+<SCarousel Style="height:260px;">
+    <SCarouselItem><img src="1.jpg" /></SCarouselItem>
+    <SCarouselItem><img src="2.jpg" /></SCarouselItem>
+    <SCarouselItem><img src="3.jpg" /></SCarouselItem>
+</SCarousel>
+""";
+
+    const string _autoCode = """
+<SCarousel AutoplayMs="3000">
+    <SCarouselItem>...</SCarouselItem>
+    <SCarouselItem>...</SCarouselItem>
+</SCarousel>
+""";
+
+    const string _contentCode = """
+<SCarousel Loop="false">
+    <SCarouselItem>
+        <div class="onboarding-screen">
+            <h3>Первый экран</h3>
+        </div>
+    </SCarouselItem>
+</SCarousel>
+""";
+}

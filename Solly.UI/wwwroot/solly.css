@@ -4112,3 +4112,104 @@
     color: var(--s-text-mute);
     font: 400 14px var(--s-font);
 }
+
+/* ============================================================
+   CAROUSEL
+   ============================================================ */
+.s-carousel {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--s-radius-md);
+    border: 1px solid var(--s-border);
+    background: var(--s-panel);
+    outline: none;
+    font-family: var(--s-font);
+}
+.s-carousel:focus-visible { box-shadow: 0 0 0 3px var(--s-accent-25); }
+
+.s-carousel-viewport { overflow: hidden; width: 100%; }
+
+.s-carousel-track {
+    display: flex;
+    transition: transform var(--s-dur-slow) var(--s-ease);
+    will-change: transform;
+}
+
+.s-carousel-slide {
+    flex: 0 0 100%;
+    width: 100%;
+    min-width: 0;
+}
+
+/* arrows */
+.s-carousel-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(8, 14, 20, .7);
+    color: var(--s-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--s-border-hi);
+    border-radius: 999px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    cursor: pointer;
+    z-index: 2;
+    transition: all var(--s-dur-fast) var(--s-ease);
+}
+.s-carousel-arrow:hover {
+    border-color: var(--s-accent);
+    color: var(--s-accent);
+    box-shadow: 0 0 16px var(--s-accent-45);
+}
+.s-carousel-prev { left: 14px; }
+.s-carousel-prev svg { transform: rotate(180deg); }
+.s-carousel-next { right: 14px; }
+
+/* dots */
+.s-carousel-dots {
+    position: absolute;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 2;
+}
+.s-carousel-dot {
+    width: 8px;
+    height: 8px;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .35);
+    cursor: pointer;
+    transition: all var(--s-dur-fast) var(--s-ease);
+}
+.s-carousel-dot:hover { background: rgba(255, 255, 255, .6); }
+.s-carousel-dot.s-active {
+    width: 24px;
+    border-radius: 999px;
+    background: var(--s-accent);
+    box-shadow: 0 0 10px var(--s-accent-45);
+}
+[data-solly-theme="light"] .s-carousel-arrow {
+    background: rgba(255, 255, 255, .75);
+    border-color: var(--s-border-hi);
+    color: var(--s-text);
+}
+[data-solly-theme="light"] .s-carousel-arrow:hover {
+    background: rgba(255, 255, 255, .95);
+    border-color: var(--s-accent);
+    color: var(--s-accent);
+}
+[data-solly-theme="light"] .s-carousel-dot {
+    background: rgba(0, 0, 0, .25);
+}
+[data-solly-theme="light"] .s-carousel-dot:hover {
+    background: rgba(0, 0, 0, .45);
+}
