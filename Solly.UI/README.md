@@ -7,6 +7,7 @@ Works in **Blazor Server** and **Blazor WebAssembly**. No Node build step — CS
 [![NuGet](https://img.shields.io/nuget/v/SollyUI.svg)](https://www.nuget.org/packages/SollyUI)
 [![License: MIT](https://img.shields.io/badge/License-MIT-informational.svg)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4.svg)](https://dotnet.microsoft.com)
+[![Tests](https://github.com/13cyberpunk02/SollyUI/actions/workflows/tests.yml/badge.svg)](https://github.com/13cyberpunk02/SollyUI/actions/workflows/tests.yml)
 
 ---
 
@@ -73,17 +74,19 @@ Add the usings to `_Imports.razor`:
 
 ## Components
 
-**Form inputs** — `SButton`, `SInput`, `STextArea`, `SNumberInput<T>`, `SCheckbox`, `SSwitch`, `SRadioGroup<T>`, `SSelect<T>` (searchable, multi-select, async), `SSlider`, `SDatePicker`.
+40+ components across six families. Every one is themeable, keyboard-accessible, and works identically under Server and WebAssembly.
 
-**Form layout** — `SGForm`, `SFormSection`, `SFormField`, `SFormActions`, with a built-in validation summary.
+**Form controls** - `SButton`, `SInput`, `STextArea`, `SNumberInput<T>`, `SCheckbox`, `SRadioGroup<T>`, `SSwitch`, `SSlider`, `SSelect<T>` (searchable, multi-select, async), `SDatePicker`, `SRating<T>` (stars/hearts, half values), `SColorPicker` (HSV field + hex, feeds the theme palette), `SAutocomplete<T>` (free-text with static or async suggestions).
 
-**Overlays** — `SModal`, `SDrawer`, `SPopover`, `STooltip`, `SDropdownMenu` (with nested submenus), `SPopconfirm`, `SToast` (service-driven).
+**Forms** - `SForm`, `SFormSection`, `SFormField`, `SFormActions`, with a built-in validation summary.
 
-**Layout & shell** — `SShell`, `SSidebar`, `SHeader`, `SNavGroup`, `SNavLink`, `SCollapseButton`, `SThemeToggle`, `SAmbient`.
+**Data display** - `STable<T>` (sorting, pagination, search, row selection, cell templates, server-side data via items provider), `STree<T>` (data-driven hierarchy with cascading tri-state checkboxes), `SVirtualList<T>` (virtualized rendering for thousands of rows, static or async provider), `SCard`, `SBadge`, `SChip`, `SAvatar` (+ `SAvatarGroup`), `SAlert`, `SProgress` (linear + circular), `SSkeleton`, `SEmpty`, `STimeline` (event feed with status markers), `SCarousel` (slides with arrows, dots, autoplay, swipe).
 
-**Data** — `STable<T>` with sorting, pagination, search, row selection, cell templates, and server-side data via an items provider. `SPagination` is also available standalone.
+**Navigation** - `STabs`, `SAccordion`, `SBreadcrumbs`, `SDropdownMenu` (with nested submenus), `SStepper` (multi-step wizard with per-step validation), `SPagination` (standalone).
 
-**Display** — `SCard`, `SBadge`, `SChip`, `SAvatar` (+ `SAvatarGroup`), `SAlert`, `SProgress` (linear + circular), `STabs`, `SAccordion`, `SBreadcrumbs`, `SSkeleton`, `SEmpty`, `SIcon`.
+**Overlays** - `SModal`, `SDrawer`, `SPopover`, `STooltip`, `SPopconfirm`, `SToast` (service-driven), `SCommandPalette` (Cmd/Ctrl+K, fuzzy search, grouped, static or async source).
+
+**Layout & shell** - `SShell`, `SSidebar`, `SHeader`, `SNavGroup`, `SNavLink`, `SCollapseButton`, `SSplitter` (draggable resizable panes), `SThemeToggle`, `SAmbient`, `SIcon`.
 
 ---
 
